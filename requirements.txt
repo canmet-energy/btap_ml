@@ -1,0 +1,4 @@
+numpy==1.19.5
+pandas==1.2.4
+sklearn
+s3fs==0.3.0

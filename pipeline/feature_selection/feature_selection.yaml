@@ -1,0 +1,33 @@
+name: Feature selection Function
+description: Selects the feature that would be used in building the model
+
+inputs:
+- {name: Tenant, type: String, description: 'Name of minio tenant to access data from'}
+- {name: Bucket, type: String, description: 'Name of minio bucket to access data from'}
+- {name: Object Name, type: String, description: 'Name of minio bucket to access data from'}
+- {name: Minio destination, type: String, description: 'Name of minio bucket to access data from'}
+outputs:
+- {name: Minio destination, type: String, description: 'Path where the output data will be stored.'}
+
+implementation:
+  container:
+    # The strict name of a container image that you've pushed to a container registry.
+    image: fernandolpz/only-tests:download_data_v3
+    command: [
+      python3, 
+      
+      # Path of the program inside the container
+      feature_selection.py,
+      
+      --tenant,
+      {inputValue: Tenant},
+      
+      --bucket,
+      {inputValue: Bucket},
+      
+      --in_obj_name,
+      {inputValue: Object Name},
+      
+      --output_path,
+      {outputPath: Minio destination},
+    ]

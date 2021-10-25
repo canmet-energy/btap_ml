@@ -33,6 +33,7 @@ extensions = [
     'sphinx.ext.graphviz',
     'sphinx.ext.mathjax',
     'sphinx.ext.napoleon',
+    'sphinx_autodoc_typehints',   # must be loaded after napoleon
 ]
 
 # Add any paths that contain templates here, relative to this directory.

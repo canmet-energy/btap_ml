@@ -18,7 +18,7 @@
 # -- Project information -----------------------------------------------------
 
 project = 'Building Technology Assessment Platform: Machine Learning Implementation'
-copyright = '2021, Natural Resources Canada, Statistics Canada'
+copyright = '2021, Natural Resources Canada'
 author = 'Natural Resources Canada, Statistics Canada'
 
 

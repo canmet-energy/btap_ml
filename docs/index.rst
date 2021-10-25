@@ -21,7 +21,7 @@ required to produce usable outputs.
    :maxdepth: 2
    :caption: Contents:
 
-
+   installation
 
 Indices and tables
 ==================

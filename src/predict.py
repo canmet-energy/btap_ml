@@ -23,7 +23,7 @@ from tensorflow.keras.optimizers import Adam
 from sklearn.compose import TransformedTargetRegressor
 from sklearn.pipeline import Pipeline
 from sklearn import metrics
-from sklearn.preprocessing import StandardScaler,MinMaxScaler
+from sklearn.preprocessing import StandardScaler,MinMaxScaler,Normalizer 
 from sklearn.model_selection import cross_val_score,cross_val_predict
 from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import mean_absolute_error, mean_squared_error
@@ -95,7 +95,7 @@ def save_plot(H):
     plt.xlabel("Epoch #")
     plt.ylabel("Loss")
     plt.legend()
-    plt.savefig('./output/turner_train_test_loss.png')
+    plt.savefig('../output/turner_train_test_loss.png')
     
     plt.style.use("ggplot")
     plt.figure(2)
@@ -105,7 +105,7 @@ def save_plot(H):
     plt.xlabel("Epoch #")
     plt.ylabel("MAE")
     plt.legend()
-    plt.savefig('./output/turner_train_test_mae.png')
+    plt.savefig('../output/turner_train_test_mae.png')
     
     return
 
@@ -155,33 +155,22 @@ def model_builder(hp):
     model = keras.Sequential()
 #     model.add(keras.layers.Flatten())
     hp_activation= hp.Choice('activation', values=['relu','tanh','sigmoid'])
-    hp_regularizers= hp.Choice('regularizers', values=[1e-1,1e-2,1e-3,1e-4, 1e-5])
-    for i in range(hp.Int("num_layers", 1,10)):
-        model.add(
-            layers.Dense(
-                units=hp.Int("units_" + str(i), min_value=16, max_value=128, step=8),
+    hp_regularizers= hp.Choice('regularizers', values=[1e-4, 1e-5])
+    for i in range(hp.Int("num_layers", 1,5)):
+        model.add(layers.Dense(
+                units=hp.Int("units_" + str(i), min_value=8, max_value=96, step=8),
                 activation= hp_activation,
-                input_shape=(45, ),
+                input_shape=(36, ),
                 kernel_initializer='normal',
-                
-               # kernel_regularizer=regularizers.l2(0.001)
-                kernel_regularizer=regularizers.l1_l2(l1=hp_regularizers,
-                                                      l2=hp_regularizers)
-#                 bias_regularizer=regularizers.l2(1e-4),
-#                 activity_regularizer=regularizers.l2(1e-5)
-            )
-            )
-        model.add(Dropout(
-                     hp.Choice('dropout_rate', values=[0.1,0.2,0.4,0.5])
-                    )
-                 )
-    model.add(Dense(1,activation=hp_activation))
-    hp_learning_rate = hp.Choice('learning_rate', values=[1e-1,1e-2,1e-3,1e-4, 1e-5])
+                kernel_regularizer=regularizers.l1_l2(l1=1e-5,l2=1e-5),
+                bias_regularizer=regularizers.l2(1e-4),
+                activity_regularizer=regularizers.l2(1e-5)
+            ))
+        model.add(Dropout( hp.Choice('dropout_rate', values=[0.1,0.2,0.3,0.4])))
+    model.add(Dense(1,activation='linear'))
+    hp_learning_rate = hp.Choice('learning_rate', values=[1e-3,1e-4, 1e-5])
     hp_optimizer = hp.Choice('optimizer', values=['rmsprop','adam','sgd'])
-        
-#     hp_learning_rate = hp.Choice('learning_rate', values=[1e-4])
-#     hp_optimizer = hp.Choice('optimizer', values=['rmsprop'])
-    
+           
     if hp_optimizer == "adam":
         optimizer = tf.optimizers.Adam(learning_rate=hp_learning_rate)
     elif hp_optimizer == "sgd":
@@ -206,14 +195,14 @@ def predicts_hp(X_train,y_train,X_test,y_test,selected_feature,validate):
                      max_epochs=50,
                      overwrite=True,
                      factor=3,
-                     directory='./parameter_search',
+                     directory='../output/parameter_search',
                      project_name='btap')
     
     stop_early = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=5)
     tuner.search(X_train, 
                  y_train, 
                  epochs=100,
-                 batch_size=90,
+                 batch_size=365,
                  callbacks=[stop_early],
                  use_multiprocessing=True,
                  validation_split=0.2)
@@ -229,7 +218,7 @@ def predicts_hp(X_train,y_train,X_test,y_test,selected_feature,validate):
     """)
     result = best_hps
     
-    logdir = os.path.join("./parameter_search/btap", datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
+    logdir = os.path.join("../output/parameter_search/btap", datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
     hist_callback = tf.keras.callbacks.TensorBoard(logdir, 
                                                    histogram_freq=1,
                                                    embeddings_freq=1,
@@ -238,12 +227,12 @@ def predicts_hp(X_train,y_train,X_test,y_test,selected_feature,validate):
                                                    write_steps_per_second=False
                                                   )
     
-    # Build the model with the optimal hyperparameters and train it on the data for 50 epochs
+    # Build the model with the optimal hyperparameters 
     model = tuner.hypermodel.build(best_hps)
     history = model.fit(X_train, 
                         y_train, 
                         epochs=50,
-                        batch_size=90,
+                        batch_size=365,
                         validation_split=0.2,
                         callbacks=[stop_early,hist_callback],
                         )
@@ -255,13 +244,18 @@ def predicts_hp(X_train,y_train,X_test,y_test,selected_feature,validate):
     
     #Re-instantiate the hypermodel and train it with the optimal number of epochs from above.
     hypermodel = tuner.hypermodel.build(best_hps)
-
-    # Retrain the model
     hypermodel.fit(X_train, y_train, epochs=best_epoch, validation_split=0.2)
+    
+    
+    return hypermodel
+
+def hyper_evaluate(hypermodel,X_test,y_test,scalery,validate):
     #evaluate the hypermodel on the test data.
     eval_result = hypermodel.evaluate(X_test, y_test['energy'])
-    y_test['y_pred'] = model.predict(X_test)
-    
+    y_test['y_pred'] = hypermodel.predict(X_test)
+    # Retrain the model
+    y_test['y_pred_transformed'] =scalery.inverse_transform(y_test['y_pred'].values.reshape(-1,1))
+
     #y_pred =scalery.inverse_transform(y_pred)
     print("[test loss, test mae, test mse]:", eval_result)
     validate = validate.groupby(['datapoint_id']).sum()
@@ -272,7 +266,7 @@ def predicts_hp(X_train,y_train,X_test,y_test,selected_feature,validate):
     y_test['y_pred'] =y_test['y_pred'].apply(lambda r : float((r*1.0)/1000))
     
     output_df = pd.merge(y_test,validate,left_index=True, right_index=True,how='left')
-    annual_metric=score(output_df['Total Energy'],output_df['y_pred'])
+    annual_metric=score(output_df['Total Energy'],output_df['y_pred_transformed'])
     
     print('********************annual metric below')
     print(annual_metric)
@@ -287,24 +281,71 @@ def predicts_hp(X_train,y_train,X_test,y_test,selected_feature,validate):
     return result
 
 
+def predict(model,X_test,y_test,scalery,test_complete):
+    y_test['y_pred']  = model.predict(X_test)
+    y_test['y_pred_transformed'] =scalery.inverse_transform(y_test['y_pred'].values.reshape(-1,1))
+   
+    #eval_result = model.evaluate(X_test,y_test['energy'],batch_size=30)
+    eval_result = model.evaluate(X_test,y_test['energy'])
+    scores_metric  = score(y_test['energy'],y_test['y_pred_transformed'])
+
+    #aggregating annual energy
+    test_complete = test_complete.groupby(['datapoint_id']).sum()
+    test_complete['Total Energy'] = test_complete['Total Energy'].apply(lambda r : float(r/365))
+    
+    #converting to GJ
+    y_test = y_test.groupby(['datapoint_id']).sum()
+    y_test['energy'] =y_test['energy'].apply(lambda r : float((r*1.0)/1000))
+    y_test['y_pred_transformed'] =y_test['y_pred_transformed'].apply(lambda r : float((r*1.0)/1000))
+    
+    #merging to create the output dataframe
+    output_df = pd.merge(y_test,test_complete,left_index=True, right_index=True,how='left')
+    output_df = output_df.drop(['y_pred','energy_y','energy_x'],axis=1)
+    annual_metric=score(output_df['Total Energy'],output_df['y_pred_transformed'])
+    
+    print(output_df)
+    print('****************TEST SET****************************')
+    print(eval_result)
+    print(scores_metric)
+    print('********************annual metric below')
+    print(annual_metric)
+   
+    result= scores_metric,annual_metric,output_df
+    
+    plt.style.use("ggplot")
+    plt.figure()
+    plt.plot(output_df['Total Energy'],label='actual')
+    plt.plot(output_df['y_pred_transformed'],label='pred')
+    plt.title("Annual Energy")
+    plt.savefig('../output/annual_energy.png')
+    
+     
+    plt.style.use("ggplot")
+    plt.figure()
+    #plt.hist(y_train,label='train')
+    plt.hist(output_df['Total Energy'],label='test')
+    plt.savefig('../output/daily_energy_train.png')
+    return result   
 
 
 
-def create_model(dense_layers,activation,optimizer,dropout_rate,length,learning_rate,epochs,batch_size,X_train,y_train,X_test,y_test,test_complete,scalery,X_validate,y_validate,validate_complete):
+def create_model(dense_layers,activation,optimizer,dropout_rate,length,learning_rate,epochs,X_train,y_train,X_test,y_test,test_complete,scalery,
+                X_validate,y_validate,validate_complete):
     
     model = Sequential()
-    #model.add(Flatten(input_shape=(length,)))
+    model.add(Flatten(input_shape=(length,)))
+    #model.add(Dropout(dropout_rate, input_shape=(length,)))
     for index, lsize in enumerate(dense_layers):
-       
-        model.add(Dense(lsize,input_shape=(length,),activation=activation, kernel_initializer='normal', 
-                        #kernel_regularizer=regularizers.l2(0.001),
-                        kernel_regularizer=regularizers.l1_l2(l1=1e-4, l2=1e-4),
-#                         bias_regularizer=regularizers.l2(1e-4),
-#                         activity_regularizer=regularizers.l2(1e-5)
+        model.add(Dense(lsize,activation=activation, kernel_initializer='normal', 
+                        # kernel_regularizer=regularizers.l1(1e-5),
+                        kernel_regularizer=regularizers.l1_l2(l1=1e-2, l2=1e-2),
+                        bias_regularizer=regularizers.l2(1e-2),
+                        activity_regularizer=regularizers.l2(1e-2)
+        
                 ))
         model.add(Dropout(dropout_rate))
         #model.add(BatchNormalization())
-    model.add(Dense(1,activation=activation))
+    model.add(Dense(1,activation='linear'))
    
     if optimizer == "adam":
         optimizer = tf.optimizers.Adam(learning_rate=learning_rate)
@@ -322,84 +363,39 @@ def create_model(dense_layers,activation,optimizer,dropout_rate,length,learning_
               #metrics =[mse_loss,mae_loss]
     # Define callback
     early_stopping = EarlyStopping(monitor='loss', patience=5)
-    logdir = os.path.join("./parameter_search/btap", datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
+    logdir = os.path.join("../output/parameter_search/btap", datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
     hist_callback = tf.keras.callbacks.TensorBoard(logdir, histogram_freq=1)
-    logger = keras.callbacks.CSVLogger('./output/metric.csv', append=True)
+    logger = keras.callbacks.CSVLogger('../output/metric.csv', append=True)
     output_df =''
     
     # prepare the model with target scaling
     scores_metric=''
-    np.random.seed(1337)
+    np.random.seed(7)
     history = model.fit(X_train,
                         y_train,
-                        callbacks=[logger,early_stopping,hist_callback],
+                        callbacks=[logger,
+                                    early_stopping,
+                                    hist_callback,
+                                    #tfdocs.modeling.EpochDots()
+                                    ],
                         epochs=epochs,
-                        batch_size =batch_size,                    
+                        #batch_size =batch_size,                    
                         verbose=1,
-                        shuffle=False,
-                        validation_split=0.2)
+                        # shuffle=False,
+                        validation_split=0.1)
     save_plot(history)
     
-    y_test['y_pred']  = model.predict(X_test)
-    y_validate['y_pred']  = model.predict(X_validate)
-    #y_test['y_pred_transformed'] =scalery.inverse_transform(y_test['y_pred'].values.reshape(-1,1))
-    eval_result = model.evaluate(X_test,y_test['energy'],batch_size=30)
-    eval_result_validate = model.evaluate(X_validate,y_validate['energy'],batch_size=30)
     
-    print('############################')
-    print(y_test)
-    print('Test set result:')
-    print(eval_result)
-    print("")
+    print(model.summary())
+    #model.summary()
+    #plotter = tfdocs.plots.HistoryPlotter(smoothing_std=2)
+    plt.ylabel('loss')
     
-    print('Validation set result:')
-    print(eval_result_validate)
-    print("")
-    
-    #scores_metric  = score(y_test['energy'],y_test['y_pred_transformed'])
-    scores_metric  = score(y_test['energy'],y_test['y_pred'])
-    scores_metric_val  = score(y_validate['energy'],y_validate['y_pred'])
-#     history_df = pd.read_csv('./output/metric.csv')
-#     plot_metric(history_df)
-    
-    test_complete = test_complete.groupby(['datapoint_id']).sum()
-    test_complete['Total Energy'] = test_complete['Total Energy'].apply(lambda r : float(r/365))
-    
-    validate_complete = validate_complete.groupby(['datapoint_id']).sum()
-    validate_complete['Total Energy'] = validate_complete['Total Energy'].apply(lambda r : float(r/365))
-    
-    print('bukola5555555555555555555555555555555555555555555555')
-    print(y_test)
-    #converting to GJ
-    y_test = y_test.groupby(['datapoint_id']).sum()
-    y_test['energy'] =y_test['energy'].apply(lambda r : float((r*1.0)/1000000000))
-    y_test['y_pred'] =y_test['y_pred'].apply(lambda r : float((r*1.0)/1000000000))
-    
-    print('ishola%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-    print(y_test)
-    output_df = pd.merge(y_test,test_complete,left_index=True, right_index=True,how='left')
-    annual_metric=score(output_df['Total Energy'],output_df['y_pred'])
-    
-    #annual_metric=score(output_df['Total Energy'],output_df['y_pred_transformed'])
-    y_validate = y_validate.groupby(['datapoint_id']).sum()
-    y_validate['energy'] =y_validate['energy'].apply(lambda r : float((r*1.0)/1000000000))
-    y_validate['y_pred'] =y_validate['y_pred'].apply(lambda r : float((r*1.0)/1000000000))
 
-    output_val_df = pd.merge(y_validate,validate_complete,left_index=True, right_index=True,how='left')
-    annual_metric_val=score(output_val_df['Total Energy'],output_val_df['y_pred'])
-    
-    print(output_df)
-    print('****************TEST SET****************************')
-    print(scores_metric)
-    print('********************annual metric below')
-    print(annual_metric)
-    
-    print(output_val_df)
-    print('****************VALIDATION SET****************************')
-    print(scores_metric_val)
-    print('********************annual metric below')
-    print(annual_metric_val)
-    
+
+    scores_metric,annual_metric,output_df = predict(model,X_test,y_test,scalery,test_complete)
+    scores_metric_val,annual_metric_val,output_val_df = predict(model,X_validate,y_validate,scalery,validate_complete)
+
     result= {
             'metric' : scores_metric,
             'annual_metric':annual_metric,
@@ -409,22 +405,8 @@ def create_model(dense_layers,activation,optimizer,dropout_rate,length,learning_
             'output_val_df':output_val_df.values.tolist(),
             }
    
+    return result
     
-    plt.style.use("ggplot")
-    plt.figure()
-    plt.plot(output_df['Total Energy'],label='actual')
-    plt.plot(output_df['y_pred'],label='pred')
-    plt.title("Annual Energy")
-    plt.savefig('./output/annual_energy.png')
-    
-     
-    plt.style.use("ggplot")
-    plt.figure()
-    #plt.hist(y_train,label='train')
-    plt.hist(output_df['Total Energy'],label='test')
-    plt.savefig('./output/daily_energy_train.png')
-    
-    return result   
 
 def fit_evaluate(args): 
     #Resets all state generated by Keras.
@@ -462,54 +444,51 @@ def fit_evaluate(args):
     X_test = pd.DataFrame(data["X_test"],columns=features)
     X_validate= pd.DataFrame(data["X_validate"],columns=features)
     y_train = pd.read_json(data["y_train"], orient='values').values.ravel()
-    # y_test = pd.read_json(data["y_test"], orient='values').values.ravel()
+    
+    #extracting the selected features from feature engineering
     X_train = X_train[selected_features]
     X_test = X_test[selected_features]
     X_validate = X_validate[selected_features]
+
     col_length = X_train.shape[1]
+
+    #extracting the test data for the target variable
     y_valid = pd.DataFrame(data["y_valid"],columns=['energy','datapoint_id','Total Energy'])
     y_test = pd.DataFrame(data["y_test"],columns=['energy','datapoint_id'])
-   
-    
-    
     validate_complete = pd.DataFrame(data["y_complete"],columns=['energy','datapoint_id','Total Energy'])
     y_validate = pd.DataFrame(data["y_validate"],columns=['energy','datapoint_id'])
-    #y_validate = validate_complete[['energy','datapoint_id']]
     
-#     print(validate_complete.groupby(['datapoint_id']).sum())
-#     test =  validate_complete[validate_complete['datapoint_id'] == '00177092-f4e0-4f9f-8292-945142d2fee0']
-#     print(test)
-#     print(test[['energy','Total Energy']])
-#     print('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^6')
-#     print(test.groupby(['datapoint_id']).sum())
-    
-    
-    print(validate_complete)
-    scalerx= MinMaxScaler()
-    scalery= MinMaxScaler()
+    scalerx= Normalizer()
+    scalery= StandardScaler()
     X_train = scalerx.fit_transform(X_train)
-    X_test = scalerx.fit_transform(X_test)
-    #y_train = scalery.fit_transform(y_train.reshape(-1, 1))
-    #y_test['scaled_value'] = scalery.fit_transform(y_test['energy'].values.reshape(-1, 1))
-    np.random.seed(1337)
-    #search for best hyperparameters
+    X_test = scalerx.transform(X_test)
+    X_validate = scalerx.transform(X_validate)
+    y_train = scalery.fit_transform(y_train.reshape(-1, 1))
+    
+    np.random.seed(7)
+    #search for best hyperparameters 
     if args.param_search == "yes":
-        results_pred = predicts_hp(X_train,y_train,X_test,y_test,features,y_valid)
+        hypermodel = predicts_hp(X_train,y_train,X_test,y_test,features,y_valid)
+        results_pred = hyper_evaluate(hypermodel,X_test,y_test,scalery,y_valid)
+        print(results_pred)
+        results_pred = hyper_evaluate(hypermodel,X_validate,y_validate,scalery,validate_complete)
+        print(results_pred)
     else:
         results_pred = create_model(
-                             dense_layers=[64],
-                             #dense_layers=[56,48,80,104,24],
-                             activation='tanh',
+                             dense_layers=[50,10],
+                             activation='relu',
                              optimizer='rmsprop',
-                             dropout_rate=0.3,
+                             dropout_rate=0.1,
                              length=col_length,
-                             learning_rate=0.0001,
-                             epochs=10,batch_size=90,
+                             learning_rate=0.001,
+                             epochs=2,
+                             #batch_size=90,
                              X_train=X_train,y_train=y_train,
                              X_test=X_test,y_test=y_test
                              ,test_complete=y_valid,scalery=scalery,
                              X_validate = X_validate, y_validate=y_validate,
-                             validate_complete= validate_complete
+                             validate_complete= validate_complete,
+                             
                             )
     time_taken = ((time.time() - start_time)/60)
     print("********* Total time spent is ***********" + str(time_taken)+" minutes" )

@@ -2,8 +2,6 @@ import kfp
 from kfp import dsl
 from kfp.components import func_to_container_op
 from kfp.components import load_component_from_file
-#from utilities import get_minio_credentials
-
 
 @dsl.pipeline(name='Btap Pipeline', 
               description='MLP employed for Total energy consumed regression problem',

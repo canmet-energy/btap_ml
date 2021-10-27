@@ -10,13 +10,24 @@ import json
 import argparse
 import pandas as pd
 import s3fs
-#from kfp.components import load_component_from_file
 
 ############################################################    
 # feature selection
 ############################################################
 
-def access_minio(tenant,bucket,path,operation,data):    
+def access_minio(tenant,bucket,path,operation,data):
+    """
+    Used to read and write to minio.
+
+    Args:
+        tenant: default value is standard
+        bucket: nrcan-btap
+        path: file path where data is to be read from or written to
+        data: for write operation, it contains the data to be written to minio
+
+    Returns:
+       Dataframe containing the data downladed from minio is returned for read operation and for write operation , null value is returned. 
+    """
     with open(f'/vault/secrets/minio-{tenant}-tenant-1.json') as f:
         creds = json.load(f)
         
@@ -45,99 +56,67 @@ def access_minio(tenant,bucket,path,operation,data):
 
 def select_features(args,estimator_type ='lasso', min_features=20): 
     """
-    Select the feature which contribute most to the prediction for the total energy consumed.  
+    Select the feature which contribute most to the prediction for the total energy consumed.
+    
+    Default estimator_type used for feature selection is 'LassoCV'
+    
+    Args:
+        args: arguements provided from the main
+
+    Returns:
+       selected features are returned and uploaded to minio. 
+       
     """
     data = access_minio(tenant=args.tenant,
                            bucket=args.bucket,
                            operation= 'read',
                            path=args.in_obj_name,
                            data='')
-#    
-#     data = open('../preprocessing/output/preprocessing_out',)
+
     data = json.load(data)
     features =data["features"] 
     X_train = pd.DataFrame(data["X_train"],columns=features)
     X_test = pd.DataFrame(data["X_test"],columns=features)
     
   
-    #standardize
+    #normalize
     scalerx= Normalizer()
     scalery= Normalizer()
     X_train = scalerx.fit_transform(data["X_train"])
     y_train = pd.read_json(data["y_train"], orient='values').values.ravel()
     
-    #y_train =scalery.fit_transform(y_train.reshape(-1, 1))
-   
     if estimator_type == "linear":
         estimator = LinearRegression()
         rfecv = RFECV(estimator=estimator, step=1, cv=KFold(10),scoring='neg_mean_squared_error',min_features_to_select=min_features)
-        #fit = rfecv.fit(data["X_train"],data["y_train"])
         fit = rfecv.fit(X_train,y_train)
         rank_features_nun = pd.DataFrame(rfecv.ranking_, columns=["rank"], index = data["features"])
         selected_features = rank_features_nun.loc[rank_features_nun["rank"]==1].index.tolist() 
-        #print(selected_features)
-        
-        data = {'selected_features' : selected_features}
-    
-        # Creates a json object based on `data`
-        data_json = json.dumps(data).encode('utf-8')
-        #data_json = json.dumps(data)
-        csv_buffer = io.BytesIO(data_json)
-        client.put_object(bucket_name=args.bucket,
-                  object_name=args.output_path,  
-                  data=csv_buffer, 
-                  length=len(data_json), 
-                  content_type='application/csv')
-        #return selected_features
     
     elif estimator_type == "elasticnet":
-#         estimator = ElasticNetCV(n_jobs=-1,cv=10)
-#         rfecv = RFECV(estimator=estimator, step=1, cv=KFold(10),scoring='neg_mean_squared_error', min_features_to_select=min_features)
-#         fit = rfecv.fit(X_train,y_train)
         reg = ElasticNetCV(n_jobs=-1,cv=10)
         fit = reg.fit(X_train,y_train)
         rank_features_nun = pd.DataFrame(rfecv.ranking_, columns=["rank"], index = data["features"])
         selected_features = rank_features_nun.loc[rank_features_nun["rank"]==1].index.tolist()
         score = rfecv.score(X_train,y_train)
-        print('************************************elasticnet*')
-        print(score)
         rank_features_nun = pd.DataFrame(reg.coef_, columns=["rank"], index = data["features"])
         selected_features = rank_features_nun.loc[abs(rank_features_nun["rank"])>0].index.tolist()
-        print(len(selected_features))
-        print(selected_features)
         
     elif estimator_type == "xgb":
-        
         estimator = xgb.XGBRegressor(n_jobs = -1)
-        #estimator = xgb.XGBRegressor(**params, n_jobs = multiprocessing.cpu_count())        
         rfecv = RFECV(estimator=estimator, step=1, cv=KFold(10),scoring='neg_mean_squared_error', min_features_to_select=min_features)
         fit = rfecv.fit(X_train,y_train)
         rank_features_nun = pd.DataFrame(rfecv.ranking_, columns=["rank"], index = data["features"])
         selected_features = rank_features_nun.loc[rank_features_nun["rank"]==1].index.tolist()
-        print(selected_features)
-        #return selected_features
     else:
-        #estimator =LassoCV(cv=10, tol=0.001,max_iter=100000,n_jobs = -1,alphas=[0.1,0.001], normalize=True)
-#         estimator =LassoCV(cv=10,n_jobs=-1)
-#         rfecv = RFECV(estimator=estimator, step=1, cv=KFold(10),scoring='neg_mean_squared_error', min_features_to_select=min_features)
-#         fit = rfecv.fit(X_train,y_train)
-#         rank_features_nun = pd.DataFrame(rfecv.ranking_, columns=["rank"], index = data["features"])
-#         selected_features = rank_features_nun.loc[rank_features_nun["rank"]==1].index.tolist()
-#         print(len(selected_features))
-#         print(selected_features)
-       
         reg = linear_model.LassoCV(cv=10,n_jobs=-1,n_alphas=100)
         fit = reg.fit(X_train,y_train)
         score = reg.score(X_train,y_train)
-        print('************************************lasso no rfecv*')
-        print(fig)
-        print(score)
         rank_features_nun = pd.DataFrame(reg.coef_, columns=["rank"], index = data["features"])
         selected_features = rank_features_nun.loc[abs(rank_features_nun["rank"])>0].index.tolist()
+        print(score)
         print(len(selected_features))
         print(selected_features)
 
-    #share train and test datasets.
     data = {'features' : selected_features}
     data_json = json.dumps(data).encode('utf-8')
     
@@ -147,22 +126,15 @@ def select_features(args,estimator_type ='lasso', min_features=20):
                  operation='copy',
                  path=args.output_path,
                  data=data_json)
-
-#     out_file =open('./output/feature_out','w')
-#     json.dump(data, out_file, indent = 6) 
-#     out_file.close()
     
     return              
         
 
-
 if __name__ == '__main__':
     
-    # This component does not receive any input it only outpus one artifact which is `data`.
-    # Defining and parsing the command-line arguments
     parser = argparse.ArgumentParser()
     
-     # Paths must be passed in, not hardcoded
+    # Paths must be passed in, not hardcoded
     parser.add_argument('--tenant', type=str, help='The minio tenant where the data is located in')
     parser.add_argument('--bucket', type=str, help='The minio bucket where the data is located in')
     parser.add_argument('--in_obj_name', type=str, help='Name of data file to be read')
@@ -170,7 +142,6 @@ if __name__ == '__main__':
     parser.add_argument('--output_path', type=str, help='Path of the local file where the output file should be written.')
     args = parser.parse_args()
     
-    #Path(args.output_path).parent.mkdir(parents=True, exist_ok=True)
     select_features(args)
     #python3 feature_selection.py --tenant standard --bucket nrcan-btap --in_obj_name output_data/preprocessing_out --output_path output_data/feature_out --estimator_type elasticnet
 

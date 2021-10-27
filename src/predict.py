@@ -1,8 +1,12 @@
+'''
+Uses the output from preprocessing and feature selection from mino, builds the model and then evaluate the model. 
+
+'''
 import tensorflow as tf
 import tensorflow.keras as keras
 from tensorflow.keras import layers
-import tensorflow_docs as tfdocs
-import tensorflow_docs.plots
+# import tensorflow_docs as tfdocs
+# import tensorflow_docs.plots
 import tensorflow_docs.modeling
 import numpy as np
 #np.random.seed(1337)
@@ -39,11 +43,24 @@ import time
 import datetime
 from tensorboard.plugins.hparams import api as hp
 import s3fs
+import plot as pl
 
 #######################################################    
 # Predict energy consumed
 ############################################################
-def access_minio(tenant,bucket,path,operation,data):    
+def access_minio(tenant,bucket,path,operation,data):
+    """
+    Used to read and write to minio.
+
+    Args:
+        tenant: default value is standard
+        bucket: nrcan-btap
+        path: file path where data is to be read from or written to
+        data: for write operation, it contains the data to be written to minio
+
+    Returns:
+       Dataframe containing the data downladed from minio is returned for read operation and for write operation , null value is returned. 
+    """
     with open(f'/vault/secrets/minio-{tenant}-tenant-1.json') as f:
         creds = json.load(f)
         
@@ -70,80 +87,36 @@ def access_minio(tenant,bucket,path,operation,data):
             f.write(data)   
     return data
 
-def plot_metric(df):
-    plt.figure()
-    plt.plot(df['loss'],label='mae')
-    plt.savefig('./output/mae.png')
-    plt.ylabel('Metric')
-    plt.xlabel('Epoch number')
-    plt.figure()
-    plt.plot(df['mae'],label='mae')
-    plt.savefig('./output/mse.png')
-    plt.ylabel('Metric')
-    plt.xlabel('Epoch number')
-
-    
-    return
 
 
-def save_plot(H):
-    # plot the training loss and accuracy
-    plt.style.use("ggplot")
-    plt.figure()
-    plt.plot(H.history["loss"], label="train_loss")
-    plt.plot(H.history["val_loss"], label="val_loss")
-    plt.xlabel("Epoch #")
-    plt.ylabel("Loss")
-    plt.legend()
-    plt.savefig('../output/turner_train_test_loss.png')
-    
-    plt.style.use("ggplot")
-    plt.figure(2)
-    plt.plot(H.history["mae"], label="train_mae")
-    plt.plot(H.history["val_mae"], label="val_mae")
-    plt.title("Training Loss and MAE")
-    plt.xlabel("Epoch #")
-    plt.ylabel("MAE")
-    plt.legend()
-    plt.savefig('../output/turner_train_test_mae.png')
-    
-    return
+def score(y_test,y_pred):
+    """
+    Used to compute the mse, rmse and mae scores
 
-
-def score(y_test,val_predict):    
-#     sum_square_error = 0.0
-#     for i in range(len(y_test)):
-#         sum_square_error += (y_test[i] - val_predict[i])**2.0
-    
-    mse = metrics.mean_squared_error(y_test,val_predict)
-    
-    #mse = np.square(np.subtract(y_test,val_predict)).mean()
-    mae = metrics.mean_absolute_error(y_test,val_predict)
-    #mape = metrics.mean_absolute_percentage_error(y_test,val_predict)
+    Args:
+        y_test: y testset
+        y_pred: y predicted value from the model
+    Returns:
+       mse, rmse and mae scores from comparing the y_test and y_pred values
+    """
+    mse = metrics.mean_squared_error(y_test,y_pred)
+    mae = metrics.mean_absolute_error(y_test,y_pred)
     rmse = sqrt(mse)
-    #r2_scores=metrics.r2_score(y_test,val_predict)    
-    scores = {
-              #"mape":mape,
-              #"r2_scores": r2_scores,
-              "mse":mse,
-              "rmse": rmse,
+    scores = {"mse":mse,
+              "rmse":rmse,
               "mae":mae}
     return scores
-def mae_loss(y_true, y_pred):        
-    sum_pred =  K.sum(y_pred, axis=-1)
-    sum_true = K.sum(y_true, axis=-1)
-    loss = K.mean(K.abs(sum_pred - sum_true) )
-    
-    return loss
 
-def mse_loss(y_true, y_pred):        
-    sum_pred =  K.sum(y_pred, axis=-1)
-    sum_true = K.sum(y_true, axis=-1)
-    loss = K.mean(K.square(sum_pred - sum_true) )
-    
-    return loss
+def rmse_loss(y_true, y_pred):
+    """
+    A customized rmse score that takes a sum of y_pred and y_test before computing the rmse score
 
-def rmse_loss(y_true, y_pred):        
+    Args:
+        y_test: y testset
+        y_pred: y predicted value from the model
+    Returns:
+       rmse loss from comparing the y_test and y_pred values
+    """
     sum_pred =  K.sum(y_pred, axis=-1)
     sum_true = K.sum(y_true, axis=-1)
     loss = K.sqrt(K.mean(K.square(sum_pred - sum_true) ))
@@ -152,8 +125,19 @@ def rmse_loss(y_true, y_pred):
 
     
 def model_builder(hp):
+    """
+    Builds the model that would be used to search for hyperparameter.
+    
+    The hyperparameters search inclues activation, regularizers, dropout_rate, learning_rate, and optimizer
+
+    Args:
+        hp: hyperband object with different hyperparameters to be checked. 
+    Returns:
+       model will be built based on the different hyperparameter combinations. 
+    """
     model = keras.Sequential()
-#     model.add(keras.layers.Flatten())
+    model.add(keras.layers.Flatten())
+    
     hp_activation= hp.Choice('activation', values=['relu','tanh','sigmoid'])
     hp_regularizers= hp.Choice('regularizers', values=[1e-4, 1e-5])
     for i in range(hp.Int("num_layers", 1,5)):
@@ -168,6 +152,7 @@ def model_builder(hp):
             ))
         model.add(Dropout( hp.Choice('dropout_rate', values=[0.1,0.2,0.3,0.4])))
     model.add(Dense(1,activation='linear'))
+    
     hp_learning_rate = hp.Choice('learning_rate', values=[1e-3,1e-4, 1e-5])
     hp_optimizer = hp.Choice('optimizer', values=['rmsprop','adam','sgd'])
            
@@ -180,16 +165,28 @@ def model_builder(hp):
     
     # Comiple the mode with the optimizer and learninf rate specified in hparams
     model.compile(optimizer=optimizer,
-              #loss='mean_squared_error',
-              loss =rmse_loss,
-              metrics=['mae','mse'])
+                  loss =rmse_loss,
+                  metrics=['mae','mse'])
     
     return model
 
 
 
-def predicts_hp(X_train,y_train,X_test,y_test,selected_feature,validate):
+def predicts_hp(X_train,y_train,X_test,y_test,selected_feature):
+    """
+    Using the set of hyperparameter combined,the model built is used to make predictions 
     
+
+    Args:
+        X_train: X trainset
+        y_train: y trainset
+        X_test: X testset
+        y_test: y testset
+        selected_feature: selected features that would be used to build the model
+        
+    Returns:
+       Model built from the set of hyperparameters combined. 
+    """
     tuner = kt.Hyperband(model_builder,
                      objective='val_loss',
                      max_epochs=50,
@@ -236,7 +233,7 @@ def predicts_hp(X_train,y_train,X_test,y_test,selected_feature,validate):
                         validation_split=0.2,
                         callbacks=[stop_early,hist_callback],
                         )
-    save_plot(history)
+    pl.save_plot(history)
     
     val_acc_per_epoch = history.history['mae']
     best_epoch = val_acc_per_epoch.index(max(val_acc_per_epoch)) + 1
@@ -245,93 +242,119 @@ def predicts_hp(X_train,y_train,X_test,y_test,selected_feature,validate):
     #Re-instantiate the hypermodel and train it with the optimal number of epochs from above.
     hypermodel = tuner.hypermodel.build(best_hps)
     hypermodel.fit(X_train, y_train, epochs=best_epoch, validation_split=0.2)
-    
-    
+
     return hypermodel
 
-def hyper_evaluate(hypermodel,X_test,y_test,scalery,validate):
+def evaluate(model,X_test,y_test,scalery,X_validate,y_validate, y_test_complete,y_validate_complete ):
+    """
+    The model selected with the best hyperparameter is used to make predictions 
+
+    Args:
+        model: model built from training 
+        X_test: X testset
+        y_test: y testset
+        scalery: y scaler used to transform the y values to the original scale
+        X_validate: X validationset
+        y_validate: y validationset
+        validate: validation dataset
+        
+    Returns:
+        metric: evaluation results containing the loss value from the testset prediction,
+        annual_metric: predicted value for each datapooint_id is summed to calculate the annual energy consumed and the loss value from the testset prediction,
+        output_df: merge of y_pred, y_test, datapoint_id, the final dataframe showing the model output using the testset
+        val_metric:evaluation results containing the loss value from the validationset prediction,
+        val_annual_metric:predicted value for each datapooint_id is summed to calculate the annual energy consumed and the loss value from the validationset prediction,,
+        output_val_df: merge of y_pred, y_validate, datapoint_id, the final dataframe showing the model output using the validation set
+       
+    """
     #evaluate the hypermodel on the test data.
-    eval_result = hypermodel.evaluate(X_test, y_test['energy'])
-    y_test['y_pred'] = hypermodel.predict(X_test)
+    eval_result = model.evaluate(X_test, y_test['energy'])
+    eval_result_val = model.evaluate(X_validate, y_validate['energy'])
+    y_test['y_pred'] = model.predict(X_test)
+    y_validate['y_pred'] = model.predict(X_validate)
+    
     # Retrain the model
     y_test['y_pred_transformed'] =scalery.inverse_transform(y_test['y_pred'].values.reshape(-1,1))
-
-    #y_pred =scalery.inverse_transform(y_pred)
+    y_validate['y_pred_transformed'] =scalery.inverse_transform(y_validate['y_pred'].values.reshape(-1,1))
+    
     print("[test loss, test mae, test mse]:", eval_result)
-    validate = validate.groupby(['datapoint_id']).sum()
-    validate['Total Energy'] = validate['Total Energy'].apply(lambda r : float(r/365))
+    print("[val loss, val mae, val mse]:", eval_result_val)
+    
+    y_test_complete = y_test_complete.groupby(['datapoint_id']).sum()
+    y_test_complete['Total Energy'] = y_test_complete['Total Energy'].apply(lambda r : float(r/365))
     output_df =''
     y_test = y_test.groupby(['datapoint_id']).sum()
     y_test['energy'] =y_test['energy'].apply(lambda r : float((r*1.0)/1000))
     y_test['y_pred'] =y_test['y_pred'].apply(lambda r : float((r*1.0)/1000))
-    
-    output_df = pd.merge(y_test,validate,left_index=True, right_index=True,how='left')
+    output_df = pd.merge(y_test,y_test_complete,left_index=True, right_index=True,how='left')
     annual_metric=score(output_df['Total Energy'],output_df['y_pred_transformed'])
     
-    print('********************annual metric below')
+    y_validate_complete = y_validate_complete.groupby(['datapoint_id']).sum()
+    y_validate_complete['Total Energy'] = y_validate_complete['Total Energy'].apply(lambda r : float(r/365))
+    output_val_df =''
+    y_validate = y_validate.groupby(['datapoint_id']).sum()
+    y_validate['energy'] =y_validate['energy'].apply(lambda r : float((r*1.0)/1000))
+    y_validate['y_pred'] =y_validate['y_pred'].apply(lambda r : float((r*1.0)/1000))
+    output_val_df = pd.merge(y_validate,y_validate_complete,left_index=True, right_index=True,how='left')
+    annual_metric_val=score(output_val_df['Total Energy'],output_val_df['y_pred_transformed'])
+    
+    pl.annual_plot(output_df,'test_set')
+    pl.annual_plot(output_df,'validation_set')
+    
+    print(output_df)
+    print('****************TEST SET****************************')
+    print(eval_result)
     print(annual_metric)
+    print(output_val_df)
+    print('****************VALIDATION SET****************************')
+    print(eval_result_val)
+    print(annual_metric_val)
     
     result= {
-            'best_epoch':best_epoch,
             'metric' : eval_result,
             'annual_metric':annual_metric,
             'output_df':output_df.values.tolist(),
+            'val_metric' : eval_result_val,
+            'val_annual_metric':annual_metric_val,
+            'output_val_df':output_val_df.values.tolist(),
             }
 
     return result
 
 
-def predict(model,X_test,y_test,scalery,test_complete):
-    y_test['y_pred']  = model.predict(X_test)
-    y_test['y_pred_transformed'] =scalery.inverse_transform(y_test['y_pred'].values.reshape(-1,1))
-   
-    #eval_result = model.evaluate(X_test,y_test['energy'],batch_size=30)
-    eval_result = model.evaluate(X_test,y_test['energy'])
-    scores_metric  = score(y_test['energy'],y_test['y_pred_transformed'])
+def create_model(dense_layers,activation,optimizer,dropout_rate,length,learning_rate,epochs,X_train,y_train,X_test,y_test,y_test_complete,scalery,
+                X_validate,y_validate,y_validate_complete):
+    """
+    Creates a model with defaulted values without need to perform an hyperparameter search at all times. 
+    
+    Its initutive to have run the hyperparameter search beforehand to know the hyperparameter value to set. 
 
-    #aggregating annual energy
-    test_complete = test_complete.groupby(['datapoint_id']).sum()
-    test_complete['Total Energy'] = test_complete['Total Energy'].apply(lambda r : float(r/365))
-    
-    #converting to GJ
-    y_test = y_test.groupby(['datapoint_id']).sum()
-    y_test['energy'] =y_test['energy'].apply(lambda r : float((r*1.0)/1000))
-    y_test['y_pred_transformed'] =y_test['y_pred_transformed'].apply(lambda r : float((r*1.0)/1000))
-    
-    #merging to create the output dataframe
-    output_df = pd.merge(y_test,test_complete,left_index=True, right_index=True,how='left')
-    output_df = output_df.drop(['y_pred','energy_y','energy_x'],axis=1)
-    annual_metric=score(output_df['Total Energy'],output_df['y_pred_transformed'])
-    
-    print(output_df)
-    print('****************TEST SET****************************')
-    print(eval_result)
-    print(scores_metric)
-    print('********************annual metric below')
-    print(annual_metric)
-   
-    result= scores_metric,annual_metric,output_df
-    
-    plt.style.use("ggplot")
-    plt.figure()
-    plt.plot(output_df['Total Energy'],label='actual')
-    plt.plot(output_df['y_pred_transformed'],label='pred')
-    plt.title("Annual Energy")
-    plt.savefig('../output/annual_energy.png')
-    
-     
-    plt.style.use("ggplot")
-    plt.figure()
-    #plt.hist(y_train,label='train')
-    plt.hist(output_df['Total Energy'],label='test')
-    plt.savefig('../output/daily_energy_train.png')
-    return result   
-
-
-
-def create_model(dense_layers,activation,optimizer,dropout_rate,length,learning_rate,epochs,X_train,y_train,X_test,y_test,test_complete,scalery,
-                X_validate,y_validate,validate_complete):
-    
+    Args:
+        dense_layers: number of layers for the model architecture e.g for a model with 3 layers, values will be passed as [8,20,30]
+        activation: activation function to be used e.g relu, tanh
+        optimizer: optimizer to be used in compiling the model e.g relu, rmsprop, adam
+        dropout_rate: used to make the model avoid overfitting, value should be less than 1 e.g 0.3
+        length: length of the trainset 
+        learning_rate: learning rate determines how fast or how slow the model will converge to an optimal loss value. Value should be less or equal 0.1 e.g 0.001
+        epochs: number of iterations the model should perform
+        X_train: X trainset
+        y_train: y trainset
+        X_test: X testset
+        y_test: y testset
+        y_test_complete: dataframe containing the target variable with corresponding datapointid for the test set
+        scalery: y scaler used to transform the y values to the original scale
+        X_validate: X validation set
+        y_validate: y validation set
+        y_validate_complete: dataframe containing the target variable with corresponding datapointid for the validation set
+        
+    Returns:
+        metric: evaluation results containing the loss value from the testset prediction,
+        annual_metric: predicted value for each datapooint_id is summed to calculate the annual energy consumed and the loss value from the testset prediction,
+        output_df: merge of y_pred, y_test, datapoint_id, the final dataframe showing the model output using the testset
+        val_metric:evaluation results containing the loss value from the validationset prediction,
+        val_annual_metric:predicted value for each datapooint_id is summed to calculate the annual energy consumed and the loss value from the validationset prediction,,
+        output_val_df: merge of y_pred, y_validate, datapoint_id, the final dataframe showing the model output using the validation set
+    """
     model = Sequential()
     model.add(Flatten(input_shape=(length,)))
     #model.add(Dropout(dropout_rate, input_shape=(length,)))
@@ -344,7 +367,6 @@ def create_model(dense_layers,activation,optimizer,dropout_rate,length,learning_
         
                 ))
         model.add(Dropout(dropout_rate))
-        #model.add(BatchNormalization())
     model.add(Dense(1,activation='linear'))
    
     if optimizer == "adam":
@@ -356,11 +378,8 @@ def create_model(dense_layers,activation,optimizer,dropout_rate,length,learning_
 
     # Comiple the mode with the optimizer and learninf rate specified in hparams
     model.compile(optimizer=optimizer,
-              #loss='mean_squared_error',
-              #loss=CustomMSE(),
-              loss = rmse_loss,
-              metrics=['mae','mse'])
-              #metrics =[mse_loss,mae_loss]
+                  loss = rmse_loss,
+                  metrics=['mae','mse'])
     # Define callback
     early_stopping = EarlyStopping(monitor='loss', patience=5)
     logdir = os.path.join("../output/parameter_search/btap", datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
@@ -376,42 +395,40 @@ def create_model(dense_layers,activation,optimizer,dropout_rate,length,learning_
                         callbacks=[logger,
                                     early_stopping,
                                     hist_callback,
-                                    #tfdocs.modeling.EpochDots()
                                     ],
                         epochs=epochs,
-                        #batch_size =batch_size,                    
+                        batch_size =365,                    
                         verbose=1,
                         # shuffle=False,
                         validation_split=0.1)
-    save_plot(history)
+    pl.save_plot(history)
     
     
     print(model.summary())
-    #model.summary()
-    #plotter = tfdocs.plots.HistoryPlotter(smoothing_std=2)
     plt.ylabel('loss')
     
-
-
-    scores_metric,annual_metric,output_df = predict(model,X_test,y_test,scalery,test_complete)
-    scores_metric_val,annual_metric_val,output_val_df = predict(model,X_validate,y_validate,scalery,validate_complete)
-
-    result= {
-            'metric' : scores_metric,
-            'annual_metric':annual_metric,
-            'output_df':output_df.values.tolist(),
-            'val_metric' : scores_metric_val,
-            'val_annual_metric':annual_metric_val,
-            'output_val_df':output_val_df.values.tolist(),
-            }
+    result= evaluate(model,X_test,y_test,scalery,X_validate,y_validate, y_test_complete,y_validate_complete)
    
     return result
-    
 
-def fit_evaluate(args): 
+
+def fit_evaluate(args):
+    """
+    Downloads the output from preprocessing and feature selection from mino, builds the model and then evaluate the model. 
+    
+    
+    Args:
+         args: arguements provided from the main
+         
+    Returns:
+        the results from the model prediction is uploaded to minio
+    """
+    
+    
     #Resets all state generated by Keras.
     K.clear_session()
     start_time = time.time()
+    
     data = access_minio(tenant=args.tenant,
                            bucket=args.bucket,
                            operation= 'read',
@@ -423,10 +440,7 @@ def fit_evaluate(args):
                            operation= 'read',
                            path=args.features,
                            data='')
-#     data = open('../preprocessing/output/preprocessing_out',)
-#     data2 = open('../feature_Selection/output/feature_out',)
-    
-    
+
     # removing log directory
     shutil.rmtree('../output/parameter_search/btap', ignore_errors=True)
 
@@ -453,10 +467,10 @@ def fit_evaluate(args):
     col_length = X_train.shape[1]
 
     #extracting the test data for the target variable
-    y_valid = pd.DataFrame(data["y_valid"],columns=['energy','datapoint_id','Total Energy'])
+    y_test_complete = pd.DataFrame(data["y_test_complete"],columns=['energy','datapoint_id','Total Energy'])
     y_test = pd.DataFrame(data["y_test"],columns=['energy','datapoint_id'])
-    validate_complete = pd.DataFrame(data["y_complete"],columns=['energy','datapoint_id','Total Energy'])
-    y_validate = pd.DataFrame(data["y_validate"],columns=['energy','datapoint_id'])
+    y_validate_complete = pd.DataFrame(data["y_validate_complete"],columns=['energy','datapoint_id','Total Energy'])
+    y_validate= pd.DataFrame(data["y_validate"],columns=['energy','datapoint_id'])
     
     scalerx= Normalizer()
     scalery= StandardScaler()
@@ -468,10 +482,8 @@ def fit_evaluate(args):
     np.random.seed(7)
     #search for best hyperparameters 
     if args.param_search == "yes":
-        hypermodel = predicts_hp(X_train,y_train,X_test,y_test,features,y_valid)
-        results_pred = hyper_evaluate(hypermodel,X_test,y_test,scalery,y_valid)
-        print(results_pred)
-        results_pred = hyper_evaluate(hypermodel,X_validate,y_validate,scalery,validate_complete)
+        hypermodel = predicts_hp(X_train,y_train,X_test,y_test,features)
+        results_pred = evaluate(hypermodel,X_test,y_test,scalery,X_validate,y_validate, y_test_complete,y_validate_complete)
         print(results_pred)
     else:
         results_pred = create_model(
@@ -485,9 +497,9 @@ def fit_evaluate(args):
                              #batch_size=90,
                              X_train=X_train,y_train=y_train,
                              X_test=X_test,y_test=y_test
-                             ,test_complete=y_valid,scalery=scalery,
+                             ,y_test_complete=y_test_complete,scalery=scalery,
                              X_validate = X_validate, y_validate=y_validate,
-                             validate_complete= validate_complete,
+                             y_validate_complete= y_validate_complete,
                              
                             )
     time_taken = ((time.time() - start_time)/60)
@@ -502,20 +514,15 @@ def fit_evaluate(args):
                  path=args.output_path,
                  data=data_json)
 
-#     out_file =open('./output/predict_out','w')
-#     json.dump(results_pred, out_file, indent = 6) 
-#     out_file.close()
     
     return 
 
 
 if __name__ == '__main__':
     
-    # This component does not receive any input it only outpus one artifact which is `data`.
-    # Defining and parsing the command-line arguments
     parser = argparse.ArgumentParser()
     
-     # Paths must be passed in, not hardcoded
+    # Paths must be passed in, not hardcoded
     parser.add_argument('--tenant', type=str, help='The minio tenant where the data is located in')
     parser.add_argument('--bucket', type=str, help='The minio bucket where the data is located in')
     parser.add_argument('--in_obj_name', type=str, help='Name of data file to be read')
@@ -524,7 +531,6 @@ if __name__ == '__main__':
     parser.add_argument('--output_path', type=str, help='Path of the local file where the output file should be written.')
     args = parser.parse_args()
     
-    #Path(args.output_path).parent.mkdir(parents=True, exist_ok=True)
     fit_evaluate(args)
     
      #python3 predict.py --tenant standard --bucket nrcan-btap --param_search no --in_obj_name output_data/preprocessing_out --features output_data/feature_out --output_path output_data/predict_out 

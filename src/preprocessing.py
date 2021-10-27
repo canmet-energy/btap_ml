@@ -1,3 +1,8 @@
+'''
+Downloads all the dataset from minio, preprocess the data, split the data into train, test and validation set. 
+
+'''
+
 import numpy as np
 import pandas as pd
 import argparse
@@ -20,7 +25,19 @@ from sklearn.model_selection import GroupShuffleSplit
 import json
 import s3fs
 
-def access_minio(tenant,bucket,path,operation,data):    
+def access_minio(tenant,bucket,path,operation,data):
+    """
+    Used to read and write to minio.
+
+    Args:
+        tenant: default value is standard
+        bucket: nrcan-btap
+        path: file path where data is to be read from or written to
+        data: for write operation, it contains the data to be written to minio
+
+    Returns:
+       Dataframe containing the data downladed from minio is returned for read operation and for write operation , null value is returned. 
+    """
     with open(f'/vault/secrets/minio-{tenant}-tenant-1.json') as f:
         creds = json.load(f)
         
@@ -48,16 +65,23 @@ def access_minio(tenant,bucket,path,operation,data):
     else:
         with s3.open('{}/{}'.format(bucket, path), 'wb') as f:
             f.write(data)
+            data = ''
        
     return data
 
 
 def clean_data(df):
-    # dropping columns with one unique value
-    for col in df.columns:
-        if ((len(df[col].unique()) ==1) and (col not in ['energy_eui_additional_fuel_gj_per_m_sq','energy_eui_electricity_gj_per_m_sq','energy_eui_natural_gas_gj_per_m_sq'])):
-            df.drop(col,inplace=True,axis=1)
-   
+    """
+    Basic cleaning of the data using the following criterion:
+    - dropping any column with more than 50% missing values
+    - dropping columns with less than 3 unquie values
+
+    Args:
+        df: dataset to be cleaned
+
+    Returns:
+       clean dataframe
+    """
     # Drop any column with more than 50% missing values
     half_count = len(df) / 2
     df = df.dropna(thresh=half_count,axis=1)
@@ -71,14 +95,24 @@ def clean_data(df):
     return df
 
 def read_output(tenant,bucket,path):
-#     output_data = './input/output.xlsx'
+    """
+    Used to read the building simulation I/O file
+
+    Args:
+        tenant: default value is standard
+        bucket: nrcan-btap
+        path: file path where data is to be read from in minio
+
+    Returns:
+       btap_df: Dataframe containing the clean building parameters file.
+       floor_sq: the square foot of the building
+    """
     btap_df = access_minio(tenant=tenant,
                                bucket=bucket,
                                operation= 'read',
                                path=path,
                                data='')
-    
-#     btap_df = pd.read_excel(output_data, engine='openpyxl')
+
     floor_sq = btap_df['bldg_conditioned_floor_area_m_sq'].unique()
     
     #dropping output features present in the output file and dropping columns with one unique value
@@ -88,7 +122,6 @@ def read_output(tenant,bucket,path):
             output_drop_list.append(col)
     btap_df = btap_df.drop(output_drop_list,axis=1)
     btap_df = clean_data(btap_df)
-    #btap_df['Total Energy'] = btap_df[['net_site_eui_gj_per_m_sq','energy_eui_natural_gas_gj_per_m_sq']].sum(axis=1)
     btap_df['Total Energy'] = btap_df[['net_site_eui_gj_per_m_sq']].sum(axis=1)
     drop_list=['energy_eui_additional_fuel_gj_per_m_sq','energy_eui_electricity_gj_per_m_sq','energy_eui_natural_gas_gj_per_m_sq','net_site_eui_gj_per_m_sq']
     btap_df = btap_df.drop(drop_list,axis=1)
@@ -96,14 +129,24 @@ def read_output(tenant,bucket,path):
     return btap_df,floor_sq
 
 def read_weather(tenant,bucket,path):
+    """
+    Used to read the weather epw file from minio
+
+    Args:
+        tenant: default value is standard
+        bucket: nrcan-btap
+        path: file path where weather.csv file is to be read from in minio
+       
+    Returns:
+       btap_df: Dataframe containing the clean weather file.
+    """
+    
     weather_df = access_minio(tenant=tenant,
                                bucket=bucket,
                                operation= 'read',
                                path=path,
                                data='')
-#     weather_data ='./input/montreal_epw.csv'
-#     weather_df = pd.read_csv(weather_data, skiprows=0, low_memory=False)
-#     dropping columns not used by Enegyplus calculation
+
     weather_drop_list= ['Minute','Uncertainty Flags','Extraterrestrial Horizontal Radiation', 'Extraterrestrial Direct Normal Radiation','Global Horizontal Radiation','Global Horizontal Illuminance','Direct Normal Illuminance', 'Diffuse Horizontal Illuminance', 'Zenith Luminance', 'Total Sky Cover', 'Opaque Sky Cover', 'Visibility', 'Ceiling Height', 'Precipitable Water', 'Aerosol Optical Depth', 'Days Since Last Snowfall', 'Albedo'
            , 'Liquid Precipitation Quantity','Present Weather Codes' ]
     weather_df = weather_df.drop(weather_drop_list,axis=1)
@@ -115,24 +158,28 @@ def read_weather(tenant,bucket,path):
     return weather_df
 
 def read_hour_energy(tenant,bucket,path,floor_sq):
+    """
+    Used to read the weather epw file from minio
+
+    Args:
+        tenant: default value is standard
+        bucket: nrcan-btap
+        path: file path where weather.csv file is to be read from in minio
+        floor_sq: the square foot of the building
+    Returns:
+       energy_hour_melt: Dataframe containing the clean and transposed hourly energy file.
+    """
+    
     energy_hour_df = access_minio(tenant=tenant,
                                bucket=bucket,
                                operation= 'read',
                                path=path,
                                data='')
-#     energy_file = './input/total_hourly_res.csv'
-#     energy_hour_df = pd.read_csv(energy_file, skiprows=0, low_memory=False)
 
     eletricity_hour_df = energy_hour_df[energy_hour_df['Name'] != "Electricity:Facility"].groupby(['datapoint_id']).sum()
-    #gas_hour_df = energy_hour_df[energy_hour_df['Name'] == "Gas:Facility"].groupby(['datapoint_id']).sum()
-    #energy_df = pd.concat([eletricity_hour_df,gas_hour_df])
-    #energy_df = energy_df.groupby(['datapoint_id']).sum()
-    #converting to GJ/sq_m
-    #energy_df= eletricity_hour_df.agg(lambda x: x /(floor_sq*1000000) )
     energy_df= eletricity_hour_df.agg(lambda x: x /(floor_sq*1000000) )
     energy_df = energy_df.drop(['KeyValue'],axis=1)
-    #energy_df = energy_df[0:10]
-   
+  
     energy_df = clean_data(energy_df)
     energy_hour_df = energy_df.reset_index()
     energy_hour_melt =energy_hour_df.melt(id_vars=['datapoint_id'],var_name='Timestamp', value_name='energy')
@@ -144,43 +191,112 @@ def read_hour_energy(tenant,bucket,path,floor_sq):
    
     return energy_hour_melt
 
-def train_test_split(energy_daily_df,validate):
-    drop_list= ['index', 'Dew Point Temperature', 'Horizontal Infrared Radiation Intensity',  ':datapoint_id','level_0', 'index','date_int',':datapoint_id','Year', 'Month', 'Day', 'Hour']
-    #split to train and test datasets
+def groupsplit(X,y,valsplit):
+    """
+    Used to split the dataset by datapoint_id into train and test sets.
     
-    y = energy_daily_df[['energy','datapoint_id','Total Energy']]
-    X = energy_daily_df.drop(['energy'],axis = 1)
-      
-    gs = GroupShuffleSplit(n_splits=2, test_size=.2)
-    train_ix, test_ix = next(gs.split(X, y, groups=X.datapoint_id))
+    The data is split to ensure all datapoints for each datapoint_id occurs completely in the respective dataset split. 
+    
+    Note that where there is validation set, data is split with 80% for training and 20% for test set. 
+    
+    Otherwise, the test set is split further with 60% as test set and 40% as validation set. 
+
+    Args:
+        X: data excluding the target_variable
+        y: target variable with datapoint_id
+        valsplit: flag to indicate if there is a dataframe for the validation set. Accepeted values are "yes" or "no"
+    Returns:
+       X_train: X trainset
+       y_train: y trainset
+       X_test: X testset
+       y_test_complete: Dataframe containing the target variable with corresponding datapointid
+       
+    """
+    if valsplit == 'yes':
+        gs = GroupShuffleSplit(n_splits=2, train_size=.7,random_state=42)
+    else:
+        gs = GroupShuffleSplit(n_splits=2, test_size=.4,random_state=42)
+    
+        
+    train_ix, test_ix= next(gs.split(X, y, groups=X.datapoint_id))
+   
     X_train = X.loc[train_ix]
     y_train = y.loc[train_ix]
     X_test = X.loc[test_ix]
-    y_valid = y.loc[test_ix]
+    y_test_complete = y.loc[test_ix]
     
+    return X_train, y_train,X_test,y_test_complete
+
+
+def train_test_split(energy_daily_df,val_df, valsplit):
+    
+    """
+    Used to split the dataset by datapoint_id into train , test and validation sets.
+    
+    Args:
+        energy_daily_df: the merged dataframe for simulation I/O, weather, and hourly energy file. 
+        val_df: the merged dataframe for simulation I/O, weather, and hourly energy file validation set. Where there is no validation set, its value is null
+        valsplit: flag to indicate if there is a dataframe for the validation set. Accepeted values are "yes" or "no"
+    Returns:
+       X_train: X trainset
+       y_train: y trainset
+       X_test: X testset
+       y_test_complete: Dataframe containing the target variable with corresponding datapointid
+       X_validate: X validate set
+       y_validate: y validate set
+       y_validate_complete: Dataframe containing the target variable with corresponding datapointid for the validation set
+    """
+    
+    drop_list= ['index', 'Dew Point Temperature', 'Horizontal Infrared Radiation Intensity',  ':datapoint_id','level_0', 'index','date_int',':datapoint_id','Year', 'Month', 'Day', 'Hour']
+    
+    #split to train and test datasets
+    y = energy_daily_df[['energy','datapoint_id','Total Energy']]
+    X = energy_daily_df.drop(['energy'],axis = 1)
+    X_train, y_train,X_test,y_test_complete = groupsplit(X,y,valsplit)
+    y_test = y_test_complete[['energy','datapoint_id']]
+    
+    if valsplit == 'yes' :
+        y_val = val_df[['energy','datapoint_id','Total Energy']]
+        X_val = val_df.drop(['energy'],axis = 1)
+        y_validate_complete = y_val
+        X_validate = X_val.drop(drop_list,axis=1)
+        X_validate = X_validate.drop(['datapoint_id','Total Energy'],axis = 1)
+        y_validate=y_validate_complete[['energy','datapoint_id']]
+        
+    else:
+        X_test = X_test.reset_index(drop=True)
+        y_test = y_test.reset_index(drop=True)
+        X_test,y_test,X_validate,y_validate_complete = groupsplit(X_test,y_test,valsplit)
+        y_validate = y_validate_complete[['energy','datapoint_id']]
+        X_validate = X_validate.drop(drop_list,axis=1)
+        X_validate = X_validate.drop(['datapoint_id','Total Energy'],axis = 1)
+       
     energy_daily_df= energy_daily_df.drop(drop_list,axis = 1)
     X_train = X_train.drop(drop_list,axis=1)
     X_test = X_test.drop(drop_list,axis=1)
     y_train = y_train['energy']
-    y_test = y_valid[['energy','datapoint_id']]
-
     X_train= X_train.drop(['datapoint_id','Total Energy'],axis = 1)
     X_test= X_test.drop(['datapoint_id','Total Energy'],axis = 1)
-    
-    
-    
-    if validate == 'yes' :
-        X = X.drop(drop_list,axis=1)
-        X = X.drop(['datapoint_id','Total Energy'],axis = 1)
-        y_valid = y
-        y = y[['energy','datapoint_id']]
         
-        
-        return X, y, y_valid
-    else:
-        return X_train, X_test, y_train, y_test, y_valid
+    return X_train, X_test, y_train, y_test, y_test_complete,X_validate, y_validate,y_validate_complete
 
 def categorical_encode(x_train,x_test,x_validate):
+    """
+    Used to encode the categorical variables contained in the x_train, x_test and x_validate
+    
+    Note that the encoded data return creates additional columns equivalent to the unique categorical values in the each categorical column. 
+    
+    Args:
+         X_train: X trainset
+         X_test:  X testset
+         X_validate: X validate set
+    Returns:
+        X_train_oh: encoded X trainset
+        X_test_oh: encoded X testset
+        x_val_oh: encoded X validate set
+        all_features: all features after encoding. 
+       y_validate_complete: Dataframe containing the target variable with corresponding datapointid for the validation set
+    """
     
     #extracting the categorical columns
     cat_cols = x_train.select_dtypes(include=['object']).columns
@@ -189,11 +305,8 @@ def categorical_encode(x_train,x_test,x_validate):
     # Create the encoder.
     encoder = OneHotEncoder(handle_unknown="ignore")
     ct = ColumnTransformer([('ohe', OneHotEncoder(sparse=False), cat_cols)], remainder=MinMaxScaler())
-    #encoded_matrix = ct.fit(x_train)
     # Apply the encoder.
     x_train_oh = ct.fit_transform(x_train)
-    # x_test_oh = ct.fit_transform(x_test)
-    # x_val_oh = ct.fit_transform(x_validate)
     x_test_oh = ct.transform(x_test)
     x_val_oh = ct.transform(x_validate)
     encoded_cols = ct.named_transformers_.ohe.get_feature_names(cat_cols)
@@ -204,71 +317,60 @@ def categorical_encode(x_train,x_test,x_validate):
 
 
 def process_data(args):
+    """
+    Used to encode the categorical variables contained in the x_train, x_test and x_validate
+    
+    Note that the encoded data return creates additional columns equivalent to the unique categorical values in the each categorical column. 
+    
+    Args:
+         args: arguements provided from the main
+         
+    Returns:
+        the preprocessed dataset is uploaded to minio
+    """
     btap_df,floor_sq = read_output(args.tenant,args.bucket,args.in_build_params)
     weather_df = read_weather(args.tenant,args.bucket,args.in_weather)
     energy_hour_df = read_hour_energy(args.tenant,args.bucket,args.in_hour,floor_sq)
-    btap_df_val,floor_sq = read_output(args.tenant,args.bucket,args.in_build_params_val)
-    energy_hour_df_val = read_hour_energy(args.tenant,args.bucket,args.in_hour_val,floor_sq)
-    
-    #btap_df, weather_df, energy_hour_df = read__files(args)
     energy_hour_merge = pd.merge(energy_hour_df, btap_df, left_on=['datapoint_id'],right_on=[':datapoint_id'],how='left').reset_index()
-    energy_daily_df = pd.merge(energy_hour_merge, weather_df, on='date_int',how='left').reset_index()  
+    energy_daily_df = pd.merge(energy_hour_merge, weather_df, on='date_int',how='left').reset_index()   
     
-    energy_hour_merge_val = pd.merge(energy_hour_df_val, btap_df_val, left_on=['datapoint_id'],right_on=[':datapoint_id'],how='left').reset_index()
-    energy_daily_df_val = pd.merge(energy_hour_merge_val, weather_df, on='date_int',how='left').reset_index()  
+    if args.in_build_params_val :
+        btap_df_val,floor_sq = read_output(args.tenant,args.bucket,args.in_build_params_val)
+        energy_hour_df_val = read_hour_energy(args.tenant,args.bucket,args.in_hour_val,floor_sq)
+        energy_hour_merge_val = pd.merge(energy_hour_df_val, btap_df_val, left_on=['datapoint_id'],right_on=[':datapoint_id'],how='left').reset_index()
+        energy_daily_df_val = pd.merge(energy_hour_merge_val, weather_df, on='date_int',how='left').reset_index()
+        X_train, X_test, y_train, y_test, y_test_complete,X_validate, y_validate,y_validate_complete = train_test_split(energy_daily_df,energy_daily_df_val,'yes')
+    else:
+        energy_hour_df_val= '' ; btap_df_val =''; energy_daily_df_val=''
+        X_train, X_test, y_train, y_test, y_test_complete,X_validate, y_validate,y_validate_complete = train_test_split(energy_daily_df,energy_daily_df_val,'no')
     
-    X_train, X_test, y_train, y_test, y_valid = train_test_split(energy_daily_df,'no')
-    X_validate, y_validate, y_complete = train_test_split(energy_daily_df_val,'yes')
-    
-    print('#####################################3')
-    print(y_valid.groupby(['datapoint_id']).sum())
-    print(y_complete.groupby(['datapoint_id']).sum())
-    
-    files = glob.glob('./img/*')
-    for f in files:
-        os.remove(f)
-    
-    #saving the plots
     pl.corr_plot(energy_daily_df)
-    #pl.target_plot(verify_train_df['Total Energy'],verify_test_df['Total Energy'])
-    
-    #convertiing categorical values to numbers
     X_train_oh, X_test_oh, X_val_oh, all_features= categorical_encode(X_train,X_test,X_validate)
-    
-    print(y_validate.shape)
-    print(y_complete.shape)
+ 
     #Creates `data` structure to save and share train and test datasets.
     data = {'features':all_features.tolist(),
             'y_train' : y_train.to_json(orient="values"),
             'X_train' : X_train_oh.tolist(),
             'X_test' : X_test_oh.tolist(),
-            #'y_test' : y_test.to_json(orient="values"),
             'y_test' : y_test.values.tolist(),
-            'y_valid':y_valid.values.tolist(),
+            'y_test_complete':y_test_complete.values.tolist(),
             'X_validate' : X_val_oh.tolist(),
             'y_validate' : y_validate.values.tolist(),
-            'y_complete':y_complete.values.tolist(),          
+            'y_validate_complete':y_validate_complete.values.tolist(),          
            }
     
-    # Creates a json object based on `data`
     data_json = json.dumps(data).encode('utf-8')
-
-#   copy data to minio
     access_minio(tenant=args.tenant,
                  bucket=args.bucket,
                  operation='copy',
                  path=args.output_path,
                  data=data_json)
-#     out_file =open('../output/preprocessing_out','w')
-#     json.dump(data, out_file, indent = 6) 
-#     out_file.close()
     
     return 
 
 
 if __name__ == '__main__':
     
-    # This component does not receive any input it only outpus one artifact which is `data`. Defining and parsing the command-line arguments
     parser = argparse.ArgumentParser()
     
     # Paths must be passed in, not hardcoded
@@ -282,10 +384,7 @@ if __name__ == '__main__':
     parser.add_argument('--in_build_params_val', type=str, help='Name of data file to be read')
     args = parser.parse_args()
     
-    # Creating the directory where the output file will be created (the directory may or may not exist).
     process_data(args)
     
-    #to run the program use the command below
-    #python3 preprocessing.py --tenant standard --bucket nrcan-btap --in_build_params input_data/output.xlsx --in_hour input_data/total_hourly_res.csv --in_weather input_data/montreal_epw.csv --output_path output_data/preprocessing_out --in_build_params_val input_data/output_validate.xlsx --in_hour_val input_data/total_hourly_res_validate.csv
-
+    #to run the program use the command below  
 #python3 preprocessing.py --tenant standard --bucket nrcan-btap --in_build_params input_data/output_2021-10-04.xlsx --in_hour input_data/total_hourly_res_2021-10-04.csv --in_weather input_data/montreal_epw.csv --output_path output_data/preprocessing_out --in_build_params_val input_data/output.xlsx --in_hour_val input_data/total_hourly_res.csv

@@ -8,12 +8,11 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /pipelines
 COPY requirements.txt /pipelines
 RUN pip install -r requirements.txt
-COPY ../../src /pipelines/component/src
-# COPY ../src/preprocessing.py /btap-project
+COPY ../../src/feature_selection.py /pipelines/component/src
 
 RUN groupadd -g 1000 app && useradd -u 1000 app -g app
 
 RUN chown -R app:app /pipelines
 
 USER 1000:1000
-# CMD ["python", "../src/preprocessing.py"] 
+CMD ["python", "feature_selection.py"] 

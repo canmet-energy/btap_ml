@@ -44,50 +44,11 @@ import datetime
 from tensorboard.plugins.hparams import api as hp
 import s3fs
 import plot as pl
+import config as acm
 
 #######################################################    
 # Predict energy consumed
 ############################################################
-def access_minio(tenant,bucket,path,operation,data):
-    """
-    Used to read and write to minio.
-
-    Args:
-        tenant: default value is standard
-        bucket: nrcan-btap
-        path: file path where data is to be read from or written to
-        data: for write operation, it contains the data to be written to minio
-
-    Returns:
-       Dataframe containing the data downladed from minio is returned for read operation and for write operation , null value is returned. 
-    """
-    with open(f'/vault/secrets/minio-{tenant}-tenant-1.json') as f:
-        creds = json.load(f)
-        
-    minio_url = creds['MINIO_URL']
-    access_key=creds['MINIO_ACCESS_KEY'],
-    secret_key=creds['MINIO_SECRET_KEY']
-
-    # Establish S3 connection
-    s3 = s3fs.S3FileSystem(
-        anon=False,
-        key=access_key[0],
-        secret=secret_key,
-        #use_ssl=False, # Used if Minio is getting SSL verification errors.
-        client_kwargs={
-            'endpoint_url': minio_url,
-            #'verify':False
-        }
-    )
-
-    if operation == 'read':
-            data = s3.open('{}/{}'.format(bucket, path), mode='rb')
-    else:
-        with s3.open('{}/{}'.format(bucket, path), 'wb') as f:
-            f.write(data)   
-    return data
-
-
 
 def score(y_test,y_pred):
     """
@@ -139,8 +100,8 @@ def model_builder(hp):
     model.add(keras.layers.Flatten())
     
     hp_activation= hp.Choice('activation', values=['relu','tanh','sigmoid'])
-    hp_regularizers= hp.Choice('regularizers', values=[1e-4, 1e-5])
-    for i in range(hp.Int("num_layers", 1,5)):
+#     hp_regularizers= hp.Choice('regularizers', values=[1e-4, 1e-5])
+    for i in range(hp.Int("num_layers", 1,2)):
         model.add(layers.Dense(
                 units=hp.Int("units_" + str(i), min_value=8, max_value=96, step=8),
                 activation= hp_activation,
@@ -150,7 +111,7 @@ def model_builder(hp):
                 bias_regularizer=regularizers.l2(1e-4),
                 activity_regularizer=regularizers.l2(1e-5)
             ))
-        model.add(Dropout( hp.Choice('dropout_rate', values=[0.1,0.2,0.3,0.4])))
+        model.add(Dropout( hp.Choice('dropout_rate', values=[0.1,0.2,0.3])))
     model.add(Dense(1,activation='linear'))
     
     hp_learning_rate = hp.Choice('learning_rate', values=[1e-3,1e-4, 1e-5])
@@ -277,37 +238,52 @@ def evaluate(model,X_test,y_test,scalery,X_validate,y_validate, y_test_complete,
     y_test['y_pred_transformed'] =scalery.inverse_transform(y_test['y_pred'].values.reshape(-1,1))
     y_validate['y_pred_transformed'] =scalery.inverse_transform(y_validate['y_pred'].values.reshape(-1,1))
     
-    print("[test loss, test mae, test mse]:", eval_result)
-    print("[val loss, val mae, val mse]:", eval_result_val)
+    test_score = score( y_test['y_pred'], y_test['y_pred_transformed'])
+    val_score = score( y_validate['y_pred'], y_validate['y_pred_transformed'])
+    
+    print("[Evalute test loss, test mae, test mse]:", eval_result)
+    print("[Evalute val loss, val mae, val mse]:", eval_result_val)
+    
+    print("[Score test loss, test mae, test mse]:", test_score)
+    print("[Score val loss, val mae, val mse]:", val_score)
     
     y_test_complete = y_test_complete.groupby(['datapoint_id']).sum()
     y_test_complete['Total Energy'] = y_test_complete['Total Energy'].apply(lambda r : float(r/365))
     output_df =''
     y_test = y_test.groupby(['datapoint_id']).sum()
     y_test['energy'] =y_test['energy'].apply(lambda r : float((r*1.0)/1000))
-    y_test['y_pred'] =y_test['y_pred'].apply(lambda r : float((r*1.0)/1000))
+    y_test['y_pred_transformed'] =y_test['y_pred_transformed'].apply(lambda r : float((r*1.0)/1000))
     output_df = pd.merge(y_test,y_test_complete,left_index=True, right_index=True,how='left')
     annual_metric=score(output_df['Total Energy'],output_df['y_pred_transformed'])
+    
     
     y_validate_complete = y_validate_complete.groupby(['datapoint_id']).sum()
     y_validate_complete['Total Energy'] = y_validate_complete['Total Energy'].apply(lambda r : float(r/365))
     output_val_df =''
     y_validate = y_validate.groupby(['datapoint_id']).sum()
     y_validate['energy'] =y_validate['energy'].apply(lambda r : float((r*1.0)/1000))
-    y_validate['y_pred'] =y_validate['y_pred'].apply(lambda r : float((r*1.0)/1000))
+    y_validate['y_pred_transformed'] =y_validate['y_pred_transformed'].apply(lambda r : float((r*1.0)/1000))
+    
+    
     output_val_df = pd.merge(y_validate,y_validate_complete,left_index=True, right_index=True,how='left')
     annual_metric_val=score(output_val_df['Total Energy'],output_val_df['y_pred_transformed'])
+    
+    output_df = output_df.drop(['y_pred','energy_y','energy_x'],axis=1)
+    output_val_df = output_val_df.drop(['y_pred','energy_y','energy_x'],axis=1)
     
     pl.annual_plot(output_df,'test_set')
     pl.annual_plot(output_df,'validation_set')
     
-    print(output_df)
+    print(model.summary)
+    
     print('****************TEST SET****************************')
     print(eval_result)
+    print(output_df)
     print(annual_metric)
-    print(output_val_df)
+    
     print('****************VALIDATION SET****************************')
     print(eval_result_val)
+    print(output_val_df)
     print(annual_metric_val)
     
     result= {
@@ -322,7 +298,7 @@ def evaluate(model,X_test,y_test,scalery,X_validate,y_validate, y_test_complete,
     return result
 
 
-def create_model(dense_layers,activation,optimizer,dropout_rate,length,learning_rate,epochs,X_train,y_train,X_test,y_test,y_test_complete,scalery,
+def create_model(dense_layers,activation,optimizer,dropout_rate,length,learning_rate,epochs,batch_size,X_train,y_train,X_test,y_test,y_test_complete,scalery,
                 X_validate,y_validate,y_validate_complete):
     """
     Creates a model with defaulted values without need to perform an hyperparameter search at all times. 
@@ -356,10 +332,11 @@ def create_model(dense_layers,activation,optimizer,dropout_rate,length,learning_
         output_val_df: merge of y_pred, y_validate, datapoint_id, the final dataframe showing the model output using the validation set
     """
     model = Sequential()
-    model.add(Flatten(input_shape=(length,)))
+    model.add(Flatten())
     #model.add(Dropout(dropout_rate, input_shape=(length,)))
     for index, lsize in enumerate(dense_layers):
-        model.add(Dense(lsize,activation=activation, kernel_initializer='normal', 
+        model.add(Dense(lsize,input_shape=(length,),
+                        activation=activation, kernel_initializer='normal', 
                         # kernel_regularizer=regularizers.l1(1e-5),
                         kernel_regularizer=regularizers.l1_l2(l1=1e-2, l2=1e-2),
                         bias_regularizer=regularizers.l2(1e-2),
@@ -397,10 +374,10 @@ def create_model(dense_layers,activation,optimizer,dropout_rate,length,learning_
                                     hist_callback,
                                     ],
                         epochs=epochs,
-                        batch_size =365,                    
+                        batch_size =batch_size,                    
                         verbose=1,
                         # shuffle=False,
-                        validation_split=0.1)
+                        validation_split=0.2)
     pl.save_plot(history)
     
     
@@ -429,13 +406,13 @@ def fit_evaluate(args):
     K.clear_session()
     start_time = time.time()
     
-    data = access_minio(tenant=args.tenant,
+    data = acm.access_minio(tenant=args.tenant,
                            bucket=args.bucket,
                            operation= 'read',
                            path=args.in_obj_name,
                            data='')
     
-    data2 = access_minio(tenant=args.tenant,
+    data2 = acm.access_minio(tenant=args.tenant,
                            bucket=args.bucket,
                            operation= 'read',
                            path=args.features,
@@ -468,8 +445,10 @@ def fit_evaluate(args):
 
     #extracting the test data for the target variable
     y_test_complete = pd.DataFrame(data["y_test_complete"],columns=['energy','datapoint_id','Total Energy'])
-    y_test = pd.DataFrame(data["y_test"],columns=['energy','datapoint_id'])
+    y_test = pd.DataFrame(data["y_test"],columns=['energy','datapoint_id','Total Energy'])
+    y_test = y_test.drop(['Total Energy'],axis=1)
     y_validate_complete = pd.DataFrame(data["y_validate_complete"],columns=['energy','datapoint_id','Total Energy'])
+    print(y_validate_complete)
     y_validate= pd.DataFrame(data["y_validate"],columns=['energy','datapoint_id'])
     
     scalerx= Normalizer()
@@ -484,17 +463,17 @@ def fit_evaluate(args):
     if args.param_search == "yes":
         hypermodel = predicts_hp(X_train,y_train,X_test,y_test,features)
         results_pred = evaluate(hypermodel,X_test,y_test,scalery,X_validate,y_validate, y_test_complete,y_validate_complete)
-        print(results_pred)
     else:
         results_pred = create_model(
-                             dense_layers=[50,10],
+                             #dense_layers=[24],
+                             dense_layers=[56,16],
                              activation='relu',
                              optimizer='rmsprop',
                              dropout_rate=0.1,
                              length=col_length,
-                             learning_rate=0.001,
-                             epochs=2,
-                             #batch_size=90,
+                             learning_rate=0.0001,
+                             epochs=100,
+                             batch_size=365,
                              X_train=X_train,y_train=y_train,
                              X_test=X_test,y_test=y_test
                              ,y_test_complete=y_test_complete,scalery=scalery,
@@ -508,7 +487,7 @@ def fit_evaluate(args):
     data_json = json.dumps(results_pred).encode('utf-8')
     
     #copy data to minio
-    access_minio(tenant=args.tenant,
+    acm.access_minio(tenant=args.tenant,
                  bucket=args.bucket,
                  operation='copy',
                  path=args.output_path,

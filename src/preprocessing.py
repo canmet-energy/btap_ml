@@ -18,56 +18,12 @@ import os
 import glob
 #from kfp.components import load_component_from_file
 import plot as pl
+import config as acm
 import sys
 from datetime import datetime
 import re
 from sklearn.model_selection import GroupShuffleSplit
 import json
-import s3fs
-
-def access_minio(tenant,bucket,path,operation,data):
-    """
-    Used to read and write to minio.
-
-    Args:
-        tenant: default value is standard
-        bucket: nrcan-btap
-        path: file path where data is to be read from or written to
-        data: for write operation, it contains the data to be written to minio
-
-    Returns:
-       Dataframe containing the data downladed from minio is returned for read operation and for write operation , null value is returned. 
-    """
-    with open(f'/vault/secrets/minio-{tenant}-tenant-1.json') as f:
-        creds = json.load(f)
-        
-    minio_url = creds['MINIO_URL']
-    access_key=creds['MINIO_ACCESS_KEY'],
-    secret_key=creds['MINIO_SECRET_KEY']
-
-    # Establish S3 connection
-    s3 = s3fs.S3FileSystem(
-        anon=False,
-        key=access_key[0],
-        secret=secret_key,
-        #use_ssl=False, # Used if Minio is getting SSL verification errors.
-        client_kwargs={
-            'endpoint_url': minio_url,
-            #'verify':False
-        }
-    )
-
-    if operation == 'read':
-            if 'csv' in path :
-                data = pd.read_csv(s3.open('{}/{}'.format(bucket, path), mode='rb'))
-            else:
-                data =  pd.read_excel(s3.open('{}/{}'.format(bucket, path), mode='rb'))
-    else:
-        with s3.open('{}/{}'.format(bucket, path), 'wb') as f:
-            f.write(data)
-            data = ''
-       
-    return data
 
 
 def clean_data(df):
@@ -107,7 +63,7 @@ def read_output(tenant,bucket,path):
        btap_df: Dataframe containing the clean building parameters file.
        floor_sq: the square foot of the building
     """
-    btap_df = access_minio(tenant=tenant,
+    btap_df = acm.access_minio(tenant=tenant,
                                bucket=bucket,
                                operation= 'read',
                                path=path,
@@ -141,7 +97,7 @@ def read_weather(tenant,bucket,path):
        btap_df: Dataframe containing the clean weather file.
     """
     
-    weather_df = access_minio(tenant=tenant,
+    weather_df = acm.access_minio(tenant=tenant,
                                bucket=bucket,
                                operation= 'read',
                                path=path,
@@ -170,7 +126,7 @@ def read_hour_energy(tenant,bucket,path,floor_sq):
        energy_hour_melt: Dataframe containing the clean and transposed hourly energy file.
     """
     
-    energy_hour_df = access_minio(tenant=tenant,
+    energy_hour_df = acm.access_minio(tenant=tenant,
                                bucket=bucket,
                                operation= 'read',
                                path=path,
@@ -265,7 +221,7 @@ def train_test_split(energy_daily_df,val_df, valsplit):
         
     else:
         X_test = X_test.reset_index(drop=True)
-        y_test = y_test.reset_index(drop=True)
+        y_test= y_test_complete.reset_index(drop=True)
         X_test,y_test,X_validate,y_validate_complete = groupsplit(X_test,y_test,valsplit)
         y_validate = y_validate_complete[['energy','datapoint_id']]
         X_validate = X_validate.drop(drop_list,axis=1)
@@ -360,7 +316,7 @@ def process_data(args):
            }
     
     data_json = json.dumps(data).encode('utf-8')
-    access_minio(tenant=args.tenant,
+    acm.access_minio(tenant=args.tenant,
                  bucket=args.bucket,
                  operation='copy',
                  path=args.output_path,

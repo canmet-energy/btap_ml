@@ -300,6 +300,7 @@ def process_data(args):
         energy_hour_df_val= '' ; btap_df_val =''; energy_daily_df_val=''
         X_train, X_test, y_train, y_test, y_test_complete,X_validate, y_validate,y_validate_complete = train_test_split(energy_daily_df,energy_daily_df_val,'no')
     
+    pl.target_plot(y_test)
     pl.corr_plot(energy_daily_df)
     X_train_oh, X_test_oh, X_val_oh, all_features= categorical_encode(X_train,X_test,X_validate)
  

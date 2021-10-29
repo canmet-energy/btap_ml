@@ -63,6 +63,7 @@ def score(y_test,y_pred):
     mse = metrics.mean_squared_error(y_test,y_pred)
     mae = metrics.mean_absolute_error(y_test,y_pred)
     rmse = sqrt(mse)
+    
     scores = {"mse":mse,
               "rmse":rmse,
               "mae":mae}
@@ -101,7 +102,7 @@ def model_builder(hp):
     
     hp_activation= hp.Choice('activation', values=['relu','tanh','sigmoid'])
 #     hp_regularizers= hp.Choice('regularizers', values=[1e-4, 1e-5])
-    for i in range(hp.Int("num_layers", 1,2)):
+    for i in range(hp.Int("num_layers", 1,1)):
         model.add(layers.Dense(
                 units=hp.Int("units_" + str(i), min_value=8, max_value=96, step=8),
                 activation= hp_activation,
@@ -229,8 +230,6 @@ def evaluate(model,X_test,y_test,scalery,X_validate,y_validate, y_test_complete,
        
     """
     #evaluate the hypermodel on the test data.
-    eval_result = model.evaluate(X_test, y_test['energy'])
-    eval_result_val = model.evaluate(X_validate, y_validate['energy'])
     y_test['y_pred'] = model.predict(X_test)
     y_validate['y_pred'] = model.predict(X_validate)
     
@@ -238,11 +237,9 @@ def evaluate(model,X_test,y_test,scalery,X_validate,y_validate, y_test_complete,
     y_test['y_pred_transformed'] =scalery.inverse_transform(y_test['y_pred'].values.reshape(-1,1))
     y_validate['y_pred_transformed'] =scalery.inverse_transform(y_validate['y_pred'].values.reshape(-1,1))
     
-    test_score = score( y_test['y_pred'], y_test['y_pred_transformed'])
-    val_score = score( y_validate['y_pred'], y_validate['y_pred_transformed'])
+    test_score = score( y_test['energy'], y_test['y_pred_transformed'])
+    val_score = score( y_validate['energy'], y_validate['y_pred_transformed'])
     
-    print("[Evalute test loss, test mae, test mse]:", eval_result)
-    print("[Evalute val loss, val mae, val mse]:", eval_result_val)
     
     print("[Score test loss, test mae, test mse]:", test_score)
     print("[Score val loss, val mae, val mse]:", val_score)
@@ -271,26 +268,27 @@ def evaluate(model,X_test,y_test,scalery,X_validate,y_validate, y_test_complete,
     output_df = output_df.drop(['y_pred','energy_y','energy_x'],axis=1)
     output_val_df = output_val_df.drop(['y_pred','energy_y','energy_x'],axis=1)
     
+    pl.daily_plot(y_test,'test_set')
+    pl.daily_plot(y_validate,'validation_set')
+    
     pl.annual_plot(output_df,'test_set')
-    pl.annual_plot(output_df,'validation_set')
+    pl.annual_plot(output_val_df,'validation_set')
     
     print(model.summary)
     
     print('****************TEST SET****************************')
-    print(eval_result)
     print(output_df)
     print(annual_metric)
     
     print('****************VALIDATION SET****************************')
-    print(eval_result_val)
     print(output_val_df)
     print(annual_metric_val)
     
     result= {
-            'metric' : eval_result,
+            'metric' : test_score,
             'annual_metric':annual_metric,
             'output_df':output_df.values.tolist(),
-            'val_metric' : eval_result_val,
+            'val_metric' : val_score,
             'val_annual_metric':annual_metric_val,
             'output_val_df':output_val_df.values.tolist(),
             }
@@ -466,14 +464,14 @@ def fit_evaluate(args):
     else:
         results_pred = create_model(
                              #dense_layers=[24],
-                             dense_layers=[56,16],
+                             dense_layers=[88],
                              activation='relu',
-                             optimizer='rmsprop',
+                             optimizer='adam',
                              dropout_rate=0.1,
                              length=col_length,
-                             learning_rate=0.0001,
+                             learning_rate=0.001,
                              epochs=100,
-                             batch_size=365,
+                             batch_size=90,
                              X_train=X_train,y_train=y_train,
                              X_test=X_test,y_test=y_test
                              ,y_test_complete=y_test_complete,scalery=scalery,

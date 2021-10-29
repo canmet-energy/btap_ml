@@ -22,6 +22,7 @@ required to produce usable outputs.
    :caption: Contents:
 
    installation
+   aaw_setup
 
 Indices and tables
 ==================

@@ -9,7 +9,6 @@ WORKDIR /pipelines
 COPY requirements.txt /pipelines
 RUN pip install -r requirements.txt
 COPY ../../src/predict.py /pipelines/component/src
-COPY ../../src/plot.py /pipelines/component/src
 
 RUN groupadd -g 1000 app && useradd -u 1000 app -g app
 

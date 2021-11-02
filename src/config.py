@@ -4,7 +4,7 @@ from typing import Any, Dict
 
 import pandas as pd
 import s3fs
-from pydantic import BaseSettings, HttpUrl, SecretStr
+from pydantic import AnyHttpUrl, BaseSettings, SecretStr
 
 
 # There's a JSON file available with required credentials in it
@@ -12,7 +12,7 @@ def json_config_settings_source(settings: BaseSettings) -> Dict[str, Any]:
     return json.loads(settings.__config__.json_settings_path.read_text())
 
 class Settings(BaseSettings):
-    MINIO_URL: HttpUrl
+    MINIO_URL: AnyHttpUrl
     MINIO_ACCESS_KEY: str
     MINIO_SECRET_KEY: SecretStr
 

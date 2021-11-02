@@ -53,13 +53,11 @@ def clean_data(df):
     return df
 
 
-def read_output(tenant, bucket, path):
+def read_output(path):
     """
     Used to read the building simulation I/O file
 
     Args:
-        tenant: default value is standard
-        bucket: nrcan-btap
         path: file path where data is to be read from in minio
 
     Returns:
@@ -86,13 +84,11 @@ def read_output(tenant, bucket, path):
     return btap_df, floor_sq
 
 
-def read_weather(tenant, bucket, path):
+def read_weather(path):
     """
     Used to read the weather epw file from minio
 
     Args:
-        tenant: default value is standard
-        bucket: nrcan-btap
         path: file path where weather.csv file is to be read from in minio
 
     Returns:
@@ -113,13 +109,11 @@ def read_weather(tenant, bucket, path):
     return weather_df
 
 
-def read_hour_energy(tenant, bucket, path, floor_sq):
+def read_hour_energy(path, floor_sq):
     """
     Used to read the weather epw file from minio
 
     Args:
-        tenant: default value is standard
-        bucket: nrcan-btap
         path: file path where weather.csv file is to be read from in minio
         floor_sq: the square foot of the building
     Returns:
@@ -277,15 +271,15 @@ def process_data(args):
     Returns:
         the preprocessed dataset is uploaded to minio
     """
-    btap_df, floor_sq = read_output(args.tenant, args.bucket, args.in_build_params)
-    weather_df = read_weather(args.tenant, args.bucket, args.in_weather)
-    energy_hour_df = read_hour_energy(args.tenant, args.bucket, args.in_hour, floor_sq)
+    btap_df, floor_sq = read_output(args.in_build_params)
+    weather_df = read_weather(args.in_weather)
+    energy_hour_df = read_hour_energy(args.in_hour, floor_sq)
     energy_hour_merge = pd.merge(energy_hour_df, btap_df, left_on=['datapoint_id'], right_on=[':datapoint_id'], how='left').reset_index()
     energy_daily_df = pd.merge(energy_hour_merge, weather_df, on='date_int', how='left').reset_index()
 
     if args.in_build_params_val:
-        btap_df_val, floor_sq = read_output(args.tenant, args.bucket, args.in_build_params_val)
-        energy_hour_df_val = read_hour_energy(args.tenant, args.bucket, args.in_hour_val, floor_sq)
+        btap_df_val, floor_sq = read_output(args.in_build_params_val)
+        energy_hour_df_val = read_hour_energy(args.in_hour_val, floor_sq)
         energy_hour_merge_val = pd.merge(energy_hour_df_val, btap_df_val, left_on=['datapoint_id'], right_on=[':datapoint_id'], how='left').reset_index()
         energy_daily_df_val = pd.merge(energy_hour_merge_val, weather_df, on='date_int', how='left').reset_index()
         X_train, X_test, y_train, y_test, y_test_complete, X_validate, y_validate, y_validate_complete = train_test_split(energy_daily_df, energy_daily_df_val, 'yes')

@@ -1,3 +1,4 @@
+-r requirements.txt
 myst-parser==0.15.2
 sphinx==4.2.0
 sphinx-intl==2.0.1

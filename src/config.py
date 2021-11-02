@@ -1,6 +1,30 @@
-import s3fs
 import json
+
 import pandas as pd
+import s3fs
+
+
+def establish_s3_connection(endpoint_url: str, access_key: str, secret_key: str) -> s3fs.S3FileSystem:
+    """Used to create a connection to an S3 data store.
+
+    Args:
+        endpoint_url: The URL for the data store.
+        access_key: The access key used to access the data store.
+        secret_key: The secret key used to access the data store.
+
+    Returns:
+        An s3fs file system object.
+    """
+    s3 = s3fs.S3FileSystem(
+        anon=False,
+        key=access_key,
+        secret=secret_key,
+        client_kwargs={
+            'endpoint_url': endpoint_url,
+        }
+    )
+
+    return s3
 
 
 def access_minio(tenant, bucket, path, operation, data):
@@ -24,14 +48,7 @@ def access_minio(tenant, bucket, path, operation, data):
     secret_key = creds['MINIO_SECRET_KEY']
 
     # Establish S3 connection
-    s3 = s3fs.S3FileSystem(
-        anon=False,
-        key=access_key[0],
-        secret=secret_key,
-        client_kwargs={
-            'endpoint_url': minio_url,
-        }
-    )
+    s3 = establish_s3_connection(minio_url, access_key, secret_key)
 
     if operation == 'read':
         if 'csv' in path:

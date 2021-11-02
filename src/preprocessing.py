@@ -1,27 +1,31 @@
 '''
 Downloads all the dataset from minio, preprocess the data, split the data into train, test and validation set.
 '''
-import numpy as np
-import pandas as pd
 import argparse
-from pathlib import Path
-from minio import Minio
-from sklearn.model_selection import train_test_split, KFold, cross_val_score, cross_val_predict
-from sklearn.preprocessing import StandardScaler, LabelEncoder, OneHotEncoder, MinMaxScaler
-from sklearn.compose import ColumnTransformer
+import glob
 # from kfp import dsl
 import io
-from io import StringIO
+import json
 import os
-import glob
-# from kfp.components import load_component_from_file
-import plot as pl
-import config as acm
+import re
 import sys
 from datetime import datetime
-import re
-from sklearn.model_selection import GroupShuffleSplit
-import json
+from io import StringIO
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+from minio import Minio
+from sklearn.compose import ColumnTransformer
+from sklearn.model_selection import (GroupShuffleSplit, KFold,
+                                     cross_val_predict, cross_val_score,
+                                     train_test_split)
+from sklearn.preprocessing import (LabelEncoder, MinMaxScaler, OneHotEncoder,
+                                   StandardScaler)
+
+import config as acm
+# from kfp.components import load_component_from_file
+import plot as pl
 
 
 def clean_data(df):
@@ -62,9 +66,7 @@ def read_output(tenant, bucket, path):
        btap_df: Dataframe containing the clean building parameters file.
        floor_sq: the square foot of the building
     """
-    btap_df = acm.access_minio(tenant=tenant,
-                               bucket=bucket,
-                               operation='read',
+    btap_df = acm.access_minio(operation='read',
                                path=path,
                                data='')
 
@@ -97,9 +99,7 @@ def read_weather(tenant, bucket, path):
        btap_df: Dataframe containing the clean weather file.
     """
 
-    weather_df = acm.access_minio(tenant=tenant,
-                               bucket=bucket,
-                               operation='read',
+    weather_df = acm.access_minio(operation='read',
                                path=path,
                                data='')
 
@@ -126,9 +126,7 @@ def read_hour_energy(tenant, bucket, path, floor_sq):
        energy_hour_melt: Dataframe containing the clean and transposed hourly energy file.
     """
 
-    energy_hour_df = acm.access_minio(tenant=tenant,
-                               bucket=bucket,
-                               operation='read',
+    energy_hour_df = acm.access_minio(operation='read',
                                path=path,
                                data='')
 
@@ -313,9 +311,7 @@ def process_data(args):
            }
 
     data_json = json.dumps(data).encode('utf-8')
-    acm.access_minio(tenant=args.tenant,
-                 bucket=args.bucket,
-                 operation='copy',
+    acm.access_minio(operation='copy',
                  path=args.output_path,
                  data=data_json)
 
@@ -326,8 +322,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     # Paths must be passed in, not hardcoded
-    parser.add_argument('--tenant', type=str, help='The minio tenant where the data is located in')
-    parser.add_argument('--bucket', type=str, help='The minio bucket where the data is located in')
     parser.add_argument('--in_hour', type=str, help='The minio bucket where the data is located in')
     parser.add_argument('--in_build_params', type=str, help='Name of data file to be read')
     parser.add_argument('--in_weather', type=str, help='Name of weather file to be read')
@@ -339,4 +333,4 @@ if __name__ == '__main__':
     process_data(args)
 
     # to run the program use the command below
-# python3 preprocessing.py --tenant standard --bucket nrcan-btap --in_build_params input_data/output_2021-10-04.xlsx --in_hour input_data/total_hourly_res_2021-10-04.csv --in_weather input_data/montreal_epw.csv --output_path output_data/preprocessing_out --in_build_params_val input_data/output.xlsx --in_hour_val input_data/total_hourly_res.csv
+# python3 preprocessing.py --in_build_params input_data/output_2021-10-04.xlsx --in_hour input_data/total_hourly_res_2021-10-04.csv --in_weather input_data/montreal_epw.csv --output_path output_data/preprocessing_out --in_build_params_val input_data/output.xlsx --in_hour_val input_data/total_hourly_res.csv

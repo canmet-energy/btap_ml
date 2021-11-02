@@ -54,7 +54,7 @@ def establish_s3_connection(endpoint_url: str, access_key: str, secret_key: Secr
     return s3
 
 
-def access_minio(tenant, bucket, path, operation, data):
+def access_minio(path, operation, data):
     """
     Used to read and write to minio.
 

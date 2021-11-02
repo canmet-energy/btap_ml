@@ -8,8 +8,9 @@ from kfp.components import load_component_from_file
               )
 
 #define your pipeline
-def btap_pipeline(minio_tenant,bucket,build_params,energy_hour,weather,build_params_val,energy_hour_val,output_path,featureestimator,featureoutput_path,param_search):
-    
+def btap_pipeline(minio_tenant:str,bucket:str,build_params:str,energy_hour:str,weather:str,build_params_val:str,energy_hour_val:str,
+                  output_path:str,featureestimator:str,featureoutput_path:str,param_search:str):
+#     tenant ='minio_tenant'
     # Loads the yaml manifest for each component
     preprocess = load_component_from_file('yaml/preprocessing.yaml')
     feature_selection = load_component_from_file('yaml/feature_selection.yaml')

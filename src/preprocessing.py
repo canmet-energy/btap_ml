@@ -150,12 +150,7 @@ def train_test_split(energy_daily_df,validate):
     
     y = energy_daily_df[['energy','datapoint_id','Total Energy']]
     X = energy_daily_df.drop(['energy'],axis = 1)
-    
-#     test =  energy_daily_df[energy_daily_df['datapoint_id'] == '9ab2cbff-cfad-4155-9e60-977e371e388a']
-#     print(test[['energy','Total Energy']])
-#     print('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^6')
-#     print(test.groupby(['datapoint_id']).sum())
-    
+      
     gs = GroupShuffleSplit(n_splits=2, test_size=.2)
     train_ix, test_ix = next(gs.split(X, y, groups=X.datapoint_id))
     X_train = X.loc[train_ix]
@@ -197,8 +192,10 @@ def categorical_encode(x_train,x_test,x_validate):
     #encoded_matrix = ct.fit(x_train)
     # Apply the encoder.
     x_train_oh = ct.fit_transform(x_train)
-    x_test_oh = ct.fit_transform(x_test)
-    x_val_oh = ct.fit_transform(x_validate)
+    # x_test_oh = ct.fit_transform(x_test)
+    # x_val_oh = ct.fit_transform(x_validate)
+    x_test_oh = ct.transform(x_test)
+    x_val_oh = ct.transform(x_validate)
     encoded_cols = ct.named_transformers_.ohe.get_feature_names(cat_cols)
     all_features = np.concatenate([encoded_cols, other_cols])
     

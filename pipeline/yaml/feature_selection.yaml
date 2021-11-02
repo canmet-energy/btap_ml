@@ -4,10 +4,11 @@ description: Selects the feature that would be used in building the model
 inputs:
 - {name: Tenant, type: String, description: 'Name of minio tenant to access data from'}
 - {name: Bucket, type: String, description: 'Name of minio bucket to access data from'}
-- {name: Object Name, type: String, description: 'Name of minio bucket to access data from'}
-- {name: Minio destination, type: String, description: 'Name of minio bucket to access data from'}
+- {name: in_obj_name, type: String, description: 'Name of minio bucket to access data from'}
+- {name: estimator_type, type: String, description: 'Name of minio bucket to access data from'}
+- {name: output_path, type: String, description: 'Path where the output data will be stored.'}
 outputs:
-- {name: Minio destination, type: String, description: 'Path where the output data will be stored.'}
+- {name: output_path, type: String, description: 'Path where the output data will be stored.'}
 
 implementation:
   container:
@@ -17,7 +18,7 @@ implementation:
       python3, 
       
       # Path of the program inside the container
-      feature_selection.py,
+      /pipelines/component/src/feature_selection.py,
       
       --tenant,
       {inputValue: Tenant},
@@ -26,8 +27,11 @@ implementation:
       {inputValue: Bucket},
       
       --in_obj_name,
-      {inputValue: Object Name},
+      {inputPath: in_obj_name},
+      
+      --estimator_type,
+      {inputValue: estimator_type},
       
       --output_path,
-      {outputPath: Minio destination},
+      {outputPath: output_path},
     ]

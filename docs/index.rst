@@ -19,10 +19,17 @@ required to produce usable outputs.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Installation
 
    installation
    aaw_setup
+
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Data Prepration
+
+   data_prep/weather
 
 Indices and tables
 ==================

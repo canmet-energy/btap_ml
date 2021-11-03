@@ -14,8 +14,17 @@ def get_config(config_file: str):
     return contents
 
 
-def get_weather_df(filename: str):
-    """Fetch weather data from the main storage location."""
+def get_weather_df(filename: str) -> pd.DataFrame:
+    """Fetch weather data from the main storage location.
+
+    Loads weather files from the NREL/openstudio-standards GitHub repository where they are managed.
+
+    Args:
+        filename: The filename of a weather file (.epw)
+
+    Returns:
+        A dataframe of weather data summarized by day.
+    """
     global _epw_file_store
 
     # Number of rows in the file that are just providing metadata
@@ -27,21 +36,37 @@ def get_weather_df(filename: str):
                    'difhorillum','zenlum','winddir','windspd','totskycvr','opaqskycvr','visibility','ceiling_hgt',
                    'presweathobs','presweathcodes','precip_wtr','aerosol_opt_depth','snowdepth','days_last_snow',
                    'Albedo','liq_precip_depth','liq_precip_rate']
-    
+
     file_url = _epw_file_store + filename
     df = pd.read_csv(file_url, names=epw_columns, skiprows=meta_row_count)
 
     return df
 
 
-def save_epw(df: pd.DataFrame):
-    """Save preprared EPW data out to blob storage."""
+def save_epw(df: pd.DataFrame, filename: str) -> None:
+    """Save preprared EPW data out to blob storage.
+    
+    The filename of the original file is used, with the extension replaced with .parquet.
+    
+    Args:
+        df: Pandas DataFrame to be saved out.
+        filename: Filename of the source file used to produce the DataFrame.
+    """
+    weather_bucket_name = 'weather'
     # TODO: Implement saving data back to storage
     pass
 
 
-def main(config_file: str, epw_file_key: str=':epw_file'):
-    """Take raw EPW files as defined in BTAP YAML configuration and prepare it for use by the model."""
+def main(config_file: str, epw_file_key: str = ':epw_file') -> None:
+    """Take raw EPW files as defined in BTAP YAML configuration and prepare it for use by the model.
+    
+    Uses the EnergyPlus configuration to identify and process weather data in EPW format. The weather data is then 
+    saved to blob storage for use in later processing stages.
+    
+    Args:
+        config_file: Path to the configuration file used for EnergyPlus.
+        epw_file_key: The key in the configuration file that has the weather file name(s). Default is ``:epw_file``.
+    """
     cfg = get_config(config_file)
 
     # Guard against incorrect or undefined file key
@@ -61,12 +86,12 @@ def main(config_file: str, epw_file_key: str=':epw_file'):
             data = (get_weather_df(name)
                     .drop(weather_drop_list, axis=1)
                     .assign(rep_time=lambda x: pd.to_datetime(x['year','month','day','hour'])))
-            save_epw(data)
+            save_epw(data, name)
     else:
         data = (get_weather_df(epw_files)
                 .drop(weather_drop_list, axis=1)
                 .assign(rep_time=lambda x: pd.to_datetime(x['year','month','day','hour'])))
-        save_epw(data)
+        save_epw(data, epw_files)
 
 
 if __name__ == '__main__':

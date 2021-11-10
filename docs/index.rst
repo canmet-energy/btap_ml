@@ -19,10 +19,19 @@ required to produce usable outputs.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Contents
 
    installation
    aaw_setup
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Usage
+
+   usage/preprocessing
+   usage/feature_selection
+   usage/build_model
+   usage/kubeflow_pipeline
 
 Indices and tables
 ==================

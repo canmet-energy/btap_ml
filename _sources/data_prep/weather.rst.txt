@@ -1,8 +1,8 @@
 Weather data processing
 =======================
 
-EnergyPlus uses weather data in the EPW file format, as defined in the `Auxiliary 
-Programs <https://energyplus.net/assets/nrel_custom/pdfs/pdfs_v9.6.0/AuxiliaryPrograms.pdf>`_ documentation. In 
+EnergyPlus uses weather data in the EPW file format, as defined in the `Auxiliary
+Programs <https://energyplus.net/assets/nrel_custom/pdfs/pdfs_v9.6.0/AuxiliaryPrograms.pdf>`_ documentation. In
 order to be consumed by the model, the data needs to undergo several steps before it can be used.
 
 Convert to tabular data
@@ -28,18 +28,30 @@ Column names for the tabular data can be found in the Auxiliary Programs documen
 Remove unused columns
 ---------------------
 
-In the Auxiliary Programs documentation for the EPW file format it lists which columns in the file are actually used 
+In the Auxiliary Programs documentation for the EPW file format it lists which columns in the file are actually used
 for predicting building energy use. Columns marked as not used by EnergyPlus are removed from the dataset.
 
 .. note::
 
-   The ``year`` column is marked as not being used by EnergyPlus, but is kept for use in creating a datetime index 
+   The ``year`` column is marked as not being used by EnergyPlus, but is kept for use in creating a datetime index
    of the data.
 
 Summarize by day
 ----------------
 
 Weather data in the file is provided for every hour for all 365 days of the year. Due to the way the data is combined
-in later steps, this becomes millions of records that need to be processed despite the fact that there is no intent to 
-predict energy use to the hourly level. To make working with the data more manageable, weather values are summarized to 
+in later steps, this becomes millions of records that need to be processed despite the fact that there is no intent to
+predict energy use to the hourly level. To make working with the data more manageable, weather values are summarized to
 daily intervals.
+
+Automated processing
+--------------------
+
+Weather data can be automatically preprared from the information found in the BTAP CLI configuration YAML. The
+``prepare_weather.py`` script can be used to process weather data and save it to blob storage.
+
+.. code::
+   $ python prepare_weather.py input_data/sample-config.yml
+
+Outputs are placed in the ``weather`` bucket (by default) in storage as parquet files. The name of the weather files
+will match the input name found in the YAML file, but with a ``.parquet`` file extension.

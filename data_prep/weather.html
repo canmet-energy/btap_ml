@@ -75,6 +75,13 @@ in later steps, this becomes millions of records that need to be processed despi
 predict energy use to the hourly level. To make working with the data more manageable, weather values are summarized to
 daily intervals.</p>
 </section>
+<section id="automated-processing">
+<h2>Automated processing<a class="headerlink" href="#automated-processing" title="Permalink to this headline">¶</a></h2>
+<p>Weather data can be automatically preprared from the information found in the BTAP CLI configuration YAML. The
+<code class="docutils literal notranslate"><span class="pre">prepare_weather.py</span></code> script can be used to process weather data and save it to blob storage.</p>
+<p>Outputs are placed in the <code class="docutils literal notranslate"><span class="pre">weather</span></code> bucket (by default) in storage as parquet files. The name of the weather files
+will match the input name found in the YAML file, but with a <code class="docutils literal notranslate"><span class="pre">.parquet</span></code> file extension.</p>
+</section>
 </section>
 
 
@@ -106,6 +113,7 @@ daily intervals.</p>
 <li class="toctree-l2"><a class="reference internal" href="#convert-to-tabular-data">Convert to tabular data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#remove-unused-columns">Remove unused columns</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#summarize-by-day">Summarize by day</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#automated-processing">Automated processing</a></li>
 </ul>
 </li>
 </ul>

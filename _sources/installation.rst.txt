@@ -1,7 +1,7 @@
 Installation
 ============
 
-This project implements a pipeline designed to run on *nix based systems, and as such may have requirements not
+This project implements a pipeline designed to run on \*nix based systems, and as such may have requirements not
 documented here to be able to run on Windows. Some elements of this documentation may be specific to running on the
 `DAaaS <https://www.statcan.gc.ca/data-analytics-service/>`_ environment.
 
@@ -10,7 +10,8 @@ Python
 
 A minimum of Python 3.8+ is required to reliably run this project.
 
-.. _dependency-install
+.. _dependency-install:
+
 Dependencies
 ------------
 

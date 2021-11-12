@@ -1,0 +1,161 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Working on AAW &#8212; Building Technology Assessment Platform: Machine Learning Implementation  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Preprocessing" href="usage/preprocessing.html" />
+    <link rel="prev" title="Installation" href="installation.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="working-on-aaw">
+<h1>Working on AAW<a class="headerlink" href="#working-on-aaw" title="Permalink to this headline">¶</a></h1>
+<p>Getting the project set up on the Advanced Analytics Workspace (AAW) can be achieved by following the guide provided
+for <a class="reference external" href="https://statcan.github.io/daaas/en/1-Experiments/Kubeflow/">Kubeflow Setup</a>. Here are some values you can use
+when creating the notebook:</p>
+<ul class="simple">
+<li><p>Name: Your name or a descriptive purpose</p></li>
+<li><p>Namespace: nrcan-btap</p></li>
+<li><p>Image: jupyterlab-cpu</p></li>
+<li><p>CPU: 1.0</p></li>
+<li><p>Memory: 32.0Gi</p></li>
+<li><p>Workspace volume: New (let it create one for you)
+* Size: 16.0Gi</p></li>
+<li><p>GPUs: None</p></li>
+</ul>
+<p>Optional:</p>
+<ul class="simple">
+<li><p>Configurations: Mount MinIO storage
+* We tend to use command line to access MinIO, rather than mount it.</p></li>
+</ul>
+<p>It takes a few minutes to create the notebook, but from that point on you can connect to it easily from the
+<code class="docutils literal notranslate"><span class="pre">Notebook</span> <span class="pre">Servers</span></code> menu (left side) in the Kubeflow dashboard.</p>
+<section id="logging-in">
+<h2>Logging in<a class="headerlink" href="#logging-in" title="Permalink to this headline">¶</a></h2>
+<p>When the notebook is ready, you can log in to see the <a class="reference external" href="https://statcan.github.io/daaas/en/1-Experiments/Jupyter/">Jupyter Launcher</a>
+screen. From there you can either use open or create notebooks, or launch VS Code to have an IDE environment.</p>
+</section>
+</section>
+<section id="project-source-code">
+<h1>Project source code<a class="headerlink" href="#project-source-code" title="Permalink to this headline">¶</a></h1>
+<p>Once you have the machine set up, you can access the project source code by cloning the git repository. Use the git
+icon on the left side of the Jupyter interface to clone the repository.</p>
+<section id="required-packages">
+<h2>Required packages<a class="headerlink" href="#required-packages" title="Permalink to this headline">¶</a></h2>
+<p>A lot of the packages that are commonly used for data science are included in the environment, but there are always
+things that need to be added further. You can install them easily with <code class="docutils literal notranslate"><span class="pre">pip</span></code> as outlined at <span class="xref std std-ref">dependency-install</span>.</p>
+<p>You are now ready to start working!</p>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Building Technology Assessment Platform: Machine Learning Implementation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Working on AAW</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#logging-in">Logging in</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#project-source-code">Project source code</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#required-packages">Required packages</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="usage/preprocessing.html">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/feature_selection.html">Feature selection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/build_model.html">Model building</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/kubeflow_pipeline.html">Kubeflow pipeline</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="installation.html" title="previous chapter">Installation</a></li>
+      <li>Next: <a href="usage/preprocessing.html" title="next chapter">Preprocessing</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2021, Natural Resources Canada.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.3.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/aaw_setup.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

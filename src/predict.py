@@ -1,49 +1,48 @@
 '''
 Uses the output from preprocessing and feature selection from mino, builds the model and then evaluate the model.
 '''
+import argparse
+import datetime
+import glob
+import json
+import os
+import shutil
+import time
+from math import sqrt
+
+import keras_tuner as kt
+import numpy as np
+import pandas as pd
+import s3fs
 import tensorflow as tf
 import tensorflow.keras as keras
-from tensorflow.keras import layers
 # import tensorflow_docs as tfdocs
 # import tensorflow_docs.plots
 import tensorflow_docs.modeling
-import numpy as np
 # np.random.seed(1337)
 from keras import backend as K
-from keras.models import Sequential
-from keras.utils import np_utils
+from keras import regularizers  # for l2 regularization
+from keras.callbacks import EarlyStopping
 # from keras.layers import Dense, Dropout, GaussianNoise, Conv1D,Flatten
 from keras.layers import BatchNormalization
-from keras.layers.core import Dense, Flatten, Dropout
-from keras import regularizers      # for l2 regularization
+from keras.layers.core import Dense, Dropout, Flatten
+from keras.models import Sequential
+from keras.utils import np_utils
 from keras.wrappers.scikit_learn import KerasRegressor
-from sklearn.metrics import mean_squared_error
-from keras import backend as K
-import os
-import glob
-from keras.callbacks import EarlyStopping
-from tensorflow.keras.optimizers import Adam
-from sklearn.compose import TransformedTargetRegressor
-from sklearn.pipeline import Pipeline
-from sklearn import metrics
-from sklearn.preprocessing import StandardScaler, MinMaxScaler, Normalizer
-from sklearn.model_selection import cross_val_score, cross_val_predict
-from sklearn.model_selection import GridSearchCV
-from sklearn.metrics import mean_absolute_error, mean_squared_error
 from matplotlib import pyplot as plt
-import json
-import argparse
-import pandas as pd
-from sklearn.model_selection import KFold
-import shutil
-from math import sqrt
-import keras_tuner as kt
-import time
-import datetime
+from sklearn import metrics
+from sklearn.compose import TransformedTargetRegressor
+from sklearn.metrics import mean_absolute_error, mean_squared_error
+from sklearn.model_selection import (GridSearchCV, KFold, cross_val_predict,
+                                     cross_val_score)
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import MinMaxScaler, Normalizer, StandardScaler
 from tensorboard.plugins.hparams import api as hp
-import s3fs
-import plot as pl
+from tensorflow.keras import layers
+from tensorflow.keras.optimizers import Adam
+
 import config as acm
+import plot as pl
 
 #######################################################
 # Predict energy consumed
@@ -399,15 +398,11 @@ def fit_evaluate(args):
     K.clear_session()
     start_time = time.time()
 
-    data = acm.access_minio(tenant=args.tenant,
-                            bucket=args.bucket,
-                            operation='read',
+    data = acm.access_minio(operation='read',
                             path=args.in_obj_name,
                             data='')
 
-    data2 = acm.access_minio(tenant=args.tenant,
-                             bucket=args.bucket,
-                             operation='read',
+    data2 = acm.access_minio(operation='read',
                              path=args.features,
                              data='')
 
@@ -479,9 +474,7 @@ def fit_evaluate(args):
     data_json = json.dumps(results_pred).encode('utf-8')
 
     # copy data to minio
-    acm.access_minio(tenant=args.tenant,
-                     bucket=args.bucket,
-                     operation='copy',
+    acm.access_minio(operation='copy',
                      path=args.output_path,
                      data=data_json)
 
@@ -492,8 +485,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     # Paths must be passed in, not hardcoded
-    parser.add_argument('--tenant', type=str, help='The minio tenant where the data is located in')
-    parser.add_argument('--bucket', type=str, help='The minio bucket where the data is located in')
     parser.add_argument('--in_obj_name', type=str, help='Name of data file to be read')
     parser.add_argument('--features', type=str, help='selected features')
     parser.add_argument('--param_search', type=str, help='param search')
@@ -502,7 +493,7 @@ if __name__ == '__main__':
 
     fit_evaluate(args)
 
-    # python3 predict.py --tenant standard --bucket nrcan-btap --param_search no --in_obj_name output_data/preprocessing_out --features output_data/feature_out --output_path output_data/predict_out
+    # python3 predict.py --param_search no --in_obj_name output_data/preprocessing_out --features output_data/feature_out --output_path output_data/predict_out
 
     # launch tensorboard
     # python -m tensorboard.main --logdir="./parameter_search/btap/"

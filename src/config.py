@@ -4,7 +4,20 @@ from typing import Any, Dict
 
 import pandas as pd
 import s3fs
-from pydantic import AnyHttpUrl, BaseSettings, SecretStr
+from pydantic import AnyHttpUrl, BaseModel, BaseSettings, SecretStr
+
+
+class AppConfig(BaseModel):
+    """Application configuration."""
+
+    # Bucket used to store weather data
+    WEATHER_BUCKET_NAME: str = 'weather'
+    # URL where weather files are stored
+    WEATHER_DATA_STORE: AnyHttpUrl = 'https://raw.githubusercontent.com/NREL/openstudio-standards/nrcan/data/weather/'
+
+    # Parent level key in the BTAP CLI config weather data is stored under.
+    # The EPW file key will be under this.
+    BUILDING_OPTS_KEY: str = ':building_options'
 
 
 # There's a JSON file available with required credentials in it
@@ -12,6 +25,11 @@ def json_config_settings_source(settings: BaseSettings) -> Dict[str, Any]:
     return json.loads(settings.__config__.json_settings_path.read_text())
 
 class Settings(BaseSettings):
+    """Application settings. All of these can be set by the environment to override anything coded here."""
+
+    # Set up application specific information
+    APP_CONFIG: AppConfig = AppConfig()
+
     MINIO_URL: AnyHttpUrl
     MINIO_ACCESS_KEY: str
     MINIO_SECRET_KEY: SecretStr

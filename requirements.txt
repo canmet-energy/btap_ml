@@ -8,6 +8,7 @@ numpy
 openpyxl
 pandas
 plotly
+pyarrow==6.0.0
 pydantic
 s3fs
 scikit_learn

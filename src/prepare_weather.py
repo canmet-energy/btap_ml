@@ -1,16 +1,25 @@
-import typer
-import config
-import yaml
 import pandas as pd
+import typer
+import yaml
 
+import config
 
 # Weather file master repo
 _epw_file_store = 'https://raw.githubusercontent.com/NREL/openstudio-standards/nrcan/data/weather/'
 
 def get_config(config_file: str):
-    """Load the specified configuration file from blob storage."""
-    # TODO: implement loading config from blob storage
-    contents = yaml.safe_load(config_file)
+    """Load the specified configuration file from blob storage.
+
+    Args:
+        config_file: Path to the config file relative to the default bucket.
+
+    Returns:
+        Dictionary of configuration information.
+    """
+    s3 = config.establish_s3_connection(config.settings.MINIO_URL,
+                                        config.settings.MINIO_ACCESS_KEY,
+                                        config.settings.MINIO_SECRET_KEY)
+    contents = yaml.safe_load(open(s3.open(config_file, mode='r')))
     return contents
 
 
@@ -45,9 +54,9 @@ def get_weather_df(filename: str) -> pd.DataFrame:
 
 def save_epw(df: pd.DataFrame, filename: str) -> None:
     """Save preprared EPW data out to blob storage.
-    
+
     The filename of the original file is used, with the extension replaced with .parquet.
-    
+
     Args:
         df: Pandas DataFrame to be saved out.
         filename: Filename of the source file used to produce the DataFrame.
@@ -59,27 +68,28 @@ def save_epw(df: pd.DataFrame, filename: str) -> None:
 
 def main(config_file: str, epw_file_key: str = ':epw_file') -> None:
     """Take raw EPW files as defined in BTAP YAML configuration and prepare it for use by the model.
-    
-    Uses the EnergyPlus configuration to identify and process weather data in EPW format. The weather data is then 
+
+    Uses the EnergyPlus configuration to identify and process weather data in EPW format. The weather data is then
     saved to blob storage for use in later processing stages.
-    
+
     Args:
         config_file: Path to the configuration file used for EnergyPlus.
         epw_file_key: The key in the configuration file that has the weather file name(s). Default is ``:epw_file``.
     """
     cfg = get_config(config_file)
 
-    # Guard against incorrect or undefined file key
-    if epw_file_key not in cfg:
+    # Guard against incorrect or undefined file key.
+    # EPW information should be under the building options.
+    if epw_file_key not in cfg.get(':building_options'):
         raise AttributeError("EPW file specification missing.")
-    
-    epw_files = cfg[epw_file_key]
+
+    epw_files = cfg.get(':building_options').get(epw_file_key)
 
     # Columns not used by EnergyPlus
-    weather_drop_list = ['minute', 'datasource', 'exthorrad', 'extdirrad', 'glohorrad', 'glohorillum', 'dirnorrad', 
-                         'difhorrad', 'zenlum', 'totskycvr', 'opaqskycvr', 'visibility', 'ceiling_hgt', 'precip_wtr', 
+    weather_drop_list = ['minute', 'datasource', 'exthorrad', 'extdirrad', 'glohorrad', 'glohorillum', 'dirnorrad',
+                         'difhorrad', 'zenlum', 'totskycvr', 'opaqskycvr', 'visibility', 'ceiling_hgt', 'precip_wtr',
                          'aerosol_opt_depth', 'days_last_snow', 'Albedo', 'liq_precip_rate', 'presweathcodes']
-    
+
     # Data could be a single file or a list of files
     if isinstance(epw_files, list):
         for name in epw_files:

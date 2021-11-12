@@ -5,8 +5,10 @@ kfp_pipeline_spec
 matplotlib==3.4.1
 minio==5.0.10
 numpy
+openpyxl
 pandas
 plotly
+pydantic
 s3fs
 scikit_learn
 seaborn

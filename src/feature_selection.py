@@ -2,18 +2,20 @@
 Select features that are used to build the surrogate mode.
 '''
 
-from sklearn.feature_selection import RFECV
-from sklearn.linear_model import LinearRegression, LassoCV, Lasso, ElasticNetCV
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.model_selection import KFold
-from sklearn.preprocessing import StandardScaler, MinMaxScaler, Normalizer
-from sklearn import linear_model
-import numpy as np
-import xgboost as xgb
-import json
 import argparse
+import json
+
+import numpy as np
 import pandas as pd
 import s3fs
+import xgboost as xgb
+from sklearn import linear_model
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.feature_selection import RFECV
+from sklearn.linear_model import ElasticNetCV, Lasso, LassoCV, LinearRegression
+from sklearn.model_selection import KFold
+from sklearn.preprocessing import MinMaxScaler, Normalizer, StandardScaler
+
 import config as acm
 
 ############################################################
@@ -33,9 +35,7 @@ def select_features(args, estimator_type='lasso', min_features=20):
     Returns:
        selected features are returned and uploaded to minio.
     """
-    data = acm.access_minio(tenant=args.tenant,
-                            bucket=args.bucket,
-                            operation='read',
+    data = acm.access_minio(operation='read',
                             path=args.in_obj_name,
                             data='')
 
@@ -84,9 +84,7 @@ def select_features(args, estimator_type='lasso', min_features=20):
     data_json = json.dumps(data).encode('utf-8')
 
     # copy data to minio
-    acm.access_minio(tenant=args.tenant,
-                     bucket=args.bucket,
-                     operation='copy',
+    acm.access_minio(operation='copy',
                      path=args.output_path,
                      data=data_json)
 
@@ -97,12 +95,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     # Paths must be passed in, not hardcoded
-    parser.add_argument('--tenant', type=str, help='The minio tenant where the data is located in')
-    parser.add_argument('--bucket', type=str, help='The minio bucket where the data is located in')
     parser.add_argument('--in_obj_name', type=str, help='Name of data file to be read')
     parser.add_argument('--estimator_type', type=str, help='Name of data file to be read')
     parser.add_argument('--output_path', type=str, help='Path of the local file where the output file should be written.')
     args = parser.parse_args()
 
     select_features(args)
-    # python3 feature_selection.py --tenant standard --bucket nrcan-btap --in_obj_name output_data/preprocessing_out --output_path output_data/feature_out --estimator_type elasticnet
+    # python3 feature_selection.py --in_obj_name output_data/preprocessing_out --output_path output_data/feature_out --estimator_type elasticnet

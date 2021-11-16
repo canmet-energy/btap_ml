@@ -103,7 +103,7 @@ def read_weather(path: str) -> pd.DataFrame:
     weather_df = clean_data(weather_df)
 
     # date_int is used later to join data together.
-    weather_df["date_int"] = weather_df['rep_time'].dt.strftime("%m%d").apply(int)
+    weather_df["date_int"] = weather_df['rep_time'].dt.strftime("%m%d").astype(int)
 
     # Aggregate data by day to reduce the complexity, leaving date values as they are.
     min_cols = {'year': 'min','month':'min','day':'min','rep_time':'min','date_int':'min'}

@@ -84,27 +84,35 @@ def read_output(path):
     return btap_df, floor_sq
 
 
-def read_weather(path):
+def read_weather(path: str) -> pd.DataFrame:
     """
     Used to read the weather epw file from minio
 
     Args:
-        path: file path where weather.csv file is to be read from in minio
+        path: file path where weather file is to be read from in minio
 
     Returns:
        btap_df: Dataframe containing the clean weather file.
     """
+    # Load the data from blob storage.
+    s3 = acm.establish_s3_connection(acm.settings.MINIO_URL, acm.settings.MINIO_ACCESS_KEY, acm.settings.MINIO_SECRET_KEY)
+    weather_df = pd.read_parquet(s3.open(acm.settings.NAMESPACE.joinpath(path).as_posix()))
 
-    weather_df = acm.access_minio(operation='read',
-                               path=path,
-                               data='')
-
-    weather_drop_list = ['Minute', 'Uncertainty Flags', 'Extraterrestrial Horizontal Radiation', 'Extraterrestrial Direct Normal Radiation', 'Global Horizontal Radiation', 'Global Horizontal Illuminance', 'Direct Normal Illuminance', 'Diffuse Horizontal Illuminance', 'Zenith Luminance', 'Total Sky Cover', 'Opaque Sky Cover', 'Visibility', 'Ceiling Height', 'Precipitable Water', 'Aerosol Optical Depth', 'Days Since Last Snowfall', 'Albedo', 'Liquid Precipitation Quantity', 'Present Weather Codes']
-    weather_df = weather_df.drop(weather_drop_list, axis=1)
+    # Remove spurious columns.
     weather_df = clean_data(weather_df)
-    weather_df["date_int"] = weather_df.apply(lambda r: datetime(int(r['Year']), int(r['Month']), int(r['Day']), int(r['Hour'] - 1)).strftime("%m%d"), axis=1)
-    weather_df["date_int"] = weather_df["date_int"].apply(lambda r: int(r))
-    weather_df = weather_df.groupby(['date_int']).agg(lambda x: x.sum())
+
+    # date_int is used later to join data together.
+    weather_df["date_int"] = weather_df['rep_time'].dt.strftime("%m%d").apply(int)
+
+    # Aggregate data by day to reduce the complexity, leaving date values as they are.
+    min_cols = {'year': 'min','month':'min','day':'min','rep_time':'min','date_int':'min'}
+    sum_cols = [c for c in weather_df.columns if c not in [min_cols.keys()]]
+    agg_funcs = dict(zip(sum_cols,['sum'] * len(sum_cols)))
+    agg_funcs.update(min_cols)
+    weather_df = weather_df.groupby([weather_df['rep_time'].dt.day]).agg(agg_funcs)
+
+    # Remove the rep_time column, since later stages don't know to expect it.
+    weather_df = weather_df.drop('rep_time', axis='columns')
 
     return weather_df
 
@@ -327,4 +335,4 @@ if __name__ == '__main__':
     process_data(args)
 
     # to run the program use the command below
-# python3 preprocessing.py --in_build_params input_data/output_2021-10-04.xlsx --in_hour input_data/total_hourly_res_2021-10-04.csv --in_weather input_data/montreal_epw.csv --output_path output_data/preprocessing_out --in_build_params_val input_data/output.xlsx --in_hour_val input_data/total_hourly_res.csv
+# python3 preprocessing.py --in_build_params input_data/output_2021-10-04.xlsx --in_hour input_data/total_hourly_res_2021-10-04.csv --in_weather weather/CAN_QC_Montreal-Trudeau.Intl.AP.716270_CWEC2016.epw.parquet --output_path output_data/preprocessing_out --in_build_params_val input_data/output.xlsx --in_hour_val input_data/total_hourly_res.csv

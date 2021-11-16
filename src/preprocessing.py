@@ -40,6 +40,7 @@ def clean_data(df):
     Returns:
        clean dataframe
     """
+    df = df.copy()
     # Drop any column with more than 50% missing values
     half_count = len(df) / 2
     df = df.dropna(thresh=half_count, axis=1)

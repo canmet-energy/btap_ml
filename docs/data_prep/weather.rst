@@ -51,6 +51,7 @@ Weather data can be automatically preprared from the information found in the BT
 ``prepare_weather.py`` script can be used to process weather data and save it to blob storage.
 
 .. code::
+
    $ python prepare_weather.py input_data/sample-config.yml
 
 Outputs are placed in the ``weather`` bucket (by default) in storage as parquet files. The name of the weather files

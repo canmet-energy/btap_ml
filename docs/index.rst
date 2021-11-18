@@ -39,6 +39,12 @@ required to produce usable outputs.
    usage/build_model
    usage/kubeflow_pipeline
 
+API
+---
+
+Refer to :ref:`modindex`
+
+
 Indices and tables
 ==================
 

@@ -3,7 +3,6 @@ Downloads all the dataset from minio, preprocess the data, split the data into t
 '''
 import argparse
 import glob
-# from kfp import dsl
 import io
 import json
 import os
@@ -24,7 +23,6 @@ from sklearn.preprocessing import (LabelEncoder, MinMaxScaler, OneHotEncoder,
                                    StandardScaler)
 
 import config as acm
-# from kfp.components import load_component_from_file
 import plot as pl
 
 

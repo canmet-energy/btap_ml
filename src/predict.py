@@ -246,20 +246,20 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
     print("[Score val loss, val mae, val mse]:", val_score)
 
     y_test_complete = y_test_complete.groupby(['datapoint_id']).sum()
-    y_test_complete['Total Energy'] = y_test_complete['Total Energy'].apply(lambda r: float(r / 365))
+    y_test_complete['Total Energy'] = y_test_complete['Total Energy'] / 365)
     output_df = ''
     y_test = y_test.groupby(['datapoint_id']).sum()
-    y_test['energy'] = y_test['energy'].apply(lambda r: float((r * 1.0) / 1000))
-    y_test['y_pred_transformed'] = y_test['y_pred_transformed'].apply(lambda r: float((r * 1.0) / 1000))
+    y_test['energy'] = y_test['energy'] / 1000
+    y_test['y_pred_transformed'] = y_test['y_pred_transformed'] / 1000
     output_df = pd.merge(y_test, y_test_complete, left_index=True, right_index=True, how='left')
     annual_metric = score(output_df['Total Energy'], output_df['y_pred_transformed'])
 
     y_validate_complete = y_validate_complete.groupby(['datapoint_id']).sum()
-    y_validate_complete['Total Energy'] = y_validate_complete['Total Energy'].apply(lambda r: float(r / 365))
+    y_validate_complete['Total Energy'] = y_validate_complete['Total Energy'] / 365)
     output_val_df = ''
     y_validate = y_validate.groupby(['datapoint_id']).sum()
-    y_validate['energy'] = y_validate['energy'].apply(lambda r: float((r * 1.0) / 1000))
-    y_validate['y_pred_transformed'] = y_validate['y_pred_transformed'].apply(lambda r: float((r * 1.0) / 1000))
+    y_validate['energy'] = y_validate['energy'] / 1000
+    y_validate['y_pred_transformed'] = y_validate['y_pred_transformed'] / 1000
 
     output_val_df = pd.merge(y_validate, y_validate_complete, left_index=True, right_index=True, how='left')
     annual_metric_val = score(output_val_df['Total Energy'], output_val_df['y_pred_transformed'])

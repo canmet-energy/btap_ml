@@ -3,7 +3,6 @@ Downloads all the dataset from minio, preprocess the data, split the data into t
 '''
 import argparse
 import glob
-# from kfp import dsl
 import io
 import json
 import os
@@ -24,7 +23,6 @@ from sklearn.preprocessing import (LabelEncoder, MinMaxScaler, OneHotEncoder,
                                    StandardScaler)
 
 import config as acm
-# from kfp.components import load_component_from_file
 import plot as pl
 
 
@@ -41,16 +39,24 @@ def clean_data(df):
        clean dataframe
     """
     df = df.copy()
+
     # Drop any column with more than 50% missing values
     half_count = len(df) / 2
     df = df.dropna(thresh=half_count, axis=1)
 
     # Again, there may be some columns with more than one unique value, but one value that has insignificant frequency in the data set.
-    for col in df.columns:
-        num = len(df[col].unique())
+    FREQ_THRESHOLD = 3
+    PROTECTED_COLS = ['energy_eui_additional_fuel_gj_per_m_sq',
+                      'energy_eui_electricity_gj_per_m_sq',
+                      'energy_eui_natural_gas_gj_per_m_sq']
 
-        if ((len(df[col].unique()) < 3) and (col not in ['energy_eui_additional_fuel_gj_per_m_sq', 'energy_eui_electricity_gj_per_m_sq', 'energy_eui_natural_gas_gj_per_m_sq'])):
-            df.drop(col, inplace=True, axis=1)
+    # Identify columns that don't match the frequency threshold
+    meets_threshold = df.nunique() >= FREQ_THRESHOLD
+    meets_threshold[PROTECTED_COLS] = True
+
+    # Drop any columns that didn't meet the threshold
+    df = df.loc[:, meets_threshold]
+
     return df
 
 
@@ -140,10 +146,7 @@ def read_hour_energy(path, floor_sq):
     energy_df = clean_data(energy_df)
     energy_hour_df = energy_df.reset_index()
     energy_hour_melt = energy_hour_df.melt(id_vars=['datapoint_id'], var_name='Timestamp', value_name='energy')
-    energy_hour_melt["date_int"] = energy_hour_melt['Timestamp'].apply(lambda r: datetime.strptime(r, '%Y-%m-%d %H:%M'))
-
-    energy_hour_melt["date_int"] = energy_hour_melt["date_int"].apply(lambda r: r.strftime("%m%d"))
-    energy_hour_melt["date_int"] = energy_hour_melt["date_int"].apply(lambda r: int(r))
+    energy_hour_melt["date_int"] = pd.to_datetime(df['timestamp']).dt.strftime("%m%d").astype(int)
     energy_hour_melt = energy_hour_melt.groupby(['datapoint_id', 'date_int'])['energy'].agg(lambda x: x.sum()).reset_index()
 
     return energy_hour_melt

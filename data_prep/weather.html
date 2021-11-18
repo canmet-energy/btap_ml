@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Weather data processing &#8212; BTAP: ML  documentation</title>
+    <title>Weather data processing &#8212; Building Technology Assessment Platform: Machine Learning Implementation  documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
     <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
@@ -79,9 +79,6 @@ daily intervals.</p>
 <h2>Automated processing<a class="headerlink" href="#automated-processing" title="Permalink to this headline">¶</a></h2>
 <p>Weather data can be automatically preprared from the information found in the BTAP CLI configuration YAML. The
 <code class="docutils literal notranslate"><span class="pre">prepare_weather.py</span></code> script can be used to process weather data and save it to blob storage.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python prepare_weather.py input_data/sample-config.yml
-</pre></div>
-</div>
 <p>Outputs are placed in the <code class="docutils literal notranslate"><span class="pre">weather</span></code> bucket (by default) in storage as parquet files. The name of the weather files
 will match the input name found in the YAML file, but with a <code class="docutils literal notranslate"><span class="pre">.parquet</span></code> file extension.</p>
 </section>
@@ -94,7 +91,7 @@ will match the input name found in the YAML file, but with a <code class="docuti
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="../index.html">BTAP: ML</a></h1>
+<h1 class="logo"><a href="../index.html">Building Technology Assessment Platform: Machine Learning Implementation</a></h1>
 
 
 
@@ -104,11 +101,13 @@ will match the input name found in the YAML file, but with a <code class="docuti
 
 
 <h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../aaw_setup.html">Working on AAW</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../aaw_setup.html#project-source-code">Project source code</a></li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">Data Prepration</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Weather data processing</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#convert-to-tabular-data">Convert to tabular data</a></li>
@@ -118,6 +117,7 @@ will match the input name found in the YAML file, but with a <code class="docuti
 </ul>
 </li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">Usage</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../usage/preprocessing.html">Preprocessing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../usage/feature_selection.html">Feature selection</a></li>

@@ -17,7 +17,7 @@
 
 # -- Project information -----------------------------------------------------
 
-project = 'Building Technology Assessment Platform: Machine Learning Implementation'
+project = 'BTAP: ML'
 copyright = '2021, Natural Resources Canada'
 author = 'Natural Resources Canada, Statistics Canada'
 

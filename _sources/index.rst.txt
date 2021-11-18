@@ -17,33 +17,33 @@ associated with calculating such a large solution space. Even with High Performa
 stock of models is estimated to take 57 centuries. Surrogate models significantly reduce the time and resources
 required to produce usable outputs.
 
+Contents
+--------
+
 .. toctree::
    :maxdepth: 2
-   :caption: Contents
 
    installation
    aaw_setup
 
+Data Prepration
+---------------
+
 .. toctree::
    :maxdepth: 2
-   :caption: Data Prepration
 
    data_prep/weather
 
+Usage
+-----
+
 .. toctree::
    :maxdepth: 2
-   :caption: Usage
 
    usage/preprocessing
    usage/feature_selection
    usage/build_model
    usage/kubeflow_pipeline
-
-API
----
-
-Refer to :ref:`modindex`
-
 
 Indices and tables
 ==================

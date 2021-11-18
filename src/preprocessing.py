@@ -41,16 +41,24 @@ def clean_data(df):
        clean dataframe
     """
     df = df.copy()
+
     # Drop any column with more than 50% missing values
     half_count = len(df) / 2
     df = df.dropna(thresh=half_count, axis=1)
 
     # Again, there may be some columns with more than one unique value, but one value that has insignificant frequency in the data set.
-    for col in df.columns:
-        num = len(df[col].unique())
+    FREQ_THRESHOLD = 3
+    PROTECTED_COLS = ['energy_eui_additional_fuel_gj_per_m_sq',
+                      'energy_eui_electricity_gj_per_m_sq',
+                      'energy_eui_natural_gas_gj_per_m_sq']
 
-        if ((len(df[col].unique()) < 3) and (col not in ['energy_eui_additional_fuel_gj_per_m_sq', 'energy_eui_electricity_gj_per_m_sq', 'energy_eui_natural_gas_gj_per_m_sq'])):
-            df.drop(col, inplace=True, axis=1)
+    # Identify columns that don't match the frequency threshold
+    meets_threshold = df.nunique() >= FREQ_THRESHOLD
+    meets_threshold[PROTECTED_COLS] = True
+
+    # Drop any columns that didn't meet the threshold
+    df = df.loc[:, meets_threshold]
+
     return df
 
 

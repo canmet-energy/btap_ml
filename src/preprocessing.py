@@ -146,10 +146,7 @@ def read_hour_energy(path, floor_sq):
     energy_df = clean_data(energy_df)
     energy_hour_df = energy_df.reset_index()
     energy_hour_melt = energy_hour_df.melt(id_vars=['datapoint_id'], var_name='Timestamp', value_name='energy')
-    energy_hour_melt["date_int"] = energy_hour_melt['Timestamp'].apply(lambda r: datetime.strptime(r, '%Y-%m-%d %H:%M'))
-
-    energy_hour_melt["date_int"] = energy_hour_melt["date_int"].apply(lambda r: r.strftime("%m%d"))
-    energy_hour_melt["date_int"] = energy_hour_melt["date_int"].apply(lambda r: int(r))
+    energy_hour_melt["date_int"] = pd.to_datetime(df['timestamp']).dt.strftime("%m%d").astype(int)
     energy_hour_melt = energy_hour_melt.groupby(['datapoint_id', 'date_int'])['energy'].agg(lambda x: x.sum()).reset_index()
 
     return energy_hour_melt

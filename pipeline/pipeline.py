@@ -8,26 +8,31 @@ from kfp.components import load_component_from_file
               )
 
 #define your pipeline
-def btap_pipeline(minio_tenant:str,bucket:str,build_params:str,energy_hour:str,weather:str,build_params_val:str,energy_hour_val:str,
-                  output_path:str,featureestimator:str,featureoutput_path:str,param_search:str):
-#     tenant ='minio_tenant'
+def btap_pipeline(minio_tenant,bucket,energy_hour,build_params,weather,output_path,energy_hour_val,
+                  build_params_val,energy_hour_gas,build_params_gas,featureestimator,featureoutput_path,param_search):
+    
     # Loads the yaml manifest for each component
-    preprocess = load_component_from_file('yaml/preprocessing.yaml')
-    feature_selection = load_component_from_file('yaml/feature_selection.yaml')
-    predict = load_component_from_file('yaml/predict.yaml')
+    preprocess = load_component_from_file('yaml/preprocessing.yml')
+    feature_selection = load_component_from_file('yaml/feature_selection.yml')
+    predict = load_component_from_file('yaml/predict.yml')
     
     preprocess_ = preprocess(
                              tenant=minio_tenant,
                              bucket=bucket,
-                             in_build_params=build_params,
                              in_hour=energy_hour,
+                             in_build_params=build_params,
                              in_weather=weather,
-                             in_build_params_val=build_params_val,
+                             output_path=output_path,
                              in_hour_val=energy_hour_val,
-                             output_path=output_path
+                             in_build_params_val=build_params_val,
+                             in_hour_gas=energy_hour_gas,
+                             in_build_params_gas =build_params_gas,
+                             
+                             
+                             
                              
                             )
- 
+    
     feature_selection_ = feature_selection(tenant=minio_tenant,
                                            bucket=bucket,
                                            in_obj_name=preprocess_.output,
@@ -45,4 +50,3 @@ if __name__ == '__main__':
     kfp.compiler.Compiler().compile(btap_pipeline, 'pipeline.yaml')
     print(f"Exported pipeline definition to pipeline.yaml")
     
-  

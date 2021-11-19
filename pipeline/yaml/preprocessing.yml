@@ -1,0 +1,66 @@
+name: Process data Function
+description: Clean and split the data downloaded from minio which is the output from download_data.yaml
+
+inputs:
+- {name: tenant, type: String, description: 'Name of minio tenant to access data from'}
+- {name: bucket, type: String, description: 'Name of minio bucket to access data from'}
+- {name: in_hour, type: String, description: 'Name of the hourly energy dataset file'}
+- {name: in_build_params, type: String, description: 'Name of building parameter dataset to access data from'}
+- {name: in_weather, type: String, description: 'Name of weather file'}
+- {name: output_path, type: String, description: 'Path where the output data will be stored.'}
+- {name: in_hour_val, type: String, description: 'Name of the hourly energy dataset file'}
+- {name: in_build_params_val, type: String, description: 'Name of building parameter  validation dataset to access data from'}
+- {name: in_hour_gas, type: String, description: 'Name of the hourly energy dataset file'}
+- {name: in_build_params_gas, type: String, description: 'Name of building parameter  validation dataset to access data from'}
+
+
+
+
+outputs:
+- {name: output_path, type: String, description: 'Path where the output data will be stored.'}
+
+implementation:
+  container:
+    # The strict name of a container image that you've pushed to a container registry.
+    image: k8scc01covidacr.azurecr.io/btap:9e5e4a7afad16167292e242e1b5e36b1a46a1ec0
+    command: [
+      python3, 
+      
+      # Path of the program inside the container
+      /pipelines/preprocessing.py,
+      
+      --tenant,
+      {inputValue: tenant},
+      
+      --bucket,
+      {inputValue: bucket},
+      
+      --in_hour,
+      {inputPath: in_hour},
+      
+      --in_build_params,
+      {inputValue: in_build_params},
+        
+      --in_weather,
+      {inputPath: in_weather},
+      
+      --output_path,
+      {outputPath: output_path},
+      
+       --in_hour_val,
+      {inputPath: in_hour_val},
+      
+      --in_build_params_val,
+      {inputPath: in_build_params_val},
+      
+      --in_hour_gas,
+      {inputPath: in_hour_gas},
+      
+      --in_build_params_gas,
+      {inputPath: in_build_params_gas},
+      
+      
+      
+      
+    ]
+

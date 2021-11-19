@@ -1,0 +1,44 @@
+stages:
+  - build-image
+  - create-pipeline
+  - upload-pipeline
+
+build:
+  image: docker:21.11.03
+  stage: build-image
+  services:
+    - docker:21.11.03-dind
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - if docker pull $CI_REGISTRY_IMAGE:latest; then docker tag $CI_REGISTRY_IMAGE:latest $CI_REGISTRY_IMAGE:prev; CACHE="--cache-from $CI_REGISTRY_IMAGE:prev "; fi
+    - docker build -t $CI_REGISTRY_IMAGE $CACHE .
+    - docker push $CI_REGISTRY_IMAGE
+
+# Example documentation deployment
+create-pipeline:
+  stage: create-pipeline
+  image: python:3.7-slim
+  # Cache conda virtual environment to avoid re-fetching these packages from
+  # the public internet on every pipeline run.
+  before_script:
+    - pip3 install kfp
+    - apt-get update --yes && apt-get install --yes unzip
+  script:
+    - python3 pipeline/create-pipeline.py
+    - unzip pipeline.zip
+  artifacts:
+    paths:
+      - pipeline.yaml
+      - pipeline.zip
+
+
+upload-pipeline:
+  stage: upload-pipeline
+  image: python:3.7-slim
+  before_script:
+    - pip install kfp
+  script:
+    - python3 pipeline/upload-pipeline.py
+  when: manual
+  dependencies:
+    - create-pipeline

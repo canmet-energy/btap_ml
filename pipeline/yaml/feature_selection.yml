@@ -2,8 +2,8 @@ name: Feature selection Function
 description: Selects the feature that would be used in building the model
 
 inputs:
-- {name: Tenant, type: String, description: 'Name of minio tenant to access data from'}
-- {name: Bucket, type: String, description: 'Name of minio bucket to access data from'}
+- {name: tenant, type: String, description: 'Name of minio tenant to access data from'}
+- {name: bucket, type: String, description: 'Name of minio bucket to access data from'}
 - {name: in_obj_name, type: String, description: 'Name of minio bucket to access data from'}
 - {name: estimator_type, type: String, description: 'Name of minio bucket to access data from'}
 - {name: output_path, type: String, description: 'Path where the output data will be stored.'}
@@ -13,18 +13,18 @@ outputs:
 implementation:
   container:
     # The strict name of a container image that you've pushed to a container registry.
-    image: fernandolpz/only-tests:download_data_v3
+    image: k8scc01covidacr.azurecr.io/btap:9e5e4a7afad16167292e242e1b5e36b1a46a1ec0
     command: [
       python3, 
       
       # Path of the program inside the container
-      /pipelines/component/src/feature_selection.py,
+      /pipelines/feature_selection.py,
       
       --tenant,
-      {inputValue: Tenant},
+      {inputValue: tenant},
       
       --bucket,
-      {inputValue: Bucket},
+      {inputValue: bucket},
       
       --in_obj_name,
       {inputPath: in_obj_name},

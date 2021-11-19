@@ -4,23 +4,23 @@ Contains helper functions used to create chart. The plots created are stored in 
 
 import numpy as np
 import pandas as pd
-import seaborn as sns
 import plotly
+import seaborn as sns
 from matplotlib import pyplot as plt
 
 
-def show_var(btap_data_df):
+def show_var(btap_data_df: pd.DataFrame) -> None:
     num_vars = list(btap_data_df.select_dtypes(include=[np.number]).columns.values)
     df_ax = btap_data_df[num_vars].plot(title='numerical values', figsize=(15, 8))
     plt.savefig('../output/numerical_val_plot.png')
 
 
-def norm_res(btap_data_df):
+def norm_res(btap_data_df: pd.DataFrame):
     results_normed = (btap_data_df - np.mean(btap_data_df)) / np.std(btap_data_df)
     return results_normed
 
 
-def norm_res_plot(btap_data_df):
+def norm_res_plot(btap_data_df: pd.DataFrame) -> None:
     total_heating_use = btap_data_df["daily_energy"]
     plt.scatter(norm_res(btap_data_df[":ext_wall_cond"]), total_heating_use, label="wall cond")
     plt.scatter(norm_res(btap_data_df[":ext_roof_cond"]), total_heating_use, label="roof cond")
@@ -29,7 +29,7 @@ def norm_res_plot(btap_data_df):
     plt.savefig('../output/Total_Energy_Scatter.png')
 
 
-def corr_plot(btap_data_df):
+def corr_plot(btap_data_df: pd.DataFrame) -> None:
     # Using Pearson Correlation
     plt.figure(figsize=(20, 20))
     cor = btap_data_df.corr()
@@ -37,14 +37,14 @@ def corr_plot(btap_data_df):
     plt.savefig('../output/corr_plot.png')
 
 
-def target_plot(y_train, y_test):
+def target_plot(y_train, y_test) -> None:
     plt.figure()
     plt.hist(y_train, label='train')
     plt.hist(y_test, label='test')
     plt.savefig('../output/daily_energy_train.png')
 
 
-def plot_metric(df):
+def plot_metric(df: pd.DataFrame) -> None:
     plt.figure()
     plt.plot(df['loss'], label='mae')
     plt.savefig('./output/mae.png')
@@ -59,7 +59,7 @@ def plot_metric(df):
     return
 
 
-def save_plot(H):
+def save_plot(H) -> None:
     # plot the training loss and accuracy
     plt.style.use("ggplot")
     plt.figure()
@@ -83,7 +83,7 @@ def save_plot(H):
     return
 
 
-def annual_plot(output_df, desc):
+def annual_plot(output_df: pd.DataFrame, desc: str) -> None:
     plt.style.use("ggplot")
     plt.figure()
     plt.plot(output_df['Total Energy'], label='actual')

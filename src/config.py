@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Union
 
 import pandas as pd
 import s3fs
@@ -72,7 +72,7 @@ def establish_s3_connection(endpoint_url: str, access_key: str, secret_key: Secr
     return s3
 
 
-def access_minio(path, operation, data):
+def access_minio(path: str, operation: str, data: Union[str, pd.DataFrame]):
     """
     Used to read and write to minio.
 

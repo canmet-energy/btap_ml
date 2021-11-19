@@ -31,7 +31,9 @@ from keras.utils import np_utils
 from keras.wrappers.scikit_learn import KerasRegressor
 from matplotlib import pyplot as plt
 from sklearn import metrics
-from sklearn.compose import TransformedTargetRegressor
+from sklearn.preprocessing import StandardScaler,MinMaxScaler,RobustScaler 
+from sklearn.model_selection import cross_val_score,cross_val_predict
+from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 from sklearn.model_selection import (GridSearchCV, KFold, cross_val_predict,
                                      cross_val_score)
@@ -98,10 +100,10 @@ def model_builder(hp):
     """
     model = keras.Sequential()
     model.add(keras.layers.Flatten())
-
-    hp_activation = hp.Choice('activation', values=['relu', 'tanh', 'sigmoid'])
-    # hp_regularizers= hp.Choice('regularizers', values=[1e-4, 1e-5])
-    for i in range(hp.Int("num_layers", 1, 2)):
+    
+    hp_activation= hp.Choice('activation', values=['relu','tanh','sigmoid'])
+#     hp_regularizers= hp.Choice('regularizers', values=[1e-4, 1e-5])
+    for i in range(hp.Int("num_layers", 1,1)):
         model.add(layers.Dense(
             units=hp.Int("units_" + str(i), min_value=8, max_value=96, step=8),
             activation=hp_activation,
@@ -227,21 +229,17 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
         output_val_df: merge of y_pred, y_validate, datapoint_id, the final dataframe showing the model output using the validation set
     """
     # evaluate the hypermodel on the test data.
-    eval_result = model.evaluate(X_test, y_test['energy'])
-    eval_result_val = model.evaluate(X_validate, y_validate['energy'])
     y_test['y_pred'] = model.predict(X_test)
     y_validate['y_pred'] = model.predict(X_validate)
 
     # Retrain the model
-    y_test['y_pred_transformed'] = scalery.inverse_transform(y_test['y_pred'].values.reshape(-1, 1))
-    y_validate['y_pred_transformed'] = scalery.inverse_transform(y_validate['y_pred'].values.reshape(-1, 1))
-
-    test_score = score(y_test['y_pred'], y_test['y_pred_transformed'])
-    val_score = score(y_validate['y_pred'], y_validate['y_pred_transformed'])
-
-    print("[Evalute test loss, test mae, test mse]:", eval_result)
-    print("[Evalute val loss, val mae, val mse]:", eval_result_val)
-
+    y_test['y_pred_transformed'] =scalery.inverse_transform(y_test['y_pred'].values.reshape(-1,1))
+    y_validate['y_pred_transformed'] =scalery.inverse_transform(y_validate['y_pred'].values.reshape(-1,1))
+    
+    test_score = score( y_test['energy'], y_test['y_pred_transformed'])
+    val_score = score( y_validate['energy'], y_validate['y_pred_transformed'])
+    
+    
     print("[Score test loss, test mae, test mse]:", test_score)
     print("[Score val loss, val mae, val mse]:", val_score)
 
@@ -249,47 +247,48 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
     y_test_complete['Total Energy'] = y_test_complete['Total Energy'].apply(lambda r: float(r / 365))
     output_df = ''
     y_test = y_test.groupby(['datapoint_id']).sum()
-    y_test['energy'] = y_test['energy'].apply(lambda r: float((r * 1.0) / 1000))
-    y_test['y_pred_transformed'] = y_test['y_pred_transformed'].apply(lambda r: float((r * 1.0) / 1000))
-    output_df = pd.merge(y_test, y_test_complete, left_index=True, right_index=True, how='left')
-    annual_metric = score(output_df['Total Energy'], output_df['y_pred_transformed'])
-
+    y_test['energy'] =y_test['energy'].apply(lambda r : float((r*1.0)/1000))
+    y_test['y_pred_transformed'] =y_test['y_pred_transformed'].apply(lambda r : float((r*1.0)/1000))
+    output_df = pd.merge(y_test,y_test_complete,left_index=True, right_index=True,how='left')
+    annual_metric=score(output_df['Total Energy'],output_df['y_pred_transformed'])
+    
     y_validate_complete = y_validate_complete.groupby(['datapoint_id']).sum()
     y_validate_complete['Total Energy'] = y_validate_complete['Total Energy'].apply(lambda r: float(r / 365))
     output_val_df = ''
     y_validate = y_validate.groupby(['datapoint_id']).sum()
-    y_validate['energy'] = y_validate['energy'].apply(lambda r: float((r * 1.0) / 1000))
-    y_validate['y_pred_transformed'] = y_validate['y_pred_transformed'].apply(lambda r: float((r * 1.0) / 1000))
-
-    output_val_df = pd.merge(y_validate, y_validate_complete, left_index=True, right_index=True, how='left')
-    annual_metric_val = score(output_val_df['Total Energy'], output_val_df['y_pred_transformed'])
-
-    output_df = output_df.drop(['y_pred', 'energy_y', 'energy_x'], axis=1)
-    output_val_df = output_val_df.drop(['y_pred', 'energy_y', 'energy_x'], axis=1)
-
-    pl.annual_plot(output_df, 'test_set')
-    pl.annual_plot(output_df, 'validation_set')
-
-    print(model.summary)
-
+    y_validate['energy'] =y_validate['energy'].apply(lambda r : float((r*1.0)/1000))
+    y_validate['y_pred_transformed'] =y_validate['y_pred_transformed'].apply(lambda r : float((r*1.0)/1000))
+    
+    
+    output_val_df = pd.merge(y_validate,y_validate_complete,left_index=True, right_index=True,how='left')
+    annual_metric_val=score(output_val_df['Total Energy'],output_val_df['y_pred_transformed'])
+    
+    output_df = output_df.drop(['y_pred','energy_y','energy_x'],axis=1)
+    output_val_df = output_val_df.drop(['y_pred','energy_y','energy_x'],axis=1)
+    
+    pl.daily_plot(y_test,'test_set')
+    pl.daily_plot(y_validate,'validation_set')
+    
+    pl.annual_plot(output_df,'test_set')
+    pl.annual_plot(output_val_df,'validation_set')
+    
+    
     print('****************TEST SET****************************')
-    print(eval_result)
-    print(output_df)
+    print(output_df.head(50))
     print(annual_metric)
 
     print('****************VALIDATION SET****************************')
-    print(eval_result_val)
-    print(output_val_df)
+    print(output_val_df.head(50))
     print(annual_metric_val)
-
-    result = {
-        'metric': eval_result,
-        'annual_metric': annual_metric,
-        'output_df': output_df.values.tolist(),
-        'val_metric': eval_result_val,
-        'val_annual_metric': annual_metric_val,
-        'output_val_df': output_val_df.values.tolist(),
-    }
+    
+    result= {
+            'metric': test_score,
+            'annual_metric':annual_metric,
+            'output_df':output_df.values.tolist(),
+            'val_metric' : val_score,
+            'val_annual_metric':annual_metric_val,
+            'output_val_df':output_val_df.values.tolist(),
+            }
 
     return result
 
@@ -369,12 +368,13 @@ def create_model(dense_layers, activation, optimizer, dropout_rate, length, lear
                                    hist_callback,
                                    ],
                         epochs=epochs,
-                        batch_size=batch_size,
+                        #batch_size =batch_size,                    
                         verbose=1,
                         # shuffle=False,
                         validation_split=0.2)
-    pl.save_plot(history)
-
+#     pl.save_plot(history)
+    
+    
     print(model.summary())
     plt.ylabel('loss')
 
@@ -429,18 +429,19 @@ def fit_evaluate(args):
     X_test = X_test[selected_features]
     X_validate = X_validate[selected_features]
 
-    col_length = X_train.shape[1]
 
-    # extracting the test data for the target variable
-    y_test_complete = pd.DataFrame(data["y_test_complete"], columns=['energy', 'datapoint_id', 'Total Energy'])
-    y_test = pd.DataFrame(data["y_test"], columns=['energy', 'datapoint_id', 'Total Energy'])
-    y_test = y_test.drop(['Total Energy'], axis=1)
-    y_validate_complete = pd.DataFrame(data["y_validate_complete"], columns=['energy', 'datapoint_id', 'Total Energy'])
+    #extracting the test data for the target variable
+    y_test_complete = pd.DataFrame(data["y_test_complete"],columns=['energy','datapoint_id','Total Energy'])
+    y_test = pd.DataFrame(data["y_test"],columns=['energy','datapoint_id'])
+    #y_test = y_test.drop(['Total Energy'],axis=1)
+    print(y_test)
+    y_validate_complete = pd.DataFrame(data["y_validate_complete"],columns=['energy','datapoint_id','Total Energy'])
+    #y_validate_complete = pd.DataFrame(data["y_validate_complete"],columns=['energy','datapoint_id'])
     print(y_validate_complete)
-    y_validate = pd.DataFrame(data["y_validate"], columns=['energy', 'datapoint_id'])
-
-    scalerx = Normalizer()
-    scalery = StandardScaler()
+    y_validate= pd.DataFrame(data["y_validate"],columns=['energy','datapoint_id'])
+    
+    scalerx= RobustScaler()
+    scalery= RobustScaler()
     X_train = scalerx.fit_transform(X_train)
     X_test = scalerx.transform(X_test)
     X_validate = scalerx.transform(X_validate)
@@ -453,24 +454,25 @@ def fit_evaluate(args):
         results_pred = evaluate(hypermodel, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete)
     else:
         results_pred = create_model(
-                                   # dense_layers=[24],
-                                   dense_layers=[56, 16],
-                                   activation='relu',
-                                   optimizer='rmsprop',
-                                   dropout_rate=0.1,
-                                   length=col_length,
-                                   learning_rate=0.0001,
-                                   epochs=100,
-                                   batch_size=365,
-                                   X_train=X_train, y_train=y_train,
-                                   X_test=X_test, y_test=y_test,
-                                   y_test_complete=y_test_complete, scalery=scalery,
-                                   X_validate=X_validate, y_validate=y_validate,
-                                   y_validate_complete=y_validate_complete,
-                                   )
-    time_taken = ((time.time() - start_time) / 60)
-    print("********* Total time spent is ***********" + str(time_taken) + " minutes")
-
+                             dense_layers=[56],
+                             #dense_layers=[88],
+                             activation='relu',
+                             optimizer='adam',
+                             dropout_rate=0.1,
+                             length=col_length,
+                             learning_rate=0.001,
+                             epochs=20,
+                             batch_size=90,
+                             X_train=X_train,y_train=y_train,
+                             X_test=X_test,y_test=y_test
+                             ,y_test_complete=y_test_complete,scalery=scalery,
+                             X_validate = X_validate, y_validate=y_validate,
+                             y_validate_complete= y_validate_complete,
+                             
+                            )
+    time_taken = ((time.time() - start_time)/60)
+    print("********* Total time spent is ***********" + str(time_taken)+" minutes" )
+    
     data_json = json.dumps(results_pred).encode('utf-8')
 
     # copy data to minio

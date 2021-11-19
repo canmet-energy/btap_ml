@@ -1,22 +1,21 @@
 '''
 Select features that are used to build the surrogate mode.
 '''
-
+from sklearn.feature_selection import RFECV 
+from sklearn.linear_model import LinearRegression, LassoCV, Lasso,ElasticNetCV
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.model_selection import KFold
+from sklearn.preprocessing import StandardScaler, MinMaxScaler,RobustScaler
+from sklearn import linear_model
+import numpy as np
+import xgboost as xgb 
+import json
 import argparse
 import json
 
 import numpy as np
 import pandas as pd
 import s3fs
-import xgboost as xgb
-from sklearn import linear_model
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.feature_selection import RFECV
-from sklearn.linear_model import ElasticNetCV, Lasso, LassoCV, LinearRegression
-from sklearn.model_selection import KFold
-from sklearn.preprocessing import MinMaxScaler, Normalizer, StandardScaler
-
-import config as acm
 
 ############################################################
 # feature selection
@@ -40,13 +39,13 @@ def select_features(args, estimator_type='lasso', min_features=20):
                             data='')
 
     data = json.load(data)
-    features = data["features"]
-    X_train = pd.DataFrame(data["X_train"], columns=features)
-    X_test = pd.DataFrame(data["X_test"], columns=features)
-
-    # normalize
-    scalerx = Normalizer()
-    scalery = Normalizer()
+    features =data["features"] 
+    X_train = pd.DataFrame(data["X_train"],columns=features)
+    X_test = pd.DataFrame(data["X_test"],columns=features)
+    
+    #standardize
+    scalerx= RobustScaler()
+    scalery= RobustScaler()
     X_train = scalerx.fit_transform(data["X_train"])
     y_train = pd.read_json(data["y_train"], orient='values').values.ravel()
 
@@ -71,11 +70,11 @@ def select_features(args, estimator_type='lasso', min_features=20):
         rank_features_nun = pd.DataFrame(rfecv.ranking_, columns=["rank"], index=data["features"])
         selected_features = rank_features_nun.loc[rank_features_nun["rank"] == 1].index.tolist()
     else:
-        reg = linear_model.LassoCV(cv=10, n_jobs=-1, n_alphas=100, tol=600)
-        fit = reg.fit(X_train, y_train)
-        score = reg.score(X_train, y_train)
-        rank_features_nun = pd.DataFrame(reg.coef_, columns=["rank"], index=data["features"])
-        selected_features = rank_features_nun.loc[abs(rank_features_nun["rank"]) > 0.3].index.tolist()
+        reg = linear_model.LassoCV(cv=10,n_jobs=-1,n_alphas=100,tol=600)
+        fit = reg.fit(X_train,y_train)
+        score = reg.score(X_train,y_train)
+        rank_features_nun = pd.DataFrame(reg.coef_, columns=["rank"], index = data["features"])
+        selected_features = rank_features_nun.loc[abs(rank_features_nun["rank"])>0].index.tolist()
         print(score)
         print(len(selected_features))
         print(selected_features)

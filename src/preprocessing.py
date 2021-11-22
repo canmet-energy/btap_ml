@@ -55,7 +55,7 @@ def clean_data(df):
             df.drop(col,inplace=True,axis=1)
     return df
 
-def read_output(tenant,bucket,path_elec,path_gas):
+def read_output(path_elec,path_gas):
     """
     Used to read the building simulation I/O file
 
@@ -68,19 +68,13 @@ def read_output(tenant,bucket,path_elec,path_gas):
        btap_df: Dataframe containing the clean building parameters file.
        floor_sq: the square foot of the building
     """
-    btap_df_elec = acm.access_minio(tenant=tenant,
-                               bucket=bucket,
-                               operation= 'read',
-                               path=path_elec,
-                               data='')
 
+    # Load the data from blob storage.
+    s3 = acm.establish_s3_connection(acm.settings.MINIO_URL, acm.settings.MINIO_ACCESS_KEY, acm.settings.MINIO_SECRET_KEY)
+    btap_df_elec = pd.read_excel(s3.open(acm.settings.NAMESPACE.joinpath(path_elec).as_posix()))
     
-    if path_gas != '':
-        btap_df_gas =  acm.access_minio(tenant=tenant,
-                               bucket=bucket,
-                               operation= 'read',
-                               path=path_gas,
-                               data='')
+    if path_gas:
+        btap_df_gas = pd.read_excel(s3.open(acm.settings.NAMESPACE.joinpath(path_gas).as_posix()))
 
         btap_df = pd.concat([btap_df_elec, btap_df_gas], ignore_index=True)
     else:
@@ -114,28 +108,36 @@ def read_weather(path: str) -> pd.DataFrame:
     """
     # Load the data from blob storage.
     s3 = acm.establish_s3_connection(acm.settings.MINIO_URL, acm.settings.MINIO_ACCESS_KEY, acm.settings.MINIO_SECRET_KEY)
-    weather_df = pd.read_parquet(s3.open(acm.settings.NAMESPACE.joinpath(path).as_posix()))
-
+    #weather_df = pd.read_parquet(s3.open(acm.settings.NAMESPACE.joinpath(path).as_posix()))
+    weather_df = pd.read_csv(s3.open(acm.settings.NAMESPACE.joinpath(path).as_posix()))
+    
     # Remove spurious columns.
     weather_df = clean_data(weather_df)
 
     # date_int is used later to join data together.
-    weather_df["date_int"] = weather_df['rep_time'].dt.strftime("%m%d").astype(int)
+#     weather_df["date_int"] = weather_df['rep_time'].dt.strftime("%m%d").astype(int)
 
-    # Aggregate data by day to reduce the complexity, leaving date values as they are.
-    min_cols = {'year': 'min','month':'min','day':'min','rep_time':'min','date_int':'min'}
-    sum_cols = [c for c in weather_df.columns if c not in [min_cols.keys()]]
-    agg_funcs = dict(zip(sum_cols,['sum'] * len(sum_cols)))
-    agg_funcs.update(min_cols)
-    weather_df = weather_df.groupby([weather_df['rep_time'].dt.day]).agg(agg_funcs)
+#     # Aggregate data by day to reduce the complexity, leaving date values as they are.
+#     min_cols = {'year': 'min','month':'min','day':'min','rep_time':'min','date_int':'min'}
+#     sum_cols = [c for c in weather_df.columns if c not in [min_cols.keys()]]
+#     agg_funcs = dict(zip(sum_cols,['sum'] * len(sum_cols)))
+#     agg_funcs.update(min_cols)
+#     weather_df = weather_df.groupby([weather_df['rep_time'].dt.day]).agg(agg_funcs)
 
-    # Remove the rep_time column, since later stages don't know to expect it.
-    weather_df = weather_df.drop('rep_time', axis='columns')
-
+#     # Remove the rep_time column, since later stages don't know to expect it.
+#     weather_df = weather_df.drop('rep_time', axis='columns')
+    weather_drop_list= ['Uncertainty Flags','Extraterrestrial Horizontal Radiation', 'Extraterrestrial Direct Normal Radiation','Global Horizontal Radiation','Global Horizontal Illuminance','Direct Normal Illuminance', 'Diffuse Horizontal Illuminance', 'Zenith Luminance', 'Total Sky Cover', 'Opaque Sky Cover', 'Visibility', 'Ceiling Height', 'Aerosol Optical Depth','Present Weather Codes' ]
+    weather_df = weather_df.drop(weather_drop_list,axis=1)
+    weather_df = clean_data(weather_df)
+    weather_df["date_int"]= weather_df.apply(lambda r : datetime(int(r['Year']), int( r['Month']),int( r['Day']), int(r['Hour']-1)).strftime("%m%d"), axis =1)
+    weather_df["date_int"]=weather_df["date_int"].apply(lambda r : int(r))
+    weather_df=weather_df.groupby(['date_int']).agg(lambda x: x.sum())
+    
     return weather_df
 
+    
 
-def read_hour_energy(tenant,bucket,path_elec,path_gas,floor_sq):
+def read_hour_energy(path_elec,path_gas,floor_sq):
     """
     Used to read the weather epw file from minio
 
@@ -146,18 +148,12 @@ def read_hour_energy(tenant,bucket,path_elec,path_gas,floor_sq):
        energy_hour_melt: Dataframe containing the clean and transposed hourly energy file.
     """
     
-    energy_hour_df_elec = acm.access_minio(tenant=tenant,
-                               bucket=bucket,
-                               operation= 'read',
-                               path=path_elec,
-                               data='')
-
-    if path_gas != '' :
-        energy_hour_df_gas = acm.access_minio(tenant=tenant,
-                               bucket=bucket,
-                               operation= 'read',
-                               path=path_gas,
-                               data='')
+    s3 = acm.establish_s3_connection(acm.settings.MINIO_URL, acm.settings.MINIO_ACCESS_KEY, acm.settings.MINIO_SECRET_KEY)
+    energy_hour_df_elec = pd.read_csv(s3.open(acm.settings.NAMESPACE.joinpath(path_elec).as_posix()))
+    
+    if path_gas:
+        energy_hour_df_gas = pd.read_csv(s3.open(acm.settings.NAMESPACE.joinpath(path_gas).as_posix()))
+    
 
         energy_hour_df = pd.concat([energy_hour_df_elec, energy_hour_df_gas], ignore_index=True)
     else:
@@ -232,7 +228,7 @@ def train_test_split(energy_daily_df, val_df, valsplit):
        y_validate_complete: Dataframe containing the target variable with corresponding datapointid for the validation set
     """
     
-    drop_list= ['index', 'Dew Point Temperature', 'Horizontal Infrared Radiation Intensity',  ':datapoint_id','level_0', 'index','date_int',':datapoint_id','Year', 'Month', 'Day', 'Hour']
+    drop_list= ['index',':datapoint_id','level_0', 'index','date_int',':datapoint_id']
     
     #split to train and test datasets
     y = energy_daily_df[['energy','datapoint_id','Total Energy']]
@@ -292,8 +288,12 @@ def categorical_encode(x_train, x_test, x_validate):
     cat_cols = x_train.select_dtypes(include=['object']).columns
     other_cols = x_train.drop(columns=cat_cols).columns
     # Create the encoder.
-    encoder = OneHotEncoder(handle_unknown="ignore")
-    ct = ColumnTransformer([('ohe', OneHotEncoder(sparse=False), cat_cols)], remainder=MinMaxScaler())
+    ct = ColumnTransformer([('ohe', OneHotEncoder(sparse=False,handle_unknown="ignore"), cat_cols)], remainder=MinMaxScaler())
+    
+
+    for col in x_train[cat_cols]:
+        print(col)
+        print(x_train[col].unique())
     # Apply the encoder.
     x_train_oh = ct.fit_transform(x_train)
     x_test_oh = ct.transform(x_test)
@@ -316,15 +316,19 @@ def process_data(args):
     Returns:
         
     """
-    btap_df,floor_sq = read_output(args.tenant,args.bucket,args.in_build_params,args.in_build_params_gas)
-    weather_df = read_weather(args.tenant,args.bucket,args.in_weather)
-    energy_hour_df = read_hour_energy(args.tenant,args.bucket,args.in_hour,args.in_hour_gas,floor_sq)
+    weather_df = read_weather(args.in_weather)
+    print(weather_df.columns)
+    print(weather_df.dtypes)
+    btap_df,floor_sq = read_output(args.in_build_params,args.in_build_params_gas)
+    energy_hour_df = read_hour_energy(args.in_hour,args.in_hour_gas,floor_sq)
     energy_hour_merge = pd.merge(energy_hour_df, btap_df, left_on=['datapoint_id'],right_on=[':datapoint_id'],how='left').reset_index()
     energy_daily_df = pd.merge(energy_hour_merge, weather_df, on='date_int',how='left').reset_index()     
     
-    if in_build_params_val :
-        btap_df_val,floor_sq = read_output(args.tenant,args.bucket,args.in_build_params_val)
-        energy_hour_df_val = read_hour_energy(args.tenant,args.bucket,args.in_hour_val,floor_sq)
+    print(energy_daily_df.head)
+    
+    if args.in_build_params_val:
+        btap_df_val,floor_sq = read_output(args.in_build_params_val,'')
+        energy_hour_df_val = read_hour_energy(args.in_hour_val,'',floor_sq)
         energy_hour_merge_val = pd.merge(energy_hour_df_val, btap_df_val, left_on=['datapoint_id'],right_on=[':datapoint_id'],how='left').reset_index()
         energy_daily_df_val = pd.merge(energy_hour_merge_val, weather_df, on='date_int',how='left').reset_index()
         X_train, X_test, y_train, y_test, y_test_complete,X_validate, y_validate,y_validate_complete = train_test_split(energy_daily_df,energy_daily_df_val,'yes')
@@ -332,8 +336,6 @@ def process_data(args):
         energy_hour_df_val= '' ; btap_df_val =''; energy_daily_df_val=''
         X_train, X_test, y_train, y_test, y_test_complete,X_validate, y_validate,y_validate_complete = train_test_split(energy_daily_df,energy_daily_df_val,'no')
     
-    pl.target_plot(y_test)
-    pl.corr_plot(energy_daily_df)
     X_train_oh, X_test_oh, X_val_oh, all_features= categorical_encode(X_train,X_test,X_validate)
     
     
@@ -354,7 +356,8 @@ def process_data(args):
                  path=args.output_path,
                  data=data_json)
     
-     
+    pl.target_plot(y_train,y_test)
+    pl.corr_plot(energy_daily_df) 
 
 
 if __name__ == '__main__':
@@ -374,4 +377,8 @@ if __name__ == '__main__':
     process_data(args)
 
     # to run the program use the command below
-# python3 preprocessing.py --in_build_params input_data/output_2021-10-04.xlsx --in_hour input_data/total_hourly_res_2021-10-04.csv --in_weather weather/CAN_QC_Montreal-Trudeau.Intl.AP.716270_CWEC2016.epw.parquet --output_path output_data/preprocessing_out --in_build_params_val input_data/output.xlsx --in_hour_val input_data/total_hourly_res.csv
+# python3 preprocessing.py --in_build_params input_data/output_elec_2021-11-05.xlsx --in_hour input_data/total_hourly_res_elec_2021-11-05.csv --in_weather weather/CAN_QC_Montreal-Trudeau.Intl.AP.716270_CWEC2016.epw.parquet --output_path output_data/preprocessing_out --in_build_params_gas input_data/output_gas_2021-11-05.xlsx --in_hour_gas input_data/total_hourly_res_gas_2021-11-05.csv 
+
+
+# python3 preprocessing.py --in_build_params input_data/output_elec_2021-11-05.xlsx --in_hour input_data/total_hourly_res_elec_2021-11-05.csv --in_weather input_data/montreal_epw.csv --output_path output_data/preprocessing_out --in_build_params_gas input_data/output_gas_2021-11-05.xlsx --in_hour_gas input_data/total_hourly_res_gas_2021-11-05.csv
+

@@ -12,7 +12,7 @@ import xgboost as xgb
 import json
 import argparse
 import json
-
+import config as acm
 import numpy as np
 import pandas as pd
 import s3fs
@@ -100,4 +100,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     select_features(args)
-    # python3 feature_selection.py --in_obj_name output_data/preprocessing_out --output_path output_data/feature_out --estimator_type elasticnet
+    # python3 feature_selection.py --in_obj_name output_data/preprocessing_out --output_path output_data/feature_out --estimator_type lasso

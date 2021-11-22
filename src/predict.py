@@ -429,7 +429,8 @@ def fit_evaluate(args):
     X_test = X_test[selected_features]
     X_validate = X_validate[selected_features]
 
-
+    col_length = X_train.shape[1]
+    
     #extracting the test data for the target variable
     y_test_complete = pd.DataFrame(data["y_test_complete"],columns=['energy','datapoint_id','Total Energy'])
     y_test = pd.DataFrame(data["y_test"],columns=['energy','datapoint_id'])

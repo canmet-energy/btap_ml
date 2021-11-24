@@ -1,10 +1,13 @@
 import json
+import logging
 from pathlib import Path
 from typing import Any, Dict, Union
 
 import pandas as pd
 import s3fs
-from pydantic import AnyHttpUrl, BaseModel, BaseSettings, SecretStr
+from pydantic import AnyHttpUrl, BaseModel, BaseSettings, Field, SecretStr
+
+logger = logging.getLogger(__name__)
 
 
 class AppConfig(BaseModel):
@@ -30,15 +33,20 @@ class Settings(BaseSettings):
     # Set up application specific information
     APP_CONFIG: AppConfig = AppConfig()
 
-    MINIO_URL: AnyHttpUrl
-    MINIO_ACCESS_KEY: str
-    MINIO_SECRET_KEY: SecretStr
+    MINIO_URL: AnyHttpUrl = Field(..., env='MINIO_URL')
+    MINIO_ACCESS_KEY: str = Field(..., env='MINIO_ACCESS_KEY')
+    MINIO_SECRET_KEY: SecretStr = Field(..., env='MINIO_SECRET_KEY')
 
     NAMESPACE: Path = Path('nrcan-btap')
 
     class Config:
+        # Prefix environment variables to avoid name collisions
+        env_prefix = 'BTAP_'
+
+        # Where to look up credentials
         minio_tenant: str = 'standard'
         json_settings_path: Path = Path(f'/vault/secrets/minio-{minio_tenant}-tenant-1.json')
+
         # Ignore extra values present in the JSON data
         extra = 'ignore'
 
@@ -47,6 +55,7 @@ class Settings(BaseSettings):
             return (init_settings, json_config_settings_source, env_settings, file_secret_settings)
 
 settings = Settings()
+logger.debug("Loaded the following settings: %s", settings)
 
 
 def establish_s3_connection(endpoint_url: str, access_key: str, secret_key: SecretStr) -> s3fs.S3FileSystem:
@@ -60,6 +69,7 @@ def establish_s3_connection(endpoint_url: str, access_key: str, secret_key: Secr
     Returns:
         An s3fs file system object.
     """
+    logger.info("Establishing connection to S3 server: %s", endpoint_url)
     s3 = s3fs.S3FileSystem(
         anon=False,
         key=access_key,
@@ -85,6 +95,7 @@ def access_minio(path: str, operation: str, data: Union[str, pd.DataFrame]):
     Returns:
        Dataframe containing the data downladed from minio is returned for read operation and for write operation , null value is returned.
     """
+    logger.info("%s minio data at %s", operation, path)
     # Establish S3 connection
     s3 = establish_s3_connection(settings.MINIO_URL,
                                  settings.MINIO_ACCESS_KEY,

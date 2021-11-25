@@ -49,4 +49,3 @@ def btap_pipeline(minio_tenant,bucket,energy_hour,build_params,weather,output_pa
 if __name__ == '__main__':
     kfp.compiler.Compiler().compile(btap_pipeline, 'pipeline.yaml')
     print(f"Exported pipeline definition to pipeline.yaml")
-

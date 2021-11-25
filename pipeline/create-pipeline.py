@@ -59,4 +59,3 @@ if __name__ == '__main__':
     experiment_yaml_zip = 'pipeline.zip'
     kfp.compiler.Compiler().compile(btap_pipeline, experiment_yaml_zip)
     print(f"Exported pipeline definition to {experiment_yaml_zip}")
-

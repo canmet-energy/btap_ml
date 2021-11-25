@@ -1,21 +1,21 @@
 '''
 Select features that are used to build the surrogate mode.
 '''
-from sklearn.feature_selection import RFECV 
-from sklearn.linear_model import LinearRegression, LassoCV, Lasso,ElasticNetCV
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.model_selection import KFold
-from sklearn.preprocessing import StandardScaler, MinMaxScaler,RobustScaler
-from sklearn import linear_model
-import numpy as np
-import xgboost as xgb 
-import json
 import argparse
 import json
 
 import numpy as np
 import pandas as pd
 import s3fs
+import xgboost as xgb
+from sklearn import linear_model
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.feature_selection import RFECV
+from sklearn.linear_model import ElasticNetCV, Lasso, LassoCV, LinearRegression
+from sklearn.model_selection import KFold
+from sklearn.preprocessing import MinMaxScaler, RobustScaler, StandardScaler
+
+import config as acm
 
 ############################################################
 # feature selection
@@ -39,10 +39,10 @@ def select_features(args, estimator_type='lasso', min_features=20):
                             data='')
 
     data = json.load(data)
-    features =data["features"] 
+    features =data["features"]
     X_train = pd.DataFrame(data["X_train"],columns=features)
     X_test = pd.DataFrame(data["X_test"],columns=features)
-    
+
     #standardize
     scalerx= RobustScaler()
     scalery= RobustScaler()
@@ -100,4 +100,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     select_features(args)
-    # python3 feature_selection.py --in_obj_name output_data/preprocessing_out --output_path output_data/feature_out --estimator_type elasticnet
+    # python3 feature_selection.py --in_obj_name output_data/preprocessing_out --output_path output_data/feature_out --estimator_type lasso

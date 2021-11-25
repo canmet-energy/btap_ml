@@ -16,7 +16,7 @@ Refer to the [documentation](docs/) to see how to install and run the model.
     - preprocessing.py: downloads all the dataset from minio, preprocess the data, split the data into train, test and validation set.
     - feature_selection.py: use the output from preprocoessing to extract the features that would be used in building the surrogate model
     - predict.py: builds the surrogate model using the preprocessed data and the selected features described above
-    
+
 # License
 
 Unless otherwise noted, the source code of this project is covered under Crown Copyright, Government of Canada, and is distributed under the [GNU GPL v3 License](LICENSE).

@@ -44,6 +44,19 @@ to meet energy consumption, cost, and GHG targets.</p>
 associated with calculating such a large solution space. Even with High Performance Computing, calculating the entire
 stock of models is estimated to take 57 centuries. Surrogate models significantly reduce the time and resources
 required to produce usable outputs.</p>
+<p>After installation, running the processing will generally follow this order:</p>
+<div class="graphviz"><img src="_images/graphviz-92e07b58335d558ae4d9e04b980349060d50be6e.png" alt="digraph G {
+   bgcolor=transparent;
+
+   start -&gt; weather -&gt; preprocess -&gt; features -&gt; build -&gt; end;
+
+   start [shape=Mdiamond];
+   weather [label=&quot;Prepare weather&quot;];
+   preprocess [label=&quot;Run preprocessing&quot;];
+   features [label=&quot;Feature selection&quot;];
+   build [label=&quot;Build the model&quot;];
+   end [shape=Msquare];
+ }" class="graphviz" /></div>
 <section id="contents">
 <h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <div class="toctree-wrapper compound">

@@ -4,8 +4,8 @@ Pull requests
 Issues
 Marketplace
 Explore
- 
-@maybuksho 
+
+@maybuksho
 canmet-energy
 /
 btap_ml
@@ -33,7 +33,7 @@ Latest commit 1b28571 9 days ago
  History
  1 contributor
 157 lines (119 sloc)  6.44 KB
-   
+
 import logging
 
 import pandas as pd

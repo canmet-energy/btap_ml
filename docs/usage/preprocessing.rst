@@ -1,7 +1,7 @@
 Preprocessing
 =============
 
-When running manually, you need to trigger the preprocessing step to prepare all the input data. Several 
+When running manually, you need to trigger the preprocessing step to prepare all the input data. Several
 inputs are required to prepare for model training:
 
 * the simulation I/O output file used in buiding and testing the model

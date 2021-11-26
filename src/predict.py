@@ -18,7 +18,7 @@ import tensorflow as tf
 import tensorflow.keras as keras
 # import tensorflow_docs as tfdocs
 # import tensorflow_docs.plots
-import tensorflow_docs.modeling
+# import tensorflow_docs.modeling
 # np.random.seed(1337)
 from keras import backend as K
 from keras import regularizers  # for l2 regularization

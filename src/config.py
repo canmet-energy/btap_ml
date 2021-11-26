@@ -1,3 +1,4 @@
+"""Load configuration from the environment and provide a single interface for blob storage access."""
 import json
 from pathlib import Path
 from typing import Any, Dict, Union

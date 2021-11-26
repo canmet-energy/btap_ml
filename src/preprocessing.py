@@ -72,11 +72,11 @@ def read_output(path_elec,path_gas):
     """
 
     # Load the data from blob storage.
-    s3 = acm.establish_s3_connection(acm.settings.MINIO_URL, acm.settings.MINIO_ACCESS_KEY, acm.settings.MINIO_SECRET_KEY)
-    btap_df_elec = pd.read_excel(s3.open(acm.settings.NAMESPACE.joinpath(path_elec).as_posix()))
+    s3 = acm.establish_s3_connection(settings.MINIO_URL, settings.MINIO_ACCESS_KEY, settings.MINIO_SECRET_KEY)
+    btap_df_elec = pd.read_excel(s3.open(settings.NAMESPACE.joinpath(path_elec).as_posix()))
 
     if path_gas:
-        btap_df_gas = pd.read_excel(s3.open(acm.settings.NAMESPACE.joinpath(path_gas).as_posix()))
+        btap_df_gas = pd.read_excel(s3.open(settings.NAMESPACE.joinpath(path_gas).as_posix()))
 
         btap_df = pd.concat([btap_df_elec, btap_df_gas], ignore_index=True)
     else:
@@ -109,9 +109,9 @@ def read_weather(path: str) -> pd.DataFrame:
        btap_df: Dataframe containing the clean weather file.
     """
     # Load the data from blob storage.
-    s3 = acm.establish_s3_connection(acm.settings.MINIO_URL, acm.settings.MINIO_ACCESS_KEY, acm.settings.MINIO_SECRET_KEY)
+    s3 = acm.establish_s3_connection(settings.MINIO_URL, settings.MINIO_ACCESS_KEY, settings.MINIO_SECRET_KEY)
     #weather_df = pd.read_parquet(s3.open(acm.settings.NAMESPACE.joinpath(path).as_posix()))
-    weather_df = pd.read_csv(s3.open(acm.settings.NAMESPACE.joinpath(path).as_posix()))
+    weather_df = pd.read_csv(s3.open(settings.NAMESPACE.joinpath(path).as_posix()))
 
     # Remove spurious columns.
     weather_df = clean_data(weather_df)
@@ -150,11 +150,11 @@ def read_hour_energy(path_elec,path_gas,floor_sq):
        energy_hour_melt: Dataframe containing the clean and transposed hourly energy file.
     """
 
-    s3 = acm.establish_s3_connection(acm.settings.MINIO_URL, acm.settings.MINIO_ACCESS_KEY, acm.settings.MINIO_SECRET_KEY)
-    energy_hour_df_elec = pd.read_csv(s3.open(acm.settings.NAMESPACE.joinpath(path_elec).as_posix()))
+    s3 = acm.establish_s3_connection(settings.MINIO_URL, settings.MINIO_ACCESS_KEY, settings.MINIO_SECRET_KEY)
+    energy_hour_df_elec = pd.read_csv(s3.open(settings.NAMESPACE.joinpath(path_elec).as_posix()))
 
     if path_gas:
-        energy_hour_df_gas = pd.read_csv(s3.open(acm.settings.NAMESPACE.joinpath(path_gas).as_posix()))
+        energy_hour_df_gas = pd.read_csv(s3.open(settings.NAMESPACE.joinpath(path_gas).as_posix()))
 
 
         energy_hour_df = pd.concat([energy_hour_df_elec, energy_hour_df_gas], ignore_index=True)
@@ -363,6 +363,10 @@ def process_data(args):
 
 
 if __name__ == '__main__':
+    # Load settings from the environment
+    settings = acm.Settings()
+
+    # Prepare the argument parser
     parser = argparse.ArgumentParser()
 
     # Paths must be passed in, not hardcoded

@@ -4,7 +4,7 @@ from typing import Any, Dict, Union
 
 import pandas as pd
 import s3fs
-from pydantic import AnyHttpUrl, BaseModel, BaseSettings, SecretStr
+from pydantic import AnyHttpUrl, BaseModel, BaseSettings, Field, SecretStr
 
 
 class AppConfig(BaseModel):
@@ -30,15 +30,20 @@ class Settings(BaseSettings):
     # Set up application specific information
     APP_CONFIG: AppConfig = AppConfig()
 
-    MINIO_URL: AnyHttpUrl
-    MINIO_ACCESS_KEY: str
-    MINIO_SECRET_KEY: SecretStr
+    MINIO_URL: AnyHttpUrl = Field(..., env='MINIO_URL')
+    MINIO_ACCESS_KEY: str = Field(..., env='MINIO_ACCESS_KEY')
+    MINIO_SECRET_KEY: SecretStr = Field(..., env='MINIO_SECRET_KEY')
 
     NAMESPACE: Path = Path('nrcan-btap')
 
     class Config:
+        # Prefix our variables to avoid collisions with other programs
+        env_prefix = 'BTAP_'
+
+        # Where to load JSON settings from
         minio_tenant: str = 'standard'
         json_settings_path: Path = Path(f'/vault/secrets/minio-{minio_tenant}-tenant-1.json')
+
         # Ignore extra values present in the JSON data
         extra = 'ignore'
 

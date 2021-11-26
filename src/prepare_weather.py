@@ -1,3 +1,4 @@
+"""Prepare the weather file(s) specified in the YAML configuration to be used by the pipeline."""
 import logging
 
 import pandas as pd

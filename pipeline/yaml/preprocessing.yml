@@ -25,32 +25,32 @@ implementation:
 
       # Path of the program inside the container
       /pipelines/preprocessing.py,
-      
-     
+
+
       --in_hour,
       {inputValue: in_hour},
-      
+
       --in_build_params,
       {inputValue: in_build_params},
 
       --in_weather,
       {inputValue: in_weather},
-      
+
        --in_hour_val,
       {inputValue: in_hour_val},
-      
+
       --in_build_params_val,
       {inputValue: in_build_params_val},
-      
+
       --in_hour_gas,
       {inputValue: in_hour_gas},
-      
+
       --in_build_params_gas,
       {inputValue: in_build_params_gas},
-      
+
       --output_path,
       {outputPath: output_path},
-      
+
       --output-paths,
         {outputPath: Output}
     ]

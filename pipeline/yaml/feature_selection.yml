@@ -18,7 +18,7 @@ implementation:
 
       # Path of the program inside the container
       /pipelines/feature_selection.py,
-      
+
       --in_obj_name,
       {inputPath: in_obj_name},
 
@@ -27,7 +27,7 @@ implementation:
 
       --output_path,
       {outputPath: output_path},
-      
+
       --output_paths,
       {outputPath: Output},
     ]

@@ -7,6 +7,7 @@ import glob
 # from kfp import dsl
 import io
 import json
+import logging
 import os
 import re
 import sys
@@ -26,7 +27,6 @@ from sklearn.preprocessing import (LabelEncoder, MinMaxScaler, OneHotEncoder,
 
 import config as acm
 import plot as pl
-import logging
 
 logging.basicConfig(filename='../output/log/preprocess2.log', level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -40,8 +40,8 @@ def clean_data(df) -> pd.DataFrame:
    We cant use N/A as it will elimnate the entire row /datapoint_id. Giving the number of features we have to work it its better we eliminate
    columns with features that have too much missing values than to eliminate by rows, which is what N/A will do .
     - dropping columns with 1 unique value
-    For columns with  1 unique values are dropped during data cleaning as they have low variance 
-    and hence have little or no significant contribution to the accuracy of the model. 
+    For columns with  1 unique values are dropped during data cleaning as they have low variance
+    and hence have little or no significant contribution to the accuracy of the model.
     Args:
         df: dataset to be cleaned
 
@@ -66,7 +66,7 @@ def read_output(path_elec,path_gas):
     Used to read the building simulation I/O file
 
     Args:
-        path_elec: file path where data is to be read from in minio. This is a mandatory parameter and in the case where only one simulation I/O file is provided,  the path to this file should be indicated here. 
+        path_elec: file path where data is to be read from in minio. This is a mandatory parameter and in the case where only one simulation I/O file is provided,  the path to this file should be indicated here.
         path_gas: This would be path to the gas output file. This is optional, if there is no gas output file to the loaded, then a value of path_gas ='' should be used
     Returns:
        btap_df: Dataframe containing the clean building parameters file.
@@ -116,7 +116,7 @@ def read_weather(path: str) -> pd.DataFrame:
     logger.info("%s read_weather s3 connection %s", s3)
     weather_df = pd.read_parquet(s3.open(acm.settings.NAMESPACE.joinpath(path).as_posix()))
     #weather_df = pd.read_csv(s3.open(acm.settings.NAMESPACE.joinpath(path).as_posix()))
-    
+
     # Remove spurious columns.
     weather_df = clean_data(weather_df)
 
@@ -138,7 +138,7 @@ def read_weather(path: str) -> pd.DataFrame:
 #     weather_df["date_int"]= weather_df.apply(lambda r : datetime(int(r['Year']), int( r['Month']),int( r['Day']), int(r['Hour']-1)).strftime("%m%d"), axis =1)
 #     weather_df["date_int"]=weather_df["date_int"].apply(lambda r : int(r))
 #     weather_df=weather_df.groupby(['date_int']).agg(lambda x: x.sum())
-    
+
     return weather_df
 
 
@@ -148,7 +148,7 @@ def read_hour_energy(path_elec,path_gas,floor_sq):
     Used to read the weather epw file from minio
 
     Args:
-        path_elec: file path where the electric hourly energy consumed file is to be read from in minio. This is a mandatory parameter and in the case where only one hourly energy output file is provided, the path to this file should be indicated here. 
+        path_elec: file path where the electric hourly energy consumed file is to be read from in minio. This is a mandatory parameter and in the case where only one hourly energy output file is provided, the path to this file should be indicated here.
         path_gas: This would be path to the gas output file. This is optional, if there is no gas output file to the loaded, then a value of path_gas ='' should be used
         floor_sq: the square foot of the building
     Returns:
@@ -359,8 +359,8 @@ def process_data(args):
                  path=args.output_path,
                  data=data_json)
     logger.info("write to mino  ", write_to_minio)
-    
-    
+
+
     pl.target_plot(y_train,y_test)
     pl.corr_plot(energy_daily_df)
 

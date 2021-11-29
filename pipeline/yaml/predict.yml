@@ -18,7 +18,7 @@ implementation:
 
       # Path of the program inside the container
       /pipelines/predict.py,
-      
+
       --param_search,
       {inputValue: param_search},
 
@@ -30,7 +30,7 @@ implementation:
 
       --output_path,
       {outputPath: output_path},
-      
+
       --output_paths,
       {outputPath: Output},
     ]

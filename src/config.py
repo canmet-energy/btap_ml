@@ -88,16 +88,16 @@ def access_minio(path: str, operation: str, data: Union[str, pd.DataFrame]):
     Returns:
        Dataframe containing the data downladed from minio is returned for read operation and for write operation , null value is returned.
     """
-    
+
     logger.info("%s minio data at %s", operation, path)
-    
+
     # Establish S3 connection
     s3 = establish_s3_connection(settings.MINIO_URL,
                                  settings.MINIO_ACCESS_KEY,
                                  settings.MINIO_SECRET_KEY)
 
     logger.info("%s s3 connection %s", s3)
-    
+
     # s3fs doesn't seem to like Path objects, so use a posix path string for operations
     full_posix_path = settings.NAMESPACE.joinpath(path).as_posix()
 

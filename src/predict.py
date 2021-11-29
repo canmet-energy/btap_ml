@@ -5,6 +5,7 @@ import argparse
 import datetime
 import glob
 import json
+import logging
 import os
 import shutil
 import time
@@ -43,7 +44,6 @@ from tensorflow.keras.optimizers import Adam
 
 import config as acm
 import plot as pl
-import logging
 
 logging.basicConfig(filename='../output/log/predict.log', level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -410,7 +410,7 @@ def fit_evaluate(args):
                              path=args.features,
                              data='')
     logger.info("%s read_output s3 connection %s", data)
-    
+
     # removing log directory
     shutil.rmtree('../output/parameter_search/btap', ignore_errors=True)
 
@@ -485,9 +485,9 @@ def fit_evaluate(args):
     write_to_minio = acm.access_minio(operation='copy',
                      path=args.output_path,
                      data=data_json)
-    
+
     logger.info("write to mino  ", write_to_minio)
-    
+
     return
 
 

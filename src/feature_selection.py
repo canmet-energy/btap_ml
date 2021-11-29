@@ -3,11 +3,11 @@ Select features that are used to build the surrogate mode.
 '''
 import argparse
 import json
+import logging
 
 import numpy as np
 import pandas as pd
 import s3fs
-import logging
 
 ############################################################
 # feature selection
@@ -32,7 +32,7 @@ def select_features(args):
                             path=args.in_obj_name,
                             data='')
     logger.info("read from mino  ", data)
-    
+
     data = json.load(data)
     features =data["features"]
     X_train = pd.DataFrame(data["X_train"],columns=features)
@@ -81,7 +81,7 @@ def select_features(args):
                      path=args.output_path,
                      data=data_json)
     logger.info("write to mino  ", write_to_minio)
-    
+
     return
 
 

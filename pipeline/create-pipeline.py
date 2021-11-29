@@ -28,9 +28,9 @@ def btap_pipeline(
     preprocess = load_component_from_file('yaml/preprocessing.yml')
     feature_selection = load_component_from_file('yaml/feature_selection.yml')
     predict = load_component_from_file('yaml/predict.yml')
-    
+
     preprocess_ = preprocess(
-                             
+
                              in_build_params=build_params,
                              in_hour=energy_hour,
                              in_weather=weather,
@@ -39,12 +39,12 @@ def btap_pipeline(
                              output_path=output_path
 
                             )
- 
+
     feature_selection_ = feature_selection(
                                            in_obj_name=preprocess_.output,
                                            estimator_type=featureestimator,
                                            output_path=featureoutput_path)
-    
+
     predict_ = predict(
                        in_obj_name=preprocess_.output,
                        features=feature_selection_.output,

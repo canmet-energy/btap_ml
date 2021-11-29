@@ -14,17 +14,17 @@ implementation:
     # The strict name of a container image that you've pushed to a container registry.
     image: k8scc01covidacr.azurecr.io/btap:4b99c6aaa4a19a171209e3d62f8aa71591dbcd71
     command: [
-      python3, 
-      
+      python3,
+
       # Path of the program inside the container
       /pipelines/feature_selection.py,
       
       --in_obj_name,
       {inputPath: in_obj_name},
-      
+
       --estimator_type,
       {inputValue: estimator_type},
-      
+
       --output_path,
       {outputPath: output_path},
       

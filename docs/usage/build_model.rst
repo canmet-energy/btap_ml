@@ -70,6 +70,5 @@ You can use the tensorboard dashboard to inspect the performance of the model.
 
 .. note::
 
-   The tensorboard opens on a random port inside your notebook container. The URL looks like 
+   The tensorboard opens on a random port inside your notebook container. The URL looks like
    https://kubeflow.aaw.cloud.statcan.ca/notebook/nrcan-btap/<notebook_name>/proxy/<port>/.
-

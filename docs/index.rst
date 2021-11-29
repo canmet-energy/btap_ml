@@ -17,6 +17,24 @@ associated with calculating such a large solution space. Even with High Performa
 stock of models is estimated to take 57 centuries. Surrogate models significantly reduce the time and resources
 required to produce usable outputs.
 
+After installation, running the processing will generally follow this order:
+
+.. graphviz::
+   :name: Processing overview
+
+   digraph G {
+      bgcolor=transparent;
+
+      start -> weather -> preprocess -> features -> build -> end;
+
+      start [shape=Mdiamond];
+      weather [label="Prepare weather"];
+      preprocess [label="Run preprocessing"];
+      features [label="Feature selection"];
+      build [label="Build the model"];
+      end [shape=Msquare];
+    }
+
 Contents
 --------
 

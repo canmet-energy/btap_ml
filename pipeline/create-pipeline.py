@@ -1,9 +1,9 @@
 import kfp
 from kfp import dsl
-from kfp.components import func_to_container_op
-from kfp.components import load_component_from_file
+from kfp.components import func_to_container_op, load_component_from_file
 
-@dsl.pipeline(name='Btap Pipeline', 
+
+@dsl.pipeline(name='Btap Pipeline',
               description='MLP employed for Total energy consumed regression problem',
               )
 
@@ -20,8 +20,8 @@ def btap_pipeline(
                     featureestimator:str="output_data/feature_out",
                     featureoutput_path:str="lasso",
                     param_search:str="no"):
-    
-    
+
+
 
 #     tenant ='minio_tenant'
     # Loads the yaml manifest for each component
@@ -37,7 +37,7 @@ def btap_pipeline(
                              in_build_params_val=build_params_val,
                              in_hour_val=energy_hour_val,
                              output_path=output_path
-                             
+
                             )
  
     feature_selection_ = feature_selection(
@@ -49,10 +49,9 @@ def btap_pipeline(
                        in_obj_name=preprocess_.output,
                        features=feature_selection_.output,
                        param_search=param_search)
- 
-    
+
+
 if __name__ == '__main__':
     experiment_yaml_zip = 'pipeline.yaml'
     kfp.compiler.Compiler().compile(btap_pipeline, experiment_yaml_zip)
     print(f"Exported pipeline definition to {experiment_yaml_zip}")
-    

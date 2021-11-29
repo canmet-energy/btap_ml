@@ -1,18 +1,9 @@
 '''
 Select features that are used to build the surrogate mode.
 '''
-from sklearn.feature_selection import RFECV 
-from sklearn.linear_model import LinearRegression, LassoCV, Lasso,ElasticNetCV
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.model_selection import KFold
-from sklearn.preprocessing import StandardScaler, MinMaxScaler,RobustScaler
-from sklearn import linear_model
-import numpy as np
-import xgboost as xgb 
-import json
 import argparse
 import json
-import config as acm
+
 import numpy as np
 import pandas as pd
 import s3fs
@@ -43,7 +34,7 @@ def select_features(args):
     logger.info("read from mino  ", data)
     
     data = json.load(data)
-    features =data["features"] 
+    features =data["features"]
     X_train = pd.DataFrame(data["X_train"],columns=features)
     print(X_train)
     #standardize

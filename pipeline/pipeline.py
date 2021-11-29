@@ -6,7 +6,8 @@ import config as acm
 import pandas as pd
 from minio import Minio
 
-@dsl.pipeline(name='Btap Pipeline', 
+
+@dsl.pipeline(name='Btap Pipeline',
               description='MLP employed for Total energy consumed regression problem',
               )
 
@@ -29,10 +30,6 @@ def btap_pipeline(  build_params="input_data/output_2021-10-04.xlsx",
     preprocess = load_component_from_file('yaml/preprocessing.yml')
     feature_selection = load_component_from_file('yaml/feature_selection.yml')
     predict = load_component_from_file('yaml/predict.yml')
-    
-    s3 = acm.establish_s3_connection(acm.settings.MINIO_URL, acm.settings.MINIO_ACCESS_KEY, acm.settings.MINIO_SECRET_KEY)
-    weather_df = pd.read_csv(s3.open(acm.settings.NAMESPACE.joinpath('input_data/montreal_epw.csv').as_posix()))
-    
     preprocess_ = preprocess(
                              
                              in_hour=energy_hour,
@@ -58,8 +55,8 @@ def btap_pipeline(  build_params="input_data/output_2021-10-04.xlsx",
                        in_obj_name=preprocess_output_ref,
                        features=feature_output_ref,
                        param_search=param_search)
- 
-    
+
+
 if __name__ == '__main__':
     experiment_yaml_zip = 'pipeline.yaml'
     kfp.compiler.Compiler().compile(btap_pipeline, experiment_yaml_zip)

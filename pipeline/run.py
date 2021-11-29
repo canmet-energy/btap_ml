@@ -1,6 +1,8 @@
-import os
-import kfp
 import json
+import os
+
+import kfp
+
 import pipeline as pl
 
 build_param =""
@@ -19,7 +21,7 @@ result = client.create_run_from_pipeline_func(
                "featureestimator":"lasso",
                "featureoutput_path":"output_data/feature_out",
                "param_search":"no"
-        
-        
+
+
               }
     )

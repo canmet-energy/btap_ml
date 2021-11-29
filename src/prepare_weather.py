@@ -1,39 +1,3 @@
-Skip to content
-Search or jump to…
-Pull requests
-Issues
-Marketplace
-Explore
- 
-@maybuksho 
-canmet-energy
-/
-btap_ml
-Public
-4
-0
-2
-Code
-Issues
-5
-Pull requests
-1
-Discussions
-Actions
-Projects
-1
-Wiki
-Security
-Insights
-Settings
-btap_ml/src/prepare_weather.py /
-@goatsweater
-goatsweater Complete processing and saving of weather files
-Latest commit 1b28571 9 days ago
- History
- 1 contributor
-157 lines (119 sloc)  6.44 KB
-   
 import logging
 
 import pandas as pd

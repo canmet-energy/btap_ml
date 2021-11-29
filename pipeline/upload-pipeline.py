@@ -1,8 +1,9 @@
 #!/bin/python3
 
-import kfp
-import git
 from datetime import datetime
+
+import git
+import kfp
 
 EXPERIMENT = "BTAP ML"
 PIPELINE = "Events"

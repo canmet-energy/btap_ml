@@ -1,7 +1,7 @@
 Preprocessing
 =============
 
-When running manually, you need to trigger the preprocessing step to prepare all the input data. Several 
+When running manually, you need to trigger the preprocessing step to prepare all the input data. Several
 inputs are required to prepare for model training:
 
 * in_hour: The minio location and filename for the hourly energy consumption file is located. This would be the path for the electric hourly file if it exist.

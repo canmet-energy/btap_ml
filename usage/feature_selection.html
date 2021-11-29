@@ -36,8 +36,23 @@
             
   <section id="feature-selection">
 <h1>Feature selection<a class="headerlink" href="#feature-selection" title="Permalink to this headline">¶</a></h1>
+<p>In order to ensure the most relevant features are used in building the surrogage model, feature_selection is performed to search for the most optimal features from preprocessed data.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Feature selection is performed using the X_train and the y_train set.</p>
+</div>
+<p>Feature selection could be perfomed using either of the following estimator type listed below:
+* Linear Regression
+* XGBRegressor
+* ElasticnetCV
+* LassoCV</p>
+<p>For the purpose of this project, XGBRegressor was often slow in selecting the features. Often times, ElasticnetCV and LassoCV selected same features. Although, LassoCV is used as the default estimator for feature selection, any of the other estimator type can be used by specifying the respective esimator type to the estimator_type parameter when performing feature selection.</p>
+<p>Below are the input parameters required for Feature Selection
+* in_obj_name: Minio locationa and name of data file to be read, ideally the output file generated from preprocessing i.e. preprocessing.out.
+* estimator_type: The type of estimator to be used, default is lasso.
+* output_path: The minio location and filename where the output file should be written.</p>
 <p>Feautre selection is performed by running:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python3</span> <span class="n">feature_selection</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">tenant</span> <span class="n">standard</span> <span class="o">--</span><span class="n">bucket</span> <span class="n">nrcan</span><span class="o">-</span><span class="n">btap</span> <span class="o">--</span><span class="n">in_obj_name</span> <span class="n">output_data</span><span class="o">/</span><span class="n">preprocessing_out</span> <span class="o">--</span><span class="n">output_path</span> <span class="n">output_data</span><span class="o">/</span><span class="n">feature_out</span> <span class="o">--</span><span class="n">estimator_type</span> <span class="n">elasticnet</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python3</span> <span class="n">feature_selection</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">in_obj_name</span> <span class="n">output_data</span><span class="o">/</span><span class="n">preprocessing_out</span> <span class="o">--</span><span class="n">output_path</span> <span class="n">output_data</span><span class="o">/</span><span class="n">feature_out</span> <span class="o">--</span><span class="n">estimator_type</span> <span class="n">lasso</span>
 </pre></div>
 </div>
 </section>
@@ -59,31 +74,19 @@
 
 
 <h3>Navigation</h3>
-<p class="caption" role="heading"><span class="caption-text">Setup</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../aaw_setup.html">Working on AAW</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../aaw_setup.html#project-source-code">Project source code</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Data preparation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../data_prep/weather.html">Weather data processing</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Usage</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="preprocessing.html">Preprocessing</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Feature selection</a></li>
 <li class="toctree-l1"><a class="reference internal" href="build_model.html">Model building</a></li>
 <li class="toctree-l1"><a class="reference internal" href="kubeflow_pipeline.html">Kubeflow pipeline</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">API</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../api/config.html">Config</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/feature_selection.html">Feature selection</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/plot.html">Plot</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/predict.html">Predict</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/prepare_weather.html">Prepare weather</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/preprocessing.html">Preprocessing</a></li>
 </ul>
 
 <div class="relations">

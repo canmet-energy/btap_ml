@@ -17,13 +17,13 @@ def get_config(config_file: str):
     Returns:
         Dictionary of configuration information.
     """
-    logger.info("Establishing connection to S3 store at %s", config.settings.MINIO_URL)
-    s3 = config.establish_s3_connection(config.settings.MINIO_URL,
-                                        config.settings.MINIO_ACCESS_KEY,
-                                        config.settings.MINIO_SECRET_KEY)
+    logger.info("Establishing connection to S3 store at %s", settings.MINIO_URL)
+    s3 = config.establish_s3_connection(settings.MINIO_URL,
+                                        settings.MINIO_ACCESS_KEY,
+                                        settings.MINIO_SECRET_KEY)
 
     # Create a path to the config from the namespace
-    config_file_path = config.settings.NAMESPACE.joinpath(config_file).as_posix()
+    config_file_path = settings.NAMESPACE.joinpath(config_file).as_posix()
     logger.info("Reading config from file %s", config_file_path)
     contents = yaml.safe_load(s3.open(config_file_path, mode='rb'))
     return contents
@@ -37,7 +37,7 @@ def get_weather_df(filename: str) -> pd.DataFrame:
     Returns:
         A dataframe of weather data summarized by day.
     """
-    epw_file_store = config.settings.APP_CONFIG.WEATHER_DATA_STORE
+    epw_file_store = settings.APP_CONFIG.WEATHER_DATA_STORE
 
     # Number of rows in the file that are just providing metadata
     meta_row_count = 8
@@ -71,23 +71,23 @@ def save_epw(df: pd.DataFrame, filename: str) -> None:
         filename = f"{filename}.parquet"
 
     # Bucket used to store weather data.
-    weather_bucket_name = config.settings.APP_CONFIG.WEATHER_BUCKET_NAME
+    weather_bucket_name = settings.APP_CONFIG.WEATHER_BUCKET_NAME
     logger.info("Weather data will be placed under %s", weather_bucket_name)
 
     # Establish a connection to the blob store.
-    s3 = config.establish_s3_connection(config.settings.MINIO_URL,
-                                        config.settings.MINIO_ACCESS_KEY,
-                                        config.settings.MINIO_SECRET_KEY)
+    s3 = config.establish_s3_connection(settings.MINIO_URL,
+                                        settings.MINIO_ACCESS_KEY,
+                                        settings.MINIO_SECRET_KEY)
 
     # Make sure the bucket for weather data exists to avoid write errors
-    existing_items = s3.ls(config.settings.NAMESPACE.as_posix())
+    existing_items = s3.ls(settings.NAMESPACE.as_posix())
     if not weather_bucket_name in existing_items:
-        bucket_path = config.settings.NAMESPACE.joinpath(weather_bucket_name).as_posix()
+        bucket_path = settings.NAMESPACE.joinpath(weather_bucket_name).as_posix()
         logger.info("Weather bucket not found, creating %s", bucket_path)
         s3.mkdir(bucket_path)
 
     # Write the data to s3
-    file_path = config.settings.NAMESPACE.joinpath(weather_bucket_name, filename).as_posix()
+    file_path = settings.NAMESPACE.joinpath(weather_bucket_name, filename).as_posix()
     logger.info("Saving weather data to %s", file_path)
     with s3.open(file_path, 'wb') as outfile:
         df.to_parquet(outfile)
@@ -124,7 +124,7 @@ def main(config_file: str = typer.Argument(..., help="Path to configuration YAML
         epw_file_key: The key in the configuration file that has the weather file name(s). Default is ``:epw_file``.
     """
     cfg = get_config(config_file)
-    building_opts_key = config.settings.APP_CONFIG.BUILDING_OPTS_KEY
+    building_opts_key = settings.APP_CONFIG.BUILDING_OPTS_KEY
 
     # Guard against incorrect or undefined file key.
     # EPW information should be under the building options.
@@ -148,4 +148,5 @@ def main(config_file: str = typer.Argument(..., help="Path to configuration YAML
 
 
 if __name__ == '__main__':
+    settings = config.Settings()
     typer.run(main)

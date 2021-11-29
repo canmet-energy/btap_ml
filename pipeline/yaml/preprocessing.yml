@@ -54,5 +54,3 @@ implementation:
       --output-paths,
         {outputPath: Output}
     ]
-
-

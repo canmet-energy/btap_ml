@@ -1,3 +1,4 @@
+"""Load configuration from the environment and provide a single interface for blob storage access."""
 import json
 from pathlib import Path
 from typing import Any, Dict, Union
@@ -46,8 +47,6 @@ class Settings(BaseSettings):
         def customise_sources(cls, init_settings, env_settings, file_secret_settings):
             return (init_settings, json_config_settings_source, env_settings, file_secret_settings)
 
-settings = Settings()
-
 
 def establish_s3_connection(endpoint_url: str, access_key: str, secret_key: SecretStr) -> s3fs.S3FileSystem:
     """Used to create a connection to an S3 data store.
@@ -85,6 +84,7 @@ def access_minio(path: str, operation: str, data: Union[str, pd.DataFrame]):
     Returns:
        Dataframe containing the data downladed from minio is returned for read operation and for write operation , null value is returned.
     """
+    settings = Settings()
     # Establish S3 connection
     s3 = establish_s3_connection(settings.MINIO_URL,
                                  settings.MINIO_ACCESS_KEY,

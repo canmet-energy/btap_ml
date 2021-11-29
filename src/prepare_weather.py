@@ -1,3 +1,4 @@
+"""Prepare the weather file(s) specified in the YAML configuration to be used by the pipeline."""
 import logging
 
 import pandas as pd
@@ -12,8 +13,10 @@ logger = logging.getLogger(__name__)
 
 def get_config(config_file: str):
     """Load the specified configuration file from blob storage.
+
     Args:
         config_file: Path to the config file relative to the default bucket.
+
     Returns:
         Dictionary of configuration information.
     """
@@ -32,8 +35,10 @@ def get_config(config_file: str):
 def get_weather_df(filename: str) -> pd.DataFrame:
     """Fetch weather data from the main storage location.
     Loads weather files from the NREL/openstudio-standards GitHub repository where they are managed.
+
     Args:
         filename: The filename of a weather file (.epw)
+
     Returns:
         A dataframe of weather data summarized by day.
     """
@@ -61,6 +66,7 @@ def get_weather_df(filename: str) -> pd.DataFrame:
 def save_epw(df: pd.DataFrame, filename: str) -> None:
     """Save preprared EPW data out to blob storage.
     The filename of the original file is used, with the extension replaced with .parquet.
+
     Args:
         df: Pandas DataFrame to be saved out.
         filename: Filename of the source file used to produce the DataFrame.
@@ -72,7 +78,7 @@ def save_epw(df: pd.DataFrame, filename: str) -> None:
 
     # Bucket used to store weather data.
     weather_bucket_name = settings.APP_CONFIG.WEATHER_BUCKET_NAME
-    logger.info("Weather data will be placed under %s", weather_bucket_name)
+    logger.info("Weather data will be placed under '%s'", weather_bucket_name)
 
     # Establish a connection to the blob store.
     s3 = config.establish_s3_connection(settings.MINIO_URL,
@@ -95,8 +101,10 @@ def save_epw(df: pd.DataFrame, filename: str) -> None:
 
 def process_weather_file(filename: str):
     """Process a weather file and return the dataframe.
+
     Args:
         filename: The name of the weather file to load, as defined in the building config file.
+
     Returns:
         A pd.DataFrame object with the ready to use weather information.
     """
@@ -119,6 +127,7 @@ def main(config_file: str = typer.Argument(..., help="Path to configuration YAML
     """Take raw EPW files as defined in BTAP YAML configuration and prepare it for use by the model.
     Uses the EnergyPlus configuration to identify and process weather data in EPW format. The weather data is then
     saved to blob storage for use in later processing stages.
+
     Args:
         config_file: Path to the configuration file used for EnergyPlus.
         epw_file_key: The key in the configuration file that has the weather file name(s). Default is ``:epw_file``.
@@ -148,5 +157,8 @@ def main(config_file: str = typer.Argument(..., help="Path to configuration YAML
 
 
 if __name__ == '__main__':
+    # Load settings from the environment.
     settings = config.Settings()
+
+    # Run the CLI interface.
     typer.run(main)

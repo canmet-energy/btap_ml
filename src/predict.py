@@ -45,6 +45,10 @@ from tensorflow.keras.optimizers import Adam
 
 import config as acm
 import plot as pl
+import logging
+
+logging.basicConfig(filename='../output/log/predict.log', level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 #######################################################
 # Predict energy consumed
@@ -59,14 +63,16 @@ def score(y_test, y_pred):
         y_test: y testset
         y_pred: y predicted value from the model
     Returns:
-       mse, rmse and mae scores from comparing the y_test and y_pred values
+       mse, rmse, mae and mape scores from comparing the y_test and y_pred values
     """
     mse = metrics.mean_squared_error(y_test, y_pred)
     mae = metrics.mean_absolute_error(y_test, y_pred)
     rmse = sqrt(mse)
+    mape = metrics.mean_absolute_percentage_error(y_test, y_pred)
     scores = {"mse": mse,
               "rmse": rmse,
-              "mae": mae}
+              "mae": mae,
+               "mape": mape}
     return scores
 
 
@@ -129,7 +135,7 @@ def model_builder(hp):
     # Comiple the mode with the optimizer and learninf rate specified in hparams
     model.compile(optimizer=optimizer,
                   loss=rmse_loss,
-                  metrics=['mae', 'mse'])
+                  metrics=['mae', 'mse','mape'])
 
     return model
 
@@ -139,10 +145,10 @@ def predicts_hp(X_train, y_train, X_test, y_test, selected_feature):
     Using the set of hyperparameter combined,the model built is used to make predictions
 
     Args:
-        X_train: X trainset
-        y_train: y trainset
-        X_test: X testset
-        y_test: y testset
+        X_train: X train set
+        y_train: y train set
+        X_test: X test set
+        y_test: y test set
         selected_feature: selected features that would be used to build the model
 
     Returns:
@@ -282,10 +288,10 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
     print(annual_metric_val)
     
     result= {
-            'metric': test_score,
-            'annual_metric':annual_metric,
+            'test_daily_metric': test_score,
+            'test_annual_metric':annual_metric,
             'output_df':output_df.values.tolist(),
-            'val_metric' : val_score,
+            'val_daily_metric' : val_score,
             'val_annual_metric':annual_metric_val,
             'output_val_df':output_val_df.values.tolist(),
             }
@@ -350,7 +356,7 @@ def create_model(dense_layers, activation, optimizer, dropout_rate, length, lear
     # Comiple the mode with the optimizer and learninf rate specified in hparams
     model.compile(optimizer=optimizer,
                   loss=rmse_loss,
-                  metrics=['mae', 'mse'])
+                  metrics=['mae', 'mse', 'mape'])
     # Define callback
     early_stopping = EarlyStopping(monitor='loss', patience=5)
     logdir = os.path.join("../output/parameter_search/btap", datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
@@ -405,7 +411,8 @@ def fit_evaluate(args):
     data2 = acm.access_minio(operation='read',
                              path=args.features,
                              data='')
-
+    logger.info("%s read_output s3 connection %s", data)
+    
     # removing log directory
     shutil.rmtree('../output/parameter_search/btap', ignore_errors=True)
 
@@ -477,10 +484,12 @@ def fit_evaluate(args):
     data_json = json.dumps(results_pred).encode('utf-8')
 
     # copy data to minio
-    acm.access_minio(operation='copy',
+    write_to_minio = acm.access_minio(operation='copy',
                      path=args.output_path,
                      data=data_json)
-
+    
+    logger.info("write to mino  ", write_to_minio)
+    
     return
 
 
@@ -488,10 +497,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     # Paths must be passed in, not hardcoded
-    parser.add_argument('--in_obj_name', type=str, help='Name of data file to be read')
-    parser.add_argument('--features', type=str, help='selected features')
-    parser.add_argument('--param_search', type=str, help='param search')
-    parser.add_argument('--output_path', type=str, help='Path of the local file where the output file should be written.')
+    parser.add_argument('--in_obj_name', type=str, help='minio locationa and name of data file to be read, ideally the output file generated from preprocessing i.e. preprocessing_out')
+    parser.add_argument('--features', type=str, help='minio locationa and name of data file to be read, ideally the output file generated from feature selection i.e. feature_out')
+    parser.add_argument('--param_search', type=str, help='This parameter is used to determine if hyperparameter search can be performed or not, accepted value is yes or no')
+    parser.add_argument('--output_path', type=str, help='The minio location and filename where the output file should be written.')
     args = parser.parse_args()
 
     fit_evaluate(args)

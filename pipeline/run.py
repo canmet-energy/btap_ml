@@ -8,8 +8,6 @@ client = kfp.Client()
 result = client.create_run_from_pipeline_func(
     pl.btap_pipeline,
     arguments={
-               "minio_tenant":"standard",
-               "bucket":"nrcan-btap",
                "energy_hour":"input_data/total_hourly_res_elec_2021-11-05.csv",
                "build_params":"input_data/output_elec_2021-11-05.xlsx",
                "weather":"input_data/montreal_epw.csv",

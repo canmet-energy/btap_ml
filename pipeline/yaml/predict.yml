@@ -2,29 +2,22 @@ name: Predict Function
 description: Predicts the output variable
 
 inputs:
-- {name: tenant, type: String, description: 'Name of minio tenant to access data from'}
-- {name: bucket, type: String, description: 'Name of minio bucket to access data from'}
 - {name: param_search, type: String, description: 'Specify whether to search for hyperparameter, yes or no'}
 - {name: in_obj_name, type: String, description: 'Name of the input path for process data'}
 - {name: features, type: String, description: 'Name of the input path for selected features data'}
+- {name: output_path, type: String, description: 'Name of the input path for selected features data'}
 outputs:
-- {name: output_path, type: String, description: 'Path where the output data will be stored.'}
+- {name: Output, type: String, description: 'Path where the output data will be stored.'}
 
 implementation:
   container:
     # The strict name of a container image that you've pushed to a container registry.
-    image: k8scc01covidacr.azurecr.io/btap:9e5e4a7afad16167292e242e1b5e36b1a46a1ec0
+    image: k8scc01covidacr.azurecr.io/btap:4b99c6aaa4a19a171209e3d62f8aa71591dbcd71
     command: [
       python3, 
       
       # Path of the program inside the container
       /pipelines/predict.py,
-      
-      --tenant,
-      {inputValue: tenant},
-      
-      --bucket,
-      {inputValue: bucket},
       
       --param_search,
       {inputValue: param_search},
@@ -37,4 +30,7 @@ implementation:
       
       --output_path,
       {outputPath: output_path},
+      
+      --output_paths,
+      {outputPath: Output},
     ]

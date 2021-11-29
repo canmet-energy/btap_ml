@@ -52,7 +52,7 @@ def get_weather_df(filename: str) -> pd.DataFrame:
 
     file_url = f"{epw_file_store}/{filename}"
     logger.info("Reading EPW file from %s", file_url)
-    df = pd.read_csv(file_url, header=0, names=epw_columns, skiprows=meta_row_count)
+    df = pd.read_csv(file_url, names=epw_columns, skiprows=meta_row_count)
 
     return df
 

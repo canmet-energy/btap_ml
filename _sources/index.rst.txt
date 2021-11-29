@@ -24,6 +24,7 @@ After installation, running the processing will generally follow this order:
 
    digraph G {
       bgcolor=transparent;
+      rankdir=LR;
 
       start -> weather -> preprocess -> features -> build -> end;
 
@@ -40,33 +41,39 @@ Contents
 
 .. toctree::
    :maxdepth: 2
+   :caption: Setup
 
    installation
    aaw_setup
 
-Data Prepration
----------------
 
 .. toctree::
    :maxdepth: 2
+   :caption: Data preparation
 
    data_prep/weather
 
-Usage
------
 
 .. toctree::
    :maxdepth: 2
+   :caption: Usage
 
    usage/preprocessing
    usage/feature_selection
    usage/build_model
    usage/kubeflow_pipeline
 
-API
----
 
-Refer to :ref:`modindex`
+.. toctree::
+   :maxdepth: 1
+   :caption: API
+
+   api/config
+   api/feature_selection
+   api/plot
+   api/predict
+   api/prepare_weather
+   api/preprocessing
 
 
 Indices and tables

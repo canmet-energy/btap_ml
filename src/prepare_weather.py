@@ -57,7 +57,8 @@ def get_weather_df(filename: str) -> pd.DataFrame:
 
     file_url = f"{epw_file_store}/{filename}"
     logger.info("Reading EPW file from %s", file_url)
-    df = pd.read_csv(file_url, header=0, names=epw_columns, skiprows=meta_row_count)
+    df = pd.read_csv(file_url, names=epw_columns, skiprows=meta_row_count)
+    logger.debug("Data shape after fetch: %s", df.shape)
 
     return df
 
@@ -70,6 +71,7 @@ def save_epw(df: pd.DataFrame, filename: str) -> None:
         df: Pandas DataFrame to be saved out.
         filename: Filename of the source file used to produce the DataFrame.
     """
+    logger.debug("Data shape being saved: %s", df.shape)
     # Add a parquet extension to the file name
     if not filename.endswith(".parquet"):
         filename = f"{filename}.parquet"
@@ -116,6 +118,7 @@ def process_weather_file(filename: str):
     df = (get_weather_df(filename)
         .drop(weather_drop_list, axis=1)
         .assign(rep_time=lambda x: pd.to_datetime(x[['year','month','day','hour']])))
+    logger.debug("Data shape in processing: %s", df.shape)
     return df
 
 
@@ -144,10 +147,12 @@ def main(config_file: str = typer.Argument(..., help="Path to configuration YAML
     # Data could be a single file or a list of files
     if isinstance(epw_files, str):
         data = process_weather_file(epw_files)
+        logger.debug("Data shape after processin: %s", data.shape)
         save_epw(data, epw_files)
     else:
         for name in epw_files:
             data = process_weather_file(name)
+            logger.debug("Data shape after processing: %s", data.shape)
             save_epw(data, name)
 
 

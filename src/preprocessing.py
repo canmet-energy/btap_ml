@@ -31,15 +31,17 @@ import plot as pl
 def clean_data(df):
     """
     Basic cleaning of the data using the following criterion:
+
     - dropping any column with more than 50% missing values
-    The 50% threshold is a way to eliminate columns with too much missing values in the dataset.
-   We cant use N/A as it will elimnate the entire row /datapoint_id. Giving the number of features we have to work it its better we eliminate
-   columns with features that have too much missing values than to eliminate by rows, which is what N/A will do .
+      The 50% threshold is a way to eliminate columns with too much missing values in the dataset.
+      We cant use N/A as it will elimnate the entire row /datapoint_id. Giving the number of features we have to work it its better we eliminate
+      columns with features that have too much missing values than to eliminate by rows, which is what N/A will do .
     - dropping columns with 2 unquie values
-    For columns with 2 or 1 unique values are dropped during data cleaning as they have low variance
-    and hence have little or no significant contribution to the accuracy of the model.
+      For columns with 2 or 1 unique values are dropped during data cleaning as they have low variance
+      and hence have little or no significant contribution to the accuracy of the model.
+
     Args:
-        df: dataset to be cleaned
+       df: dataset to be cleaned
 
     Returns:
        clean dataframe

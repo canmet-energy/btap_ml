@@ -17,7 +17,7 @@ outputs:
 - {name: Output, type: String, description: 'The minio location and filename where the output file should be written.'}
 
 implementation:
-  container:
+   container:
     # The strict name of a container image that you've pushed to a container registry.
     image: k8scc01covidacr.azurecr.io/btap:4b99c6aaa4a19a171209e3d62f8aa71591dbcd71
     command:[

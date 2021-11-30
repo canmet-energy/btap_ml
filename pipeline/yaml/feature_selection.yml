@@ -13,8 +13,8 @@ outputs:
 implementation:
   container:
     # The strict name of a container image that you've pushed to a container registry.
-    image: k8scc01covidacr.azurecr.io/btap:9e5e4a7afad16167292e242e1b5e36b1a46a1ec0
-    command: [
+    image:k8scc01covidacr.azurecr.io/btap:9e5e4a7afad16167292e242e1b5e36b1a46a1ec0
+    command:[
       python3,
 
       # Path of the program inside the container

@@ -45,7 +45,6 @@ from tensorflow.keras.optimizers import Adam
 import config as acm
 import plot as pl
 
-logging.basicConfig(filename='../output/log/predict.log', level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 #######################################################
@@ -492,6 +491,11 @@ def fit_evaluate(args):
 
 
 if __name__ == '__main__':
+    # Load settings from the environment
+    settings = acm.Settings()
+    acm.setup_logging(settings.LOG_LEVEL)
+    
+    # Prepare the argument parser
     parser = argparse.ArgumentParser()
 
     # Paths must be passed in, not hardcoded

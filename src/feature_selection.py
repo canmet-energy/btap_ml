@@ -13,7 +13,6 @@ import s3fs
 # feature selection
 ############################################################
 
-logging.basicConfig(filename='../output/log/feature.log', level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 def select_features(args):
@@ -86,6 +85,11 @@ def select_features(args):
 
 
 if __name__ == '__main__':
+    # Load settings from the environment
+    settings = acm.Settings()
+    acm.setup_logging(settings.LOG_LEVEL)
+    
+    # Prepare the argument parser
     parser = argparse.ArgumentParser()
 
     # Paths must be passed in, not hardcoded

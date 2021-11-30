@@ -1,3 +1,4 @@
+from enum import IntEnum
 import json
 import logging
 from pathlib import Path
@@ -7,7 +8,6 @@ import pandas as pd
 import s3fs
 from pydantic import AnyHttpUrl, BaseModel, BaseSettings, Field, SecretStr
 
-logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
@@ -37,6 +37,9 @@ class Settings(BaseSettings):
     MINIO_SECRET_KEY: SecretStr = Field(..., env='MINIO_SECRET_KEY')
 
     NAMESPACE: Path = Path('nrcan-btap')
+    
+    # Suitable levels: DEBUG, INFO, WARNING, ERROR, CRITICAL
+    LOG_LEVEL: str = 'INFO'
 
     class Config:
         # Prefix our variables to avoid collisions with other programs
@@ -122,3 +125,13 @@ def access_minio(path: str, operation: str, data: Union[str, pd.DataFrame]):
             data = ''
 
     return data
+
+
+def setup_logging(level_name: str) -> None:
+    """Initialize logging to the level specified.
+
+    Args:
+        level_name: The level to set logging to.
+    """
+    loglevel = logging.getLevelName(level_name)
+    logging.basicConfig(level=loglevel)

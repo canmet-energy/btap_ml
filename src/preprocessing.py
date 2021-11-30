@@ -28,7 +28,6 @@ from sklearn.preprocessing import (LabelEncoder, MinMaxScaler, OneHotEncoder,
 import config as acm
 import plot as pl
 
-logging.basicConfig(filename='../output/log/preprocess2.log', level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
@@ -115,7 +114,7 @@ def read_weather(path: str) -> pd.DataFrame:
     """
     # Load the data from blob storage.
     s3 = acm.establish_s3_connection(settings.MINIO_URL, settings.MINIO_ACCESS_KEY, settings.MINIO_SECRET_KEY)
-    logger.info("%s read_weather s3 connection %s", s3)
+    logger.info("read_weather s3 connection %s", s3)
     weather_df = pd.read_parquet(s3.open(settings.NAMESPACE.joinpath(path).as_posix()))
     #weather_df = pd.read_csv(s3.open(acm.settings.NAMESPACE.joinpath(path).as_posix()))
 
@@ -123,14 +122,15 @@ def read_weather(path: str) -> pd.DataFrame:
     weather_df = clean_data(weather_df)
 
     # date_int is used later to join data together.
-    #weather_df["date_int"] = weather_df['rep_time'].dt.strftime("%m%d").astype(int)
+    weather_df["date_int"] = weather_df['rep_time'].dt.strftime("%m%d").astype(int)
 
     # Aggregate data by day to reduce the complexity, leaving date values as they are.
     min_cols = {'year': 'min','month':'min','day':'min','rep_time':'min','date_int':'min'}
     sum_cols = [c for c in weather_df.columns if c not in [min_cols.keys()]]
     agg_funcs = dict(zip(sum_cols,['sum'] * len(sum_cols)))
     agg_funcs.update(min_cols)
-    weather_df = weather_df.groupby([weather_df['rep_time'].dt.day]).agg(agg_funcs)
+    logger.debug("Aggregating weather data by columns: %s", agg_funcs)
+    weather_df = weather_df.groupby([weather_df['rep_time'].dt.dayofyear]).agg(agg_funcs)
 
     # Remove the rep_time column, since later stages don't know to expect it.
     weather_df = weather_df.drop('rep_time', axis='columns')
@@ -370,6 +370,7 @@ def process_data(args):
 if __name__ == '__main__':
     # Load settings from the environment
     settings = acm.Settings()
+    acm.setup_logging(settings.LOG_LEVEL)
 
     # Prepare the argument parser
     parser = argparse.ArgumentParser()

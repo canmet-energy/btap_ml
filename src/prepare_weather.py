@@ -8,7 +8,6 @@ import yaml
 import config
 
 # Get a log handler
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -160,6 +159,7 @@ def main(config_file: str = typer.Argument(..., help="Path to configuration YAML
 if __name__ == '__main__':
     # Load settings from the environment.
     settings = config.Settings()
+    config.setup_logging(settings.LOG_LEVEL)
 
     # Run the CLI interface.
     typer.run(main)

@@ -32,7 +32,7 @@ exp = client.create_experiment(
 # Create pipeline if not exists
 try:
     client.upload_pipeline(
-        "pipeline.zip",
+        "pipeline.yaml",
         pipeline_name=f"{EXPERIMENT} {PIPELINE}",
         description="BTAP Surrogate model output"
     )
@@ -41,7 +41,7 @@ except:
     pass
 
 client.upload_pipeline_version(
-    "pipeline.zip",
+    "pipeline.yaml",
     pipeline_version_name=f"{TIME} - {COMMIT}",
     pipeline_name=f"{EXPERIMENT} {PIPELINE}"
 )
@@ -54,5 +54,5 @@ client.upload_pipeline_version(
 run = client.run_pipeline(
     exp.id,
     EXPERIMENT,
-    'pipeline.zip',
+    'pipeline.yaml',
 )

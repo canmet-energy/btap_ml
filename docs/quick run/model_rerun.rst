@@ -6,4 +6,4 @@ If the data is already preprocessed and the features are selected with output_fi
 
 
 .. note::
-    The results from the prediction is available in minio in the output_path specified above. 
+    The results from the prediction is available in minio in the output_path specified above.

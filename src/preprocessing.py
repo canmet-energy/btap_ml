@@ -35,13 +35,15 @@ logger = logging.getLogger(__name__)
 def clean_data(df) -> pd.DataFrame:
     """
     Basic cleaning of the data using the following criterion:
+    
     - dropping any column with more than 50% missing values
-    The 50% threshold is a way to eliminate columns with too much missing values in the dataset.
-   We cant use N/A as it will elimnate the entire row /datapoint_id. Giving the number of features we have to work it its better we eliminate
-   columns with features that have too much missing values than to eliminate by rows, which is what N/A will do .
+      The 50% threshold is a way to eliminate columns with too much missing values in the dataset.
+      We cant use N/A as it will elimnate the entire row /datapoint_id. Giving the number of features we have to work it its better we eliminate
+      columns with features that have too much missing values than to eliminate by rows, which is what N/A will do .
     - dropping columns with 1 unique value
-    For columns with  1 unique values are dropped during data cleaning as they have low variance
-    and hence have little or no significant contribution to the accuracy of the model.
+      For columns with  1 unique values are dropped during data cleaning as they have low variance
+      and hence have little or no significant contribution to the accuracy of the model.
+    
     Args:
         df: dataset to be cleaned
 
@@ -74,12 +76,12 @@ def read_output(path_elec,path_gas):
     """
 
     # Load the data from blob storage.
-    s3 = acm.establish_s3_connection(acm.settings.MINIO_URL, acm.settings.MINIO_ACCESS_KEY, acm.settings.MINIO_SECRET_KEY)
-    logger.info("%s read_output s3 connection %s", s3)
-    btap_df_elec = pd.read_excel(s3.open(acm.settings.NAMESPACE.joinpath(path_elec).as_posix()))
+    s3 = acm.establish_s3_connection(settings.MINIO_URL, settings.MINIO_ACCESS_KEY, settings.MINIO_SECRET_KEY)
+    logger.info("read_output s3 connection %s", s3)
+    btap_df_elec = pd.read_excel(s3.open(settings.NAMESPACE.joinpath(path_elec).as_posix()))
 
     if path_gas:
-        btap_df_gas = pd.read_excel(s3.open(acm.settings.NAMESPACE.joinpath(path_gas).as_posix()))
+        btap_df_gas = pd.read_excel(s3.open(settings.NAMESPACE.joinpath(path_gas).as_posix()))
 
         btap_df = pd.concat([btap_df_elec, btap_df_gas], ignore_index=True)
     else:
@@ -112,9 +114,9 @@ def read_weather(path: str) -> pd.DataFrame:
        btap_df: Dataframe containing the clean weather file.
     """
     # Load the data from blob storage.
-    s3 = acm.establish_s3_connection(acm.settings.MINIO_URL, acm.settings.MINIO_ACCESS_KEY, acm.settings.MINIO_SECRET_KEY)
+    s3 = acm.establish_s3_connection(settings.MINIO_URL, settings.MINIO_ACCESS_KEY, settings.MINIO_SECRET_KEY)
     logger.info("%s read_weather s3 connection %s", s3)
-    weather_df = pd.read_parquet(s3.open(acm.settings.NAMESPACE.joinpath(path).as_posix()))
+    weather_df = pd.read_parquet(s3.open(settings.NAMESPACE.joinpath(path).as_posix()))
     #weather_df = pd.read_csv(s3.open(acm.settings.NAMESPACE.joinpath(path).as_posix()))
 
     # Remove spurious columns.
@@ -155,9 +157,9 @@ def read_hour_energy(path_elec,path_gas,floor_sq):
        energy_hour_melt: Dataframe containing the clean and transposed hourly energy file.
     """
 
-    s3 = acm.establish_s3_connection(acm.settings.MINIO_URL, acm.settings.MINIO_ACCESS_KEY, acm.settings.MINIO_SECRET_KEY)
+    s3 = acm.establish_s3_connection(settings.MINIO_URL, settings.MINIO_ACCESS_KEY, settings.MINIO_SECRET_KEY)
     logger.info("%s read_hour_energy s3 connection %s", s3)
-    energy_hour_df_elec = pd.read_csv(s3.open(acm.settings.NAMESPACE.joinpath(path_elec).as_posix()))
+    energy_hour_df_elec = pd.read_csv(s3.open(settings.NAMESPACE.joinpath(path_elec).as_posix()))
 
     if path_gas:
         energy_hour_df_gas = pd.read_csv(s3.open(acm.settings.NAMESPACE.joinpath(path_gas).as_posix()))
@@ -366,6 +368,10 @@ def process_data(args):
 
 
 if __name__ == '__main__':
+    # Load settings from the environment
+    settings = acm.Settings()
+
+    # Prepare the argument parser
     parser = argparse.ArgumentParser()
 
     # Paths must be passed in, not hardcoded

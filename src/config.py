@@ -49,8 +49,6 @@ class Settings(BaseSettings):
         def customise_sources(cls, init_settings, env_settings, file_secret_settings):
             return (init_settings, json_config_settings_source, env_settings, file_secret_settings)
 
-settings = Settings()
-logger.debug("Loaded the following settings: %s", settings)
 
 def establish_s3_connection(endpoint_url: str, access_key: str, secret_key: SecretStr) -> s3fs.S3FileSystem:
     """Used to create a connection to an S3 data store.
@@ -90,6 +88,9 @@ def access_minio(path: str, operation: str, data: Union[str, pd.DataFrame]):
     """
 
     logger.info("%s minio data at %s", operation, path)
+    
+    # Get settings for the environment
+    settings = Settings()
 
     # Establish S3 connection
     s3 = establish_s3_connection(settings.MINIO_URL,

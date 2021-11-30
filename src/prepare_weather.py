@@ -11,6 +11,7 @@ import config
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 def get_config(config_file: str):
     """Load the specified configuration file from blob storage.
 
@@ -49,11 +50,11 @@ def get_weather_df(filename: str) -> pd.DataFrame:
     logger.debug('Skipping first %s rows of EPW data', meta_row_count)
 
     # Columns in the file as defined in Auxiliary Programs documentation
-    epw_columns = ['year','month','day','hour','minute','datasource','drybulb','dewpoint','relhum','atmos_pressure',
-                   'exthorrad','extdirrad','horirsky','glohorrad','dirnorrad','difhorrad','glohorillum','dirnorillum',
-                   'difhorillum','zenlum','winddir','windspd','totskycvr','opaqskycvr','visibility','ceiling_hgt',
-                   'presweathobs','presweathcodes','precip_wtr','aerosol_opt_depth','snowdepth','days_last_snow',
-                   'Albedo','liq_precip_depth','liq_precip_rate']
+    epw_columns = ['year', 'month', 'day', 'hour', 'minute', 'datasource', 'drybulb', 'dewpoint', 'relhum', 'atmos_pressure',
+                   'exthorrad', 'extdirrad', 'horirsky', 'glohorrad', 'dirnorrad', 'difhorrad', 'glohorillum', 'dirnorillum',
+                   'difhorillum', 'zenlum', 'winddir', 'windspd', 'totskycvr', 'opaqskycvr', 'visibility', 'ceiling_hgt',
+                   'presweathobs', 'presweathcodes', 'precip_wtr', 'aerosol_opt_depth', 'snowdepth', 'days_last_snow',
+                   'Albedo', 'liq_precip_depth', 'liq_precip_rate']
 
     file_url = f"{epw_file_store}/{filename}"
     logger.info("Reading EPW file from %s", file_url)
@@ -87,7 +88,7 @@ def save_epw(df: pd.DataFrame, filename: str) -> None:
 
     # Make sure the bucket for weather data exists to avoid write errors
     existing_items = s3.ls(settings.NAMESPACE.as_posix())
-    if not weather_bucket_name in existing_items:
+    if weather_bucket_name not in existing_items:
         bucket_path = settings.NAMESPACE.joinpath(weather_bucket_name).as_posix()
         logger.info("Weather bucket not found, creating %s", bucket_path)
         s3.mkdir(bucket_path)
@@ -116,8 +117,8 @@ def process_weather_file(filename: str):
     logger.debug("Dropping %s unused columns from weather data", len(weather_drop_list))
 
     df = (get_weather_df(filename)
-        .drop(weather_drop_list, axis=1)
-        .assign(rep_time=lambda x: pd.to_datetime(x[['year','month','day','hour']])))
+          .drop(weather_drop_list, axis=1)
+          .assign(rep_time=lambda x: pd.to_datetime(x[['year', 'month', 'day', 'hour']])))
     logger.debug("Data shape in processing: %s", df.shape)
     return df
 

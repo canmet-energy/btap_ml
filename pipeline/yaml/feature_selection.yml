@@ -9,7 +9,6 @@ inputs:
 - {name: output_path, type: String, description: 'Path where the output data will be stored.'}
 outputs:
 - {name: output_path, type: String, description: 'Path where the output data will be stored.'}
-
 implementation:
   container:
     # The strict name of a container image that you've pushed to a container registry.
@@ -17,7 +16,7 @@ implementation:
     command: [
       python3,
 
-      # Path of the program inside the container
+      #Path of the program inside the container
       /pipelines/feature_selection.py,
 
       --tenant,

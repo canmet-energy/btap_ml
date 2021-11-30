@@ -2,6 +2,7 @@ import kfp
 import pandas as pd
 from kfp import dsl
 from kfp.components import func_to_container_op, load_component_from_file
+from kubernetes.client.models import V1EnvVar
 from minio import Minio
 
 import config as acm
@@ -25,11 +26,14 @@ def btap_pipeline(  build_params="input_data/output_2021-10-04.xlsx",
                     param_search="no",
                     build_params_gas= 'input_data/output_gas_2021-11-05.xlsx',
                     energy_hour_gas ='input_data/total_hourly_res_gas_2021-11-05.csv'):
+    
+    # Set the log level
+    env_log_level = V1EnvVar(name='BTAP_LOG_LEVEL', value='DEBUG')
 
     # Loads the yaml manifest for each component
-    preprocess = load_component_from_file('yaml/preprocessing.yml')
-    feature_selection = load_component_from_file('yaml/feature_selection.yml')
-    predict = load_component_from_file('yaml/predict.yml')
+    preprocess = load_component_from_file('yaml/preprocessing.yml').add_env_variable(env_log_level)
+    feature_selection = load_component_from_file('yaml/feature_selection.yml').add_env_variable(env_log_level)
+    predict = load_component_from_file('yaml/predict.yml').add_env_variable(env_log_level)
     preprocess_ = preprocess(
 
                              in_hour=energy_hour,

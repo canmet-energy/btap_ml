@@ -12,15 +12,6 @@ During preprocessing, the hourly energy consumption file is transposed such that
 Hyperparameter Search
 ----------------------
 
-Hyperparameter Search
-----------------------
-
-Hyperparameter Search
-----------------------
-
-
-
-
 You can use the tensorboard dashboard to inspect the performance of the model.
 
 1. Open ``notebooks/tensorboard.ipynb``.

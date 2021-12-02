@@ -1,5 +1,15 @@
 '''
-Downloads all the dataset from minio, preprocess the data, split the data into train, test and validation set.
+Downloads all the datasets from minio, preprocess the data, split the data into train, test and validation set.
+
+Args:
+    in_hour: The minio location and filename for the hourly energy consumption file is located. This would be the path for the electric hourly file if it exist.
+    in_build_params: The minio location and filename the building simulation I/O file. This would be the path for the electric hourly file if it exist.
+    in_weather: The minio location and filename for the converted  weather file to be read
+    in_hour_val: The minio location and filename for the hourly energy consumption file for the validation set, if it exist.
+    in_build_params_val: The minio location and filename for the building simulation I/O file for the validation set, if it exist.
+    in_hour_gas: The minio location and filename for the hourly energy consumption file is located. This would be the path for the gas hourly file if it exist.
+    in_build_params_gas: The minio location and filename the building simulation I/O file. This would be the path for the gas hourly file if it exist.
+    output_path: The minio location and filename where the output file should be written.
 '''
 import argparse
 import copy

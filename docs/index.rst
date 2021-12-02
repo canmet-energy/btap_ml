@@ -46,21 +46,15 @@ Contents
    installation
    aaw_setup
 
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Data preparation
-
-   data_prep/weather
-
+Once installation is complete, a good place to get an overview of the complete process can be found in :doc:`usage/retrain`.
 
 .. toctree::
    :maxdepth: 2
    :caption: Usage
 
-   usage/preprocessing
-   usage/feature_selection
-   usage/build_model
+   usage/quickstart
+   usage/retrain
+   usage/model_run
    usage/kubeflow_pipeline
 
 

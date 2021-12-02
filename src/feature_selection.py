@@ -18,7 +18,7 @@ import s3fs
 # feature selection
 ############################################################
 
-logging.basicConfig(filename='../output/log/feature.log', level=logging.DEBUG)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 def select_features(args):

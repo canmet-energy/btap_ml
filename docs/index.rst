@@ -52,6 +52,7 @@ Once installation is complete, a good place to get an overview of the complete p
    :maxdepth: 2
    :caption: Usage
 
+   usage/quickstart
    usage/retrain
    usage/model_run
    usage/kubeflow_pipeline

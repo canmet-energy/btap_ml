@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Preprocessing &#8212; BTAP: ML  documentation</title>
+    <title>What this does &#8212; BTAP: ML  documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
     <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
@@ -16,8 +16,6 @@
     <script src="../_static/doctools.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Feature selection" href="feature_selection.html" />
-    <link rel="prev" title="Weather data processing" href="../data_prep/weather.html" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
@@ -34,30 +32,36 @@
 
           <div class="body" role="main">
             
-  <section id="preprocessing">
-<h1>Preprocessing<a class="headerlink" href="#preprocessing" title="Permalink to this headline">¶</a></h1>
-<p>When running manually, you need to trigger the preprocessing step to prepare all the input data. Several
-inputs are required to prepare for model training:</p>
-<ul class="simple">
-<li><p>in_hour: The minio location and filename for the hourly energy consumption file is located. This would be the path for the electric hourly file if it exist.</p></li>
-<li><p>in_build_params:The minio location and filename the building simulation I/O file. This would be the path for the electric hourly file if it exist.</p></li>
-<li><p>in_weather: The minio location and filename for the converted  weather file to be read.</p></li>
-<li><p>in_hour_val: The minio location and filename for the hourly energy consumption file for the validation set, if it exist.</p></li>
-<li><p>in_build_params_val: The minio location and filename for the building simulation I/O file for the validation set, if it exist.</p></li>
-<li><p>in_hour_gas: The minio location and filename for the hourly energy consumption file is located. This would be the path for the gas hourly file if it exist.</p></li>
-<li><p>in_build_params_gas: The minio location and filename the building simulation I/O file. This would be the path for the gas hourly file if it exist.</p></li>
-</ul>
-<p>The following command will perform the required preprocessing on the given inputs:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python3</span> <span class="n">preprocessing</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">in_build_params</span> <span class="n">input_data</span><span class="o">/</span><span class="n">output_elec_2021</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mf">05.</span><span class="n">xlsx</span> <span class="o">--</span><span class="n">in_hour</span> <span class="n">input_data</span><span class="o">/</span><span class="n">total_hourly_res_elec_2021</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mf">05.</span><span class="n">csv</span> <span class="o">--</span><span class="n">in_weather</span> <span class="n">input_data</span><span class="o">/</span><span class="n">montreal_epw</span><span class="o">.</span><span class="n">csv</span> <span class="o">--</span><span class="n">output_path</span> <span class="n">output_data</span><span class="o">/</span><span class="n">preprocessing_out</span> <span class="o">--</span><span class="n">in_build_params_gas</span> <span class="n">input_data</span><span class="o">/</span><span class="n">output_gas_2021</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mf">05.</span><span class="n">xlsx</span> <span class="o">--</span><span class="n">in_hour_gas</span> <span class="n">input_data</span><span class="o">/</span><span class="n">total_hourly_res_gas_2021</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mf">05.</span><span class="n">csv</span>
+  <p>With data loaded to blob storage, run <code class="docutils literal notranslate"><span class="pre">proprocessing.py</span></code> to clean and split the data into test and train sets:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python3 preprocessing.py --in_build_params input_data/output_elec_2021-11-05.xlsx --in_hour input_data/total_hourly_res_elec_2021-11-05.csv --in_weather input_data/montreal_epw.csv --output_path output_data/preprocessing_out --in_build_params_gas input_data/output_gas_2021-11-05.xlsx --in_hour_gas input_data/total_hourly_res_gas_2021-11-05.csv
 </pre></div>
 </div>
-<p>During preprocessing, the hourly energy consumption file is transposed such that each datapoint_id has 8760 rows (365 * 24). Hence, for a simulation run containing 5000 datapoint_id, there would be 5000 * 8760 rows which would be 43.8 million rows. In order to avoid the preprocessing stage to become computationally expensive due to large datapoints created, the transposed hourly energy is is aggregated to daily energy for each datapoint_id. Similarly, the weather information is aggregated from hourly to daily, so that it can be merged with the hourly energy file. In essensece,
-the simulation I/O file(s), weather file and the hourly energy consumption file(s) are all merged to one dataframe which then splitted for training and testing purposes.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>The total daily energy computed for each datapoint_id is converted to Mega Joules per meter square (mj_per_m_sq), which is derived by converting the total energy used provided in the simulation I/O file to Mega Joules and then dividing the result by the building floor area.</p>
+<p>Update the input parameters to point to the appropriate input files and ouput_path in minio. Only the filenames
+would need to be changed. Check <strong>Usage</strong> for full detail description of each parameter.</p>
 </div>
-<p>In the case where the validation set is not provided, the dataset provided is splitted into 70% training set, 20% test set and 10% validation set. However, when validation set is provided, the dataset is splitted only into 80% training set and 20% test set. It should be noted that the data splitting is performed using GroupShuffleSplit function which ensures that all data instances for a datapoint_id are included in the respective data set they are split into which implies a datapoint_id used for training would not have any instance in the test set.</p>
+<p>The parameters to the above script are documented in the <a class="reference internal" href="../api/preprocessing.html#module-preprocessing" title="preprocessing"><code class="xref py py-mod docutils literal notranslate"><span class="pre">preprocessing</span></code></a>.</p>
+<section id="what-this-does">
+<h1>What this does<a class="headerlink" href="#what-this-does" title="Permalink to this headline">¶</a></h1>
+<p>During preprocessing, the hourly energy consumption file is transposed such that each <code class="docutils literal notranslate"><span class="pre">datapoint_id</span></code> has 8760 rows
+(365 * 24). Hence, for a simulation run containing 5000 <a href="#id1"><span class="problematic" id="id2">``</span></a>datapoint_id``s, there would be 5000 * 8760 rows which would
+be 43.8 million rows. In order to avoid the preprocessing stage to become computationally expensive due to large
+datapoints created, the transposed hourly energy is is aggregated to daily energy for each datapoint_id. Similarly,
+the weather information is aggregated from hourly to daily, so that it can be merged with the hourly energy file.
+In essensece, the simulation I/O file(s), weather file and the hourly energy consumption file(s) are all merged to one
+dataframe which then splitted for training and testing purposes.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The total daily energy computed for each <code class="docutils literal notranslate"><span class="pre">datapoint_id</span></code> is converted to Mega Joules per meter square (mj_per_m_sq),
+which is derived by converting the total energy used provided in the simulation I/O file to Mega Joules and then
+dividing the result by the building floor area.</p>
+</div>
+<p>In the case where the validation set is not provided, the dataset provided is splitted into 70% training set, 20% test
+set and 10% validation set. However, when validation set is provided, the dataset is splitted only into 80% training
+set and 20% test set. It should be noted that the data splitting is performed using GroupShuffleSplit function which
+ensures that all data instances for a datapoint_id are included in the respective data set they are split into which
+implies a datapoint_id used for training would not have any instance in the test set.</p>
 </section>
 
 
@@ -83,15 +87,11 @@ the simulation I/O file(s), weather file and the hourly energy consumption file(
 <li class="toctree-l1"><a class="reference internal" href="../aaw_setup.html">Working on AAW</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../aaw_setup.html#project-source-code">Project source code</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Data preparation</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../data_prep/weather.html">Weather data processing</a></li>
-</ul>
 <p class="caption" role="heading"><span class="caption-text">Usage</span></p>
-<ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Preprocessing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="feature_selection.html">Feature selection</a></li>
-<li class="toctree-l1"><a class="reference internal" href="build_model.html">Build and Run Surrogate Model</a></li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="retrain.html">Train the model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model_run.html">Re-run Model</a></li>
 <li class="toctree-l1"><a class="reference internal" href="kubeflow_pipeline.html">Kubeflow pipeline</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API</span></p>
@@ -108,8 +108,6 @@ the simulation I/O file(s), weather file and the hourly energy consumption file(
 <h3>Related Topics</h3>
 <ul>
   <li><a href="../index.html">Documentation overview</a><ul>
-      <li>Previous: <a href="../data_prep/weather.html" title="previous chapter">Weather data processing</a></li>
-      <li>Next: <a href="feature_selection.html" title="next chapter">Feature selection</a></li>
   </ul></li>
 </ul>
 </div>

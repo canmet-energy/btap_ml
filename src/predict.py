@@ -1,5 +1,11 @@
 '''
 Uses the output from preprocessing and feature selection from mino, builds the model and then evaluate the model.
+
+Args:
+    in_obj_name: minio locationa and name of data file to be read, ideally the output file generated from preprocessing i.e. preprocessing_out
+    features: minio locationa and name of data file to be read, ideally the output file generated from feature selection i.e. feature_out
+    param_search: This parameter is used to determine if hyperparameter search can be performed or not, accepted value is yes or no
+    output_path: The minio location and filename where the output file should be written.
 '''
 import argparse
 import datetime

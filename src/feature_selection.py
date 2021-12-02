@@ -1,5 +1,10 @@
 '''
 Select features that are used to build the surrogate mode.
+
+Args:
+    in_obj_name: minio locationa and name of data file to be read, ideally the output file generated from preprocessing i.e. preprocessing.out
+    estimator_type: Type of estimator to be used, default is lasso
+    output_path: he minio location and filename where the output file should be written.
 '''
 import argparse
 import json

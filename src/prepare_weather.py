@@ -1,4 +1,7 @@
-"""Prepare the weather file(s) specified in the YAML configuration to be used by the pipeline."""
+"""Prepare the weather file(s) specified in the YAML configuration to be used by the pipeline.
+
+CLI arguments match those defined by ``main()``.
+"""
 import logging
 
 import pandas as pd

@@ -3,7 +3,7 @@ Train the model
 
 If there are new data files that significantly change the types of information the model knows how to predict you need
 to retrain the model. This involves performing a series of steps to prepare the data and use it to retrain the model.
-In the case that you want to retrain the model but are not dealing with significant changes in the data (for example, 
+In the case that you want to retrain the model but are not dealing with significant changes in the data (for example,
 using the same weather data) you can skip the weather data preparation or cleaning and splitting steps, as appropriate.
 
 .. contents::

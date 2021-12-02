@@ -20,7 +20,7 @@ the weather information is aggregated from hourly to daily, so that it can be me
 In essensece, the simulation I/O file(s), weather file and the hourly energy consumption file(s) are all merged to one
 dataframe which then splitted for training and testing purposes.
 
-.. note:: 
+.. note::
 
     The total daily energy computed for each ``datapoint_id`` is converted to Mega Joules per meter square (mj_per_m_sq),
     which is derived by converting the total energy used provided in the simulation I/O file to Mega Joules and then

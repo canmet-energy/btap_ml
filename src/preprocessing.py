@@ -129,7 +129,7 @@ def read_weather(path: str) -> pd.DataFrame:
         logger.warn("Weather data must be in parquet format. Ensure %s is valid.", path)
     # Load the data from blob storage.
     s3 = acm.establish_s3_connection(settings.MINIO_URL, settings.MINIO_ACCESS_KEY, settings.MINIO_SECRET_KEY)
-    logger.info("%s read_weather s3 connection %s", s3)
+    logger.info("read_weather s3 connection %s", s3)
     try:
         weather_df = pd.read_parquet(s3.open(settings.NAMESPACE.joinpath(path).as_posix()))
     except pyarrow.lib.ArrowInvalid as err:

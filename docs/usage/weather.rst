@@ -9,6 +9,11 @@ Weather data can be automatically preprared from the information found in the BT
 
    $ python prepare_weather.py input_data/sample-lhs_2021-10-04.yml
 
+.. note::
+
+   The input to ``prepare_weather.py`` is the same configuration file that is given to BTAP CLI. The script will
+   look for the file on blob storage, relative to the project namespace (``nrcan-btap`` on AAW).
+
 Outputs are placed in the ``weather`` bucket (by default) in storage as parquet files. The name of the weather files
 will match the input name found in the YAML file, but with a ``.parquet`` file extension.
 

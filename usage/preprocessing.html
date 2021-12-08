@@ -45,7 +45,7 @@ would need to be changed. Check <strong>Usage</strong> for full detail descripti
 <section id="what-this-does">
 <h1>What this does<a class="headerlink" href="#what-this-does" title="Permalink to this headline">¶</a></h1>
 <p>During preprocessing, the hourly energy consumption file is transposed such that each <code class="docutils literal notranslate"><span class="pre">datapoint_id</span></code> has 8760 rows
-(365 * 24). Hence, for a simulation run containing 5000 <a href="#id1"><span class="problematic" id="id2">``</span></a>datapoint_id``s, there would be 5000 * 8760 rows which would
+(365 * 24). Hence, for a simulation run containing 5000 <code class="docutils literal notranslate"><span class="pre">datapoint_id</span></code>, there would be 5000 * 8760 rows which would
 be 43.8 million rows. In order to avoid the preprocessing stage to become computationally expensive due to large
 datapoints created, the transposed hourly energy is is aggregated to daily energy for each datapoint_id. Similarly,
 the weather information is aggregated from hourly to daily, so that it can be merged with the hourly energy file.

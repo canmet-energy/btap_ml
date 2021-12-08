@@ -4,12 +4,16 @@ Quickstart
 If you just want to run all of the steps from start to finish, here are the steps to run. You may be able to skip some
 of these depending on if data has already been prepared.
 
+.. note::
+
+   All of the scripts for the project are in the ``src/`` folder of the repository.
+
 Prepare weather data
 --------------------
 
 Gather required weather data and place it on blob storage::
 
-   $ python prepare_weather.py input_data/sample-config.yml
+   $ python prepare_weather.py input_data/sample-lhs_2021-10-04.yml
 
 Preprocessing
 -------------

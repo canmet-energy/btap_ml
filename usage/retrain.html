@@ -42,22 +42,27 @@ In the case that you want to retrain the model but are not dealing with signific
 using the same weather data) you can skip the weather data preparation or cleaning and splitting steps, as appropriate.</p>
 <div class="contents local topic" id="contents">
 <ul class="simple">
-<li><p><a class="reference internal" href="#preparation-of-weather-data" id="id4">Preparation of weather data</a></p></li>
-<li><p><a class="reference internal" href="#clean-and-split-the-data" id="id5">Clean and split the data</a></p></li>
-<li><p><a class="reference internal" href="#feature-selection" id="id6">Feature selection</a></p></li>
-<li><p><a class="reference internal" href="#build-the-surrogate-model-and-predict-energy-use" id="id7">Build the surrogate model and predict energy use</a></p></li>
-<li><p><a class="reference internal" href="#download-results" id="id8">Download results</a></p></li>
+<li><p><a class="reference internal" href="#preparation-of-weather-data" id="id2">Preparation of weather data</a></p></li>
+<li><p><a class="reference internal" href="#clean-and-split-the-data" id="id3">Clean and split the data</a></p></li>
+<li><p><a class="reference internal" href="#feature-selection" id="id4">Feature selection</a></p></li>
+<li><p><a class="reference internal" href="#build-the-surrogate-model-and-predict-energy-use" id="id5">Build the surrogate model and predict energy use</a></p></li>
+<li><p><a class="reference internal" href="#download-results" id="id6">Download results</a></p></li>
 </ul>
 </div>
 <section id="preparation-of-weather-data">
-<h2><a class="toc-backref" href="#id4">Preparation of weather data</a><a class="headerlink" href="#preparation-of-weather-data" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id2">Preparation of weather data</a><a class="headerlink" href="#preparation-of-weather-data" title="Permalink to this headline">¶</a></h2>
 <p>EnergyPlus uses weather data in the EPW file format, as defined in the <a class="reference external" href="https://energyplus.net/assets/nrel_custom/pdfs/pdfs_v9.6.0/AuxiliaryPrograms.pdf">Auxiliary
 Programs</a> documentation. In
 order to be consumed by the model, the data needs to undergo several steps before it can be used.</p>
 <p>Weather data can be automatically preprared from the information found in the BTAP CLI configuration YAML. The
 <code class="docutils literal notranslate"><span class="pre">prepare_weather.py</span></code> script can be used to process weather data and save it to blob storage.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python prepare_weather.py input_data/sample-config.yml
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python prepare_weather.py input_data/sample-lhs_2021-10-04.yml
 </pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The input to <code class="docutils literal notranslate"><span class="pre">prepare_weather.py</span></code> is the same configuration file that is given to BTAP CLI. The script will
+look for the file on blob storage, relative to the project namespace (<code class="docutils literal notranslate"><span class="pre">nrcan-btap</span></code> on AAW).</p>
 </div>
 <p>Outputs are placed in the <code class="docutils literal notranslate"><span class="pre">weather</span></code> bucket (by default) in storage as parquet files. The name of the weather files
 will match the input name found in the YAML file, but with a <code class="docutils literal notranslate"><span class="pre">.parquet</span></code> file extension.</p>
@@ -99,7 +104,7 @@ daily intervals.</p>
 </section>
 </section>
 <section id="clean-and-split-the-data">
-<h2><a class="toc-backref" href="#id5">Clean and split the data</a><a class="headerlink" href="#clean-and-split-the-data" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id3">Clean and split the data</a><a class="headerlink" href="#clean-and-split-the-data" title="Permalink to this headline">¶</a></h2>
 <p>With data loaded to blob storage, run <code class="docutils literal notranslate"><span class="pre">proprocessing.py</span></code> to clean and split the data into test and train sets:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python3 preprocessing.py --in_build_params input_data/output_elec_2021-11-05.xlsx --in_hour input_data/total_hourly_res_elec_2021-11-05.csv --in_weather input_data/montreal_epw.csv --output_path output_data/preprocessing_out --in_build_params_gas input_data/output_gas_2021-11-05.xlsx --in_hour_gas input_data/total_hourly_res_gas_2021-11-05.csv
 </pre></div>
@@ -113,7 +118,7 @@ would need to be changed. Check <strong>Usage</strong> for full detail descripti
 <section id="id1">
 <h3>What this does<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
 <p>During preprocessing, the hourly energy consumption file is transposed such that each <code class="docutils literal notranslate"><span class="pre">datapoint_id</span></code> has 8760 rows
-(365 * 24). Hence, for a simulation run containing 5000 <a href="#id2"><span class="problematic" id="id3">``</span></a>datapoint_id``s, there would be 5000 * 8760 rows which would
+(365 * 24). Hence, for a simulation run containing 5000 <code class="docutils literal notranslate"><span class="pre">datapoint_id</span></code>, there would be 5000 * 8760 rows which would
 be 43.8 million rows. In order to avoid the preprocessing stage to become computationally expensive due to large
 datapoints created, the transposed hourly energy is is aggregated to daily energy for each datapoint_id. Similarly,
 the weather information is aggregated from hourly to daily, so that it can be merged with the hourly energy file.
@@ -133,7 +138,7 @@ implies a datapoint_id used for training would not have any instance in the test
 </section>
 </section>
 <section id="feature-selection">
-<h2><a class="toc-backref" href="#id6">Feature selection</a><a class="headerlink" href="#feature-selection" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id4">Feature selection</a><a class="headerlink" href="#feature-selection" title="Permalink to this headline">¶</a></h2>
 <p>After preprocessing the data, the features to be used in building the surrogate model can be selected:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python3 feature_selection.py --in_obj_name output_data/preprocessing_out --output_path output_data/feature_out --estimator_type lasso
 </pre></div>
@@ -158,7 +163,7 @@ other estimator type can be used by specifying the respective esimator type to t
 performing feature selection.</p>
 </section>
 <section id="build-the-surrogate-model-and-predict-energy-use">
-<h2><a class="toc-backref" href="#id7">Build the surrogate model and predict energy use</a><a class="headerlink" href="#build-the-surrogate-model-and-predict-energy-use" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id5">Build the surrogate model and predict energy use</a><a class="headerlink" href="#build-the-surrogate-model-and-predict-energy-use" title="Permalink to this headline">¶</a></h2>
 <p>The output from the data preparation and feature selection steps are used as input into this stage by running:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python3 predict.py --param_search yes --in_obj_name output_data/preprocessing_out --features output_data/feature_out --output_path output_data/predict_out
 </pre></div>
@@ -166,7 +171,7 @@ performing feature selection.</p>
 <p>The parameters to the above script are documented in the <a class="reference internal" href="../api/predict.html#module-predict" title="predict"><code class="xref py py-mod docutils literal notranslate"><span class="pre">predict</span></code></a>.</p>
 </section>
 <section id="download-results">
-<h2><a class="toc-backref" href="#id8">Download results</a><a class="headerlink" href="#download-results" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id6">Download results</a><a class="headerlink" href="#download-results" title="Permalink to this headline">¶</a></h2>
 <p>The results from the prediction is available in minio in the <code class="docutils literal notranslate"><span class="pre">output_path</span></code> specified in prediction step.</p>
 </section>
 </section>

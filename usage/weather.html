@@ -37,8 +37,13 @@ Programs</a> documentation. In
 order to be consumed by the model, the data needs to undergo several steps before it can be used.</p>
 <p>Weather data can be automatically preprared from the information found in the BTAP CLI configuration YAML. The
 <code class="docutils literal notranslate"><span class="pre">prepare_weather.py</span></code> script can be used to process weather data and save it to blob storage.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python prepare_weather.py input_data/sample-config.yml
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python prepare_weather.py input_data/sample-lhs_2021-10-04.yml
 </pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The input to <code class="docutils literal notranslate"><span class="pre">prepare_weather.py</span></code> is the same configuration file that is given to BTAP CLI. The script will
+look for the file on blob storage, relative to the project namespace (<code class="docutils literal notranslate"><span class="pre">nrcan-btap</span></code> on AAW).</p>
 </div>
 <p>Outputs are placed in the <code class="docutils literal notranslate"><span class="pre">weather</span></code> bucket (by default) in storage as parquet files. The name of the weather files
 will match the input name found in the YAML file, but with a <code class="docutils literal notranslate"><span class="pre">.parquet</span></code> file extension.</p>
@@ -104,10 +109,10 @@ daily intervals.</p>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Usage</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../usage/quickstart.html">Quickstart</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../usage/retrain.html">Train the model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../usage/model_run.html">Re-run Model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../usage/kubeflow_pipeline.html">Kubeflow pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="retrain.html">Train the model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model_run.html">Re-run Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kubeflow_pipeline.html">Kubeflow pipeline</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API</span></p>
 <ul>
@@ -156,7 +161,7 @@ daily intervals.</p>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
-      <a href="../_sources/data_prep/weather.rst.txt"
+      <a href="../_sources/usage/weather.rst.txt"
           rel="nofollow">Page source</a>
     </div>
 

@@ -13,7 +13,7 @@ using the same weather data) you can skip the weather data preparation or cleani
 Preparation of weather data
 ---------------------------
 
-.. include:: ../data_prep/weather.rst
+.. include:: weather.rst
 
 
 Clean and split the data

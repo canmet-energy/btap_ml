@@ -148,7 +148,7 @@ def read_weather(path: str) -> pd.DataFrame:
     sum_cols = [c for c in weather_df.columns if c not in [min_cols.keys()]]
     agg_funcs = dict(zip(sum_cols,['sum'] * len(sum_cols)))
     agg_funcs.update(min_cols)
-    weather_df = weather_df.groupby([weather_df['rep_time'].dt.day]).agg(agg_funcs)
+    weather_df = weather_df.groupby([weather_df['rep_time'].dt.dayofyear]).agg(agg_funcs)
 
     # Remove the rep_time column, since later stages don't know to expect it.
     weather_df = weather_df.drop('rep_time', axis='columns')

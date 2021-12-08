@@ -112,9 +112,11 @@ daily intervals.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Update the input parameters to point to the appropriate input files and ouput_path in minio. Only the filenames
-would need to be changed. Check <strong>Usage</strong> for full detail description of each parameter.</p>
+would need to be changed. Check <a class="reference internal" href="../api/preprocessing.html#module-preprocessing" title="preprocessing"><code class="xref py py-mod docutils literal notranslate"><span class="pre">preprocessing</span></code></a> for full detail description of each parameter.</p>
 </div>
-<p>The parameters to the above script are documented in the <a class="reference internal" href="../api/preprocessing.html#module-preprocessing" title="preprocessing"><code class="xref py py-mod docutils literal notranslate"><span class="pre">preprocessing</span></code></a>.</p>
+<p>Aside from supporting optional different files for electricity and gas, if you have mutliple input files they
+need to be manually combined before passing them as input. If you only have a single input file, provide it as
+the value to <code class="docutils literal notranslate"><span class="pre">--in_build_params</span></code>.</p>
 <section id="id1">
 <h3>What this does<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
 <p>During preprocessing, the hourly energy consumption file is transposed such that each <code class="docutils literal notranslate"><span class="pre">datapoint_id</span></code> has 8760 rows

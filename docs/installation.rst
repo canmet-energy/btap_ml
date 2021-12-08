@@ -25,7 +25,11 @@ Additional dependencies exist if you would like to participate in the developmen
     pip install -r requirements-dev.txt
 
 Pre-commit hooks
-----------------
+^^^^^^^^^^^^^^^^
+
+.. note::
+
+   This step is only necessary if you are interested in participating in the development of the model.
 
 The project makes use of ``pre-commit``, which is a package that helps to keep source code clean and consistent
 through hooks run against every commit. When these hooks detect something to fix they can cause your commit to fail,

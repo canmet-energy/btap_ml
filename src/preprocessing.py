@@ -180,7 +180,7 @@ def read_hour_energy(path_elec,path_gas,floor_sq):
     energy_hour_df_elec = pd.read_csv(s3.open(settings.NAMESPACE.joinpath(path_elec).as_posix()))
 
     if path_gas:
-        energy_hour_df_gas = pd.read_csv(s3.open(acm.settings.NAMESPACE.joinpath(path_gas).as_posix()))
+        energy_hour_df_gas = pd.read_csv(s3.open(settings.NAMESPACE.joinpath(path_gas).as_posix()))
         energy_hour_df = pd.concat([energy_hour_df_elec, energy_hour_df_gas], ignore_index=True)
     else:
         energy_hour_df = copy.deepcopy(energy_hour_df_elec)

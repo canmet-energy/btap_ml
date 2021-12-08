@@ -9,7 +9,7 @@ Prepare weather data
 
 Gather required weather data and place it on blob storage::
 
-   $ python prepare_weather.py input_data/sample-config.yml
+   $ python prepare_weather.py input_data/sample-lhs_2021-10-04.yml
 
 Preprocessing
 -------------

@@ -13,7 +13,7 @@ What this does
 ^^^^^^^^^^^^^^
 
 During preprocessing, the hourly energy consumption file is transposed such that each ``datapoint_id`` has 8760 rows
-(365 * 24). Hence, for a simulation run containing 5000 ``datapoint_id``s, there would be 5000 * 8760 rows which would
+(365 * 24). Hence, for a simulation run containing 5000 ``datapoint_id``, there would be 5000 * 8760 rows which would
 be 43.8 million rows. In order to avoid the preprocessing stage to become computationally expensive due to large
 datapoints created, the transposed hourly energy is is aggregated to daily energy for each datapoint_id. Similarly,
 the weather information is aggregated from hourly to daily, so that it can be merged with the hourly energy file.

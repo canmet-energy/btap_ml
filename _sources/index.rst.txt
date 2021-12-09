@@ -7,8 +7,8 @@ Building Technology Assessment Platform (BTAP): Machine Learning Implementation
 ===============================================================================
 
 Based on a whole building energy simulation engine, BTAP calculates capital and operating costs, energy consumption
-and demand, and related GHG emissions for over 60,000 difference referene housing and building models. This supports
-the development of the next generation of building codes for new housing and the development of the first code on
+and demand, and related GHG emissions for over 60,000 difference reference housing and building models. This supports
+the development of the next generation of building codes for new construction and the development of the first code on
 alternations to existing buildings. It also supports the building industry in the cost effective design of solutions
 to meet energy consumption, cost, and GHG targets.
 

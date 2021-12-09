@@ -1,49 +1,51 @@
 '''
 Select features that are used to build the surrogate mode.
-
-Args:
-    in_obj_name: minio locationa and name of data file to be read, ideally the output file generated from preprocessing i.e. preprocessing.out
-    estimator_type: Type of estimator to be used, default is lasso
-    output_path: he minio location and filename where the output file should be written.
 '''
+from sklearn.feature_selection import RFECV 
+from sklearn.linear_model import LinearRegression, LassoCV, Lasso,ElasticNetCV
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.model_selection import KFold
+from sklearn.preprocessing import StandardScaler, MinMaxScaler,RobustScaler
+from sklearn import linear_model
+import numpy as np
+import xgboost as xgb 
+import json
 import argparse
 import json
-import logging
-
+import config as acm
 import numpy as np
 import pandas as pd
 import s3fs
-
-import config as acm
+import logging
 
 ############################################################
 # feature selection
 ############################################################
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(filename='../output/log/feature.log', level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 def select_features(args):
     """
     Select the feature which contribute most to the prediction for the total energy consumed.
-
     Default estimator_type used for feature selection is 'LassoCV'
-
     Args:
         args: arguements provided from the main
-
     Returns:
        selected features are returned and uploaded to minio.
     """
     data = acm.access_minio(operation='read',
                             path=args.in_obj_name,
                             data='')
-    logger.info("read from mino  ", data)
-
+    logger.info("read from mino %s", data)
+    
     data = json.load(data)
-    features =data["features"]
+    features =data["features"] 
     X_train = pd.DataFrame(data["X_train"],columns=features)
-    print(X_train)
+    X_test = pd.DataFrame(data["X_test"],columns=features)
+    
+    print(X_train.head(10))
+    
     #standardize
     scalerx= RobustScaler()
     scalery= RobustScaler()
@@ -87,8 +89,8 @@ def select_features(args):
     write_to_minio = acm.access_minio(operation='copy',
                      path=args.output_path,
                      data=data_json)
-    logger.info("write to mino  ", write_to_minio)
-
+    logger.info("write to mino %s", write_to_minio)
+    
     return
 
 

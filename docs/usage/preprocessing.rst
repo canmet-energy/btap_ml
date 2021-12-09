@@ -5,15 +5,17 @@ With data loaded to blob storage, run ``proprocessing.py`` to clean and split th
 .. note::
 
    Update the input parameters to point to the appropriate input files and ouput_path in minio. Only the filenames
-   would need to be changed. Check **Usage** for full detail description of each parameter.
+   would need to be changed. Check :py:mod:`preprocessing` for full detail description of each parameter.
 
-The parameters to the above script are documented in the :py:mod:`preprocessing`.
+Aside from supporting optional different files for electricity and gas, if you have mutliple input files they
+need to be manually combined before passing them as input. If you only have a single input file, provide it as
+the value to ``--in_build_params``.
 
 What this does
 ^^^^^^^^^^^^^^
 
 During preprocessing, the hourly energy consumption file is transposed such that each ``datapoint_id`` has 8760 rows
-(365 * 24). Hence, for a simulation run containing 5000 ``datapoint_id``s, there would be 5000 * 8760 rows which would
+(365 * 24). Hence, for a simulation run containing 5000 ``datapoint_id``, there would be 5000 * 8760 rows which would
 be 43.8 million rows. In order to avoid the preprocessing stage to become computationally expensive due to large
 datapoints created, the transposed hourly energy is is aggregated to daily energy for each datapoint_id. Similarly,
 the weather information is aggregated from hourly to daily, so that it can be merged with the hourly energy file.

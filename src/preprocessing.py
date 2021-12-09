@@ -27,6 +27,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import pyarrow
 from minio import Minio
 from sklearn.compose import ColumnTransformer
 from sklearn.model_selection import (GroupShuffleSplit, KFold,
@@ -123,24 +124,31 @@ def read_weather(path: str) -> pd.DataFrame:
     Returns:
        btap_df: Dataframe containing the clean weather file.
     """
+    # Warn the user if they supply a weather file that looks like a CSV.
+    if path.endswith('.csv'):
+        logger.warn("Weather data must be in parquet format. Ensure %s is valid.", path)
     # Load the data from blob storage.
     s3 = acm.establish_s3_connection(settings.MINIO_URL, settings.MINIO_ACCESS_KEY, settings.MINIO_SECRET_KEY)
-    logger.info("%s read_weather s3 connection %s", s3)
-    weather_df = pd.read_parquet(s3.open(settings.NAMESPACE.joinpath(path).as_posix()))
+    logger.info("read_weather s3 connection %s", s3)
+    try:
+        weather_df = pd.read_parquet(s3.open(settings.NAMESPACE.joinpath(path).as_posix()))
+    except pyarrow.lib.ArrowInvalid as err:
+        logger.error("Invalid weather file format supplied. Is %s a parquet file?", path)
+        sys.exit(1)
     #weather_df = pd.read_csv(s3.open(acm.settings.NAMESPACE.joinpath(path).as_posix()))
 
     # Remove spurious columns.
     weather_df = clean_data(weather_df)
 
     # date_int is used later to join data together.
-    #weather_df["date_int"] = weather_df['rep_time'].dt.strftime("%m%d").astype(int)
+    weather_df["date_int"] = weather_df['rep_time'].dt.strftime("%m%d").astype(int)
 
     # Aggregate data by day to reduce the complexity, leaving date values as they are.
     min_cols = {'year': 'min','month':'min','day':'min','rep_time':'min','date_int':'min'}
     sum_cols = [c for c in weather_df.columns if c not in [min_cols.keys()]]
     agg_funcs = dict(zip(sum_cols,['sum'] * len(sum_cols)))
     agg_funcs.update(min_cols)
-    weather_df = weather_df.groupby([weather_df['rep_time'].dt.day]).agg(agg_funcs)
+    weather_df = weather_df.groupby([weather_df['rep_time'].dt.dayofyear]).agg(agg_funcs)
 
     # Remove the rep_time column, since later stages don't know to expect it.
     weather_df = weather_df.drop('rep_time', axis='columns')
@@ -172,7 +180,7 @@ def read_hour_energy(path_elec,path_gas,floor_sq):
     energy_hour_df_elec = pd.read_csv(s3.open(settings.NAMESPACE.joinpath(path_elec).as_posix()))
 
     if path_gas:
-        energy_hour_df_gas = pd.read_csv(s3.open(acm.settings.NAMESPACE.joinpath(path_gas).as_posix()))
+        energy_hour_df_gas = pd.read_csv(s3.open(settings.NAMESPACE.joinpath(path_gas).as_posix()))
         energy_hour_df = pd.concat([energy_hour_df_elec, energy_hour_df_gas], ignore_index=True)
     else:
         energy_hour_df = copy.deepcopy(energy_hour_df_elec)

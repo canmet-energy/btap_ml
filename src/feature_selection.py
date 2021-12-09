@@ -14,6 +14,8 @@ import numpy as np
 import pandas as pd
 import s3fs
 
+import config as acm
+
 ############################################################
 # feature selection
 ############################################################

@@ -82,8 +82,8 @@ def save_epw(df: pd.DataFrame, filename: str) -> None:
         filename = f"{filename}.parquet"
 
     # Bucket used to store weather data.
-    weather_bucket_name = settings.APP_CONFIG.WEATHER_BUCKET_NAME
-    logger.info("Weather data will be placed under '%s'", weather_bucket_name)
+    weather_bucket_path = settings.NAMESPACE.joinpath(settings.APP_CONFIG.WEATHER_BUCKET_NAME)
+    logger.info("Weather data will be placed under '%s'", weather_bucket_path)
 
     # Establish a connection to the blob store.
     s3 = config.establish_s3_connection(settings.MINIO_URL,
@@ -92,16 +92,32 @@ def save_epw(df: pd.DataFrame, filename: str) -> None:
 
     # Make sure the bucket for weather data exists to avoid write errors
     existing_items = s3.ls(settings.NAMESPACE.as_posix())
-    if weather_bucket_name not in existing_items:
-        bucket_path = settings.NAMESPACE.joinpath(weather_bucket_name).as_posix()
-        logger.info("Weather bucket not found, creating %s", bucket_path)
-        s3.mkdir(bucket_path)
+    if str(weather_bucket_path) not in existing_items:
+        logger.info("Weather bucket not found in %s, creating %s", existing_items, weather_bucket_path)
+        s3.mkdir(weather_bucket_path.as_posix())
 
     # Write the data to s3
-    file_path = settings.NAMESPACE.joinpath(weather_bucket_name, filename).as_posix()
+    file_path = weather_bucket_path.joinpath(filename).as_posix()
     logger.info("Saving weather data to %s", file_path)
     with s3.open(file_path, 'wb') as outfile:
         df.to_parquet(outfile)
+
+
+def adjust_hour(df: pd.DataFrame, colname: str = 'hour'):
+    """Adjust all hourly values to align with Python representation.
+
+    Args:
+        df: Raw weather data, with hours from 1 to 24 hours.
+        colname: The name of the column with hour indicators.
+
+    Returns:
+        df: A pd.DataFrame object where the hour column has been adjusted to 0 - 23 hours.
+
+    """
+    df = df.copy()
+    logger.info("Adjusting %s column by -1", colname)
+    df[colname] = df[colname] - 1
+    return df
 
 
 def process_weather_file(filename: str):
@@ -122,8 +138,11 @@ def process_weather_file(filename: str):
 
     df = (get_weather_df(filename)
           .drop(weather_drop_list, axis=1)
+          .pipe(adjust_hour)
           .assign(rep_time=lambda x: pd.to_datetime(x[['year', 'month', 'day', 'hour']])))
     logger.debug("Data shape in processing: %s", df.shape)
+    if df['hour'].loc[df['hour'] > 23].any():
+        logger.warn("Hour values greater than 23 found. Date parsing will likely return values coded to the following days.")
     return df
 
 

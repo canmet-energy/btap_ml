@@ -7,7 +7,6 @@ import pandas as pd
 import s3fs
 from pydantic import AnyHttpUrl, BaseModel, BaseSettings, Field, SecretStr
 
-logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
@@ -104,7 +103,7 @@ def access_minio(path: str, operation: str, data: Union[str, pd.DataFrame]):
                                  settings.MINIO_ACCESS_KEY,
                                  settings.MINIO_SECRET_KEY)
 
-    logger.info("%s s3 connection %s", s3)
+    logger.info("s3 connection %s", s3)
 
     # s3fs doesn't seem to like Path objects, so use a posix path string for operations
     full_posix_path = settings.NAMESPACE.joinpath(path).as_posix()

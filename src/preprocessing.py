@@ -39,7 +39,7 @@ from sklearn.preprocessing import (LabelEncoder, MinMaxScaler, OneHotEncoder,
 import config as acm
 import plot as pl
 
-logging.basicConfig(filename='../output/log/preprocess2.log', level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -132,6 +132,7 @@ def read_weather(path: str) -> pd.DataFrame:
     logger.info("read_weather s3 connection %s", s3)
     try:
         weather_df = pd.read_parquet(s3.open(settings.NAMESPACE.joinpath(path).as_posix()))
+        logger.debug("weather hours: %s", weather_df['hour'].unique())
     except pyarrow.lib.ArrowInvalid as err:
         logger.error("Invalid weather file format supplied. Is %s a parquet file?", path)
         sys.exit(1)
@@ -144,11 +145,11 @@ def read_weather(path: str) -> pd.DataFrame:
     weather_df["date_int"] = weather_df['rep_time'].dt.strftime("%m%d").astype(int)
 
     # Aggregate data by day to reduce the complexity, leaving date values as they are.
-    min_cols = {'year': 'min','month':'min','day':'min','rep_time':'min','date_int':'min'}
-    sum_cols = [c for c in weather_df.columns if c not in [min_cols.keys()]]
-    agg_funcs = dict(zip(sum_cols,['sum'] * len(sum_cols)))
-    agg_funcs.update(min_cols)
-    weather_df = weather_df.groupby([weather_df['rep_time'].dt.dayofyear]).agg(agg_funcs)
+#     min_cols = {'year': 'min','month':'min','day':'min','rep_time':'min','date_int':'min'}
+#     sum_cols = [c for c in weather_df.columns if c not in [min_cols.keys()]]
+#     agg_funcs = dict(zip(sum_cols,['sum'] * len(sum_cols)))
+#     agg_funcs.update(min_cols)
+#     weather_df = weather_df.groupby([weather_df['rep_time'].dt.dayofyear]).agg(agg_funcs)
 
     # Remove the rep_time column, since later stages don't know to expect it.
     weather_df = weather_df.drop('rep_time', axis='columns')
@@ -157,7 +158,9 @@ def read_weather(path: str) -> pd.DataFrame:
 #     weather_df = clean_data(weather_df)
 #     weather_df["date_int"]= weather_df.apply(lambda r : datetime(int(r['Year']), int( r['Month']),int( r['Day']), int(r['Hour']-1)).strftime("%m%d"), axis =1)
 #     weather_df["date_int"]=weather_df["date_int"].apply(lambda r : int(r))
-#     weather_df=weather_df.groupby(['date_int']).agg(lambda x: x.sum())
+    weather_df=weather_df.groupby(['date_int']).agg(lambda x: x.sum())
+    logger.debug("weather data shape: %s", weather_df.shape)
+    logger.debug("Weather data NA values:\n%s", weather_df.isna().any())
 
     return weather_df
 
@@ -176,11 +179,14 @@ def read_hour_energy(path_elec,path_gas,floor_sq):
     """
 
     s3 = acm.establish_s3_connection(settings.MINIO_URL, settings.MINIO_ACCESS_KEY, settings.MINIO_SECRET_KEY)
-    logger.info("%s read_hour_energy s3 connection %s", s3)
+    logger.info("read_hour_energy s3 connection %s", s3)
+    logger.info("Reading data from %s", path_elec)
     energy_hour_df_elec = pd.read_csv(s3.open(settings.NAMESPACE.joinpath(path_elec).as_posix()))
 
     if path_gas:
+        logger.info("Reading data from %s", path_gas)
         energy_hour_df_gas = pd.read_csv(s3.open(settings.NAMESPACE.joinpath(path_gas).as_posix()))
+        logger.info("Concatenating data from %s and %s", path_elec, path_gas)
         energy_hour_df = pd.concat([energy_hour_df_elec, energy_hour_df_gas], ignore_index=True)
     else:
         energy_hour_df = copy.deepcopy(energy_hour_df_elec)
@@ -221,6 +227,7 @@ def groupsplit(X, y, valsplit):
        X_test: X testset
        y_test_complete: Dataframe containing the target variable with corresponding datapointid
     """
+    logger.info("groupsplit with valsplit: %s", valsplit)
     if valsplit == 'yes':
         gs = GroupShuffleSplit(n_splits=2, train_size=.7, random_state=42)
     else:
@@ -253,7 +260,7 @@ def train_test_split(energy_daily_df, val_df, valsplit):
        y_validate: y validate set
        y_validate_complete: Dataframe containing the target variable with corresponding datapointid for the validation set
     """
-
+    logger.info("train_test_split with valsplit: %s", valsplit)
     drop_list= ['index',':datapoint_id','level_0', 'index','date_int',':datapoint_id']
 
     #split to train and test datasets
@@ -312,13 +319,14 @@ def categorical_encode(x_train, x_test, x_validate):
     # extracting the categorical columns
     cat_cols = x_train.select_dtypes(include=['object']).columns
     other_cols = x_train.drop(columns=cat_cols).columns
+    logger.info("categorical encode: %s", cat_cols)
     # Create the encoder.
     ct = ColumnTransformer([('ohe', OneHotEncoder(sparse=False,handle_unknown="ignore"), cat_cols)], remainder=MinMaxScaler())
 
 
-    for col in x_train[cat_cols]:
-        print(col)
-        print(x_train[col].unique())
+#     for col in x_train[cat_cols]:
+#         print(col)
+#         print(x_train[col].unique())
     # Apply the encoder.
     x_train_oh = ct.fit_transform(x_train)
     x_test_oh = ct.transform(x_test)
@@ -345,15 +353,19 @@ def process_data(args):
     btap_df,floor_sq = read_output(args.in_build_params,args.in_build_params_gas)
     energy_hour_df = read_hour_energy(args.in_hour,args.in_hour_gas,floor_sq)
     energy_hour_merge = pd.merge(energy_hour_df, btap_df, left_on=['datapoint_id'],right_on=[':datapoint_id'],how='left').reset_index()
+    logger.info("NA values in energy_hour_merge:\n%s", energy_hour_merge.isna().any())
     energy_daily_df = pd.merge(energy_hour_merge, weather_df, on='date_int',how='left').reset_index()
+    logger.info("NA values in energy_daily_df:\n%s", energy_daily_df.isna().any())
 
-    print(energy_daily_df.head)
+#     print(energy_daily_df.head)
 
     if args.in_build_params_val:
         btap_df_val,floor_sq = read_output(args.in_build_params_val,'')
         energy_hour_df_val = read_hour_energy(args.in_hour_val,'',floor_sq)
         energy_hour_merge_val = pd.merge(energy_hour_df_val, btap_df_val, left_on=['datapoint_id'],right_on=[':datapoint_id'],how='left').reset_index()
+        logger.info("NA values in energy_hour_merge_val:\n%s", energy_hour_merge_val.isna().any())
         energy_daily_df_val = pd.merge(energy_hour_merge_val, weather_df, on='date_int',how='left').reset_index()
+        logger.info("NA values in energy_daily_df_val:\n%s", energy_daily_df_val.isna().any())
         X_train, X_test, y_train, y_test, y_test_complete,X_validate, y_validate,y_validate_complete = train_test_split(energy_daily_df,energy_daily_df_val,'yes')
     else:
         energy_hour_df_val= '' ; btap_df_val =''; energy_daily_df_val=''
@@ -378,7 +390,7 @@ def process_data(args):
     write_to_minio = acm.access_minio(operation='copy',
                  path=args.output_path,
                  data=data_json)
-    logger.info("write to mino  ", write_to_minio)
+    logger.info("write to mino %s ", write_to_minio)
 
 
     pl.target_plot(y_train,y_test)

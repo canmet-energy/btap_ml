@@ -51,7 +51,7 @@ from tensorflow.keras.optimizers import Adam
 import config as acm
 import plot as pl
 
-logging.basicConfig(filename='../output/log/predict.log', level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 #######################################################
@@ -415,7 +415,7 @@ def fit_evaluate(args):
     data2 = acm.access_minio(operation='read',
                              path=args.features,
                              data='')
-    logger.info("%s read_output s3 connection %s", data)
+    logger.info("read_output s3 connection %s", data)
 
     # removing log directory
     shutil.rmtree('../output/parameter_search/btap', ignore_errors=True)
@@ -492,7 +492,7 @@ def fit_evaluate(args):
                      path=args.output_path,
                      data=data_json)
 
-    logger.info("write to mino  ", write_to_minio)
+    logger.info("write to mino  %s", write_to_minio)
 
     return
 

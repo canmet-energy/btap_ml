@@ -1,5 +1,7 @@
 import json
 import logging
+import sys
+import time
 from pathlib import Path
 from typing import Any, Dict, Union
 
@@ -23,7 +25,24 @@ class AppConfig(BaseModel):
 
 # There's a JSON file available with required credentials in it
 def json_config_settings_source(settings: BaseSettings) -> Dict[str, Any]:
-    return json.loads(settings.__config__.json_settings_path.read_text())
+    """Load credentials from the file system."""
+    # Maximum number of attempts befaore failing
+    max_attempts = 3
+    attempt_interval = 5
+
+    creds_file = settings.__config__.json_settings_path
+
+    for attempt in range(max_attempts):
+        if creds_file.exists():
+            logger.info("Credentials file found. Reading from %s", creds_file)
+            return json.loads(creds_file.read_text())
+        else:
+            logger.warn("Credentials file %s not found. Waiting %s seconds to try again.", creds_file, attempt_interval)
+            time.sleep(attempt_interval)
+
+    # Wasn't able to read the credentials. Error out.
+    logger.error("Unable to read storage credentials from %s", creds_file)
+    sys.exit(1)
 
 
 class Settings(BaseSettings):

@@ -40,7 +40,6 @@
  | <a href="#C"><strong>C</strong></a>
  | <a href="#D"><strong>D</strong></a>
  | <a href="#E"><strong>E</strong></a>
- | <a href="#F"><strong>F</strong></a>
  | <a href="#G"><strong>G</strong></a>
  | <a href="#J"><strong>J</strong></a>
  | <a href="#M"><strong>M</strong></a>
@@ -57,10 +56,12 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/config.html#config.access_minio">access_minio() (in module config)</a>
 </li>
-      <li><a href="api/plot.html#plot.annual_plot">annual_plot() (in module plot)</a>
+      <li><a href="api/prepare_weather.html#prepare_weather.adjust_hour">adjust_hour() (in module prepare_weather)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/plot.html#plot.annual_plot">annual_plot() (in module plot)</a>
+</li>
       <li><a href="api/config.html#config.Settings.APP_CONFIG">APP_CONFIG (config.Settings attribute)</a>
 </li>
       <li><a href="api/config.html#config.AppConfig">AppConfig (class in config)</a>
@@ -94,8 +95,6 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/plot.html#plot.corr_plot">corr_plot() (in module plot)</a>
 </li>
-      <li><a href="api/predict.html#predict.create_model">create_model() (in module predict)</a>
-</li>
       <li><a href="api/config.html#config.Settings.Config.customise_sources">customise_sources() (config.Settings.Config class method)</a>
 </li>
   </ul></td>
@@ -114,30 +113,11 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/config.html#config.Settings.Config.env_prefix">env_prefix (config.Settings.Config attribute)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/config.html#config.establish_s3_connection">establish_s3_connection() (in module config)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/predict.html#predict.evaluate">evaluate() (in module predict)</a>
-</li>
       <li><a href="api/config.html#config.Settings.Config.extra">extra (config.Settings.Config attribute)</a>
-</li>
-  </ul></td>
-</tr></table>
-
-<h2 id="F">F</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li>
-    feature_selection
-
-      <ul>
-        <li><a href="api/feature_selection.html#module-feature_selection">module</a>
-</li>
-      </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/predict.html#predict.fit_evaluate">fit_evaluate() (in module predict)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -181,8 +161,6 @@
 </li>
       <li><a href="api/config.html#config.Settings.MINIO_URL">MINIO_URL (config.Settings attribute)</a>
 </li>
-      <li><a href="api/predict.html#predict.model_builder">model_builder() (in module predict)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li>
@@ -191,11 +169,7 @@
       <ul>
         <li><a href="api/config.html#module-config">config</a>
 </li>
-        <li><a href="api/feature_selection.html#module-feature_selection">feature_selection</a>
-</li>
         <li><a href="api/plot.html#module-plot">plot</a>
-</li>
-        <li><a href="api/predict.html#module-predict">predict</a>
 </li>
         <li><a href="api/prepare_weather.html#module-prepare_weather">prepare_weather</a>
 </li>
@@ -232,23 +206,14 @@
       <li><a href="api/plot.html#plot.plot_metric">plot_metric() (in module plot)</a>
 </li>
       <li>
-    predict
-
-      <ul>
-        <li><a href="api/predict.html#module-predict">module</a>
-</li>
-      </ul></li>
-      <li><a href="api/predict.html#predict.predicts_hp">predicts_hp() (in module predict)</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li>
     prepare_weather
 
       <ul>
         <li><a href="api/prepare_weather.html#module-prepare_weather">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     preprocessing
 
@@ -268,13 +233,11 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/preprocessing.html#preprocessing.read_hour_energy">read_hour_energy() (in module preprocessing)</a>
 </li>
-      <li><a href="api/preprocessing.html#preprocessing.read_output">read_output() (in module preprocessing)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/preprocessing.html#preprocessing.read_weather">read_weather() (in module preprocessing)</a>
+      <li><a href="api/preprocessing.html#preprocessing.read_output">read_output() (in module preprocessing)</a>
 </li>
-      <li><a href="api/predict.html#predict.rmse_loss">rmse_loss() (in module predict)</a>
+      <li><a href="api/preprocessing.html#preprocessing.read_weather">read_weather() (in module preprocessing)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -286,12 +249,8 @@
 </li>
       <li><a href="api/plot.html#plot.save_plot">save_plot() (in module plot)</a>
 </li>
-      <li><a href="api/predict.html#predict.score">score() (in module predict)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/feature_selection.html#feature_selection.select_features">select_features() (in module feature_selection)</a>
-</li>
       <li><a href="api/config.html#config.Settings">Settings (class in config)</a>
 </li>
       <li><a href="api/config.html#config.Settings.Config">Settings.Config (class in config)</a>

@@ -39,6 +39,26 @@
 <p>Prepare the weather file(s) specified in the YAML configuration to be used by the pipeline.</p>
 <p>CLI arguments match those defined by <code class="docutils literal notranslate"><span class="pre">main()</span></code>.</p>
 <dl class="py function">
+<dt class="sig sig-object py" id="prepare_weather.adjust_hour">
+<span class="sig-prename descclassname"><span class="pre">prepare_weather.</span></span><span class="sig-name descname"><span class="pre">adjust_hour</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'hour'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prepare_weather.adjust_hour" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adjust all hourly values to align with Python representation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>df</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code>) – Raw weather data, with hours from 1 to 24 hours.</p></li>
+<li><p><strong>colname</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – The name of the column with hour indicators.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A pd.DataFrame object where the hour column has been adjusted to 0 - 23 hours.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>df</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="prepare_weather.get_config">
 <span class="sig-prename descclassname"><span class="pre">prepare_weather.</span></span><span class="sig-name descname"><span class="pre">get_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_file</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prepare_weather.get_config" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load the specified configuration file from blob storage.</p>

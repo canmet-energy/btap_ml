@@ -37,12 +37,12 @@
   <section id="re-run-model">
 <h1>Re-run Model<a class="headerlink" href="#re-run-model" title="Permalink to this headline">¶</a></h1>
 <p>If the data is already preprocessed and the features are selected with output files from <a class="reference internal" href="../api/preprocessing.html#module-preprocessing" title="preprocessing"><code class="xref py py-mod docutils literal notranslate"><span class="pre">preprocessing</span></code></a> and
-<a class="reference internal" href="../api/feature_selection.html#module-feature_selection" title="feature_selection"><code class="xref py py-mod docutils literal notranslate"><span class="pre">feature_selection</span></code></a> already existing in minio you can simply build the surrogate model and generate predictions.</p>
+<code class="xref py py-mod docutils literal notranslate"><span class="pre">feature_selection</span></code> already existing in minio you can simply build the surrogate model and generate predictions.</p>
 <p>The output from the data preparation and feature selection steps are used as input into this stage by running:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python3 predict.py --param_search yes --in_obj_name output_data/preprocessing_out --features output_data/feature_out --output_path output_data/predict_out
 </pre></div>
 </div>
-<p>The parameters to the above script are documented in the <a class="reference internal" href="../api/predict.html#module-predict" title="predict"><code class="xref py py-mod docutils literal notranslate"><span class="pre">predict</span></code></a>.</p>
+<p>The parameters to the above script are documented in the <code class="xref py py-mod docutils literal notranslate"><span class="pre">predict</span></code>.</p>
 <section id="download-results">
 <h2>Download results<a class="headerlink" href="#download-results" title="Permalink to this headline">¶</a></h2>
 <p>The results from the prediction is available in minio in the <code class="docutils literal notranslate"><span class="pre">output_path</span></code> specified in prediction step.</p>

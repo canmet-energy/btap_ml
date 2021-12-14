@@ -145,11 +145,11 @@ def read_weather(path: str) -> pd.DataFrame:
     weather_df["date_int"] = weather_df['rep_time'].dt.strftime("%m%d").astype(int)
 
     # Aggregate data by day to reduce the complexity, leaving date values as they are.
-    min_cols = {'year': 'min','month':'min','day':'min','rep_time':'min','date_int':'min'}
-    sum_cols = [c for c in weather_df.columns if c not in [min_cols.keys()]]
-    agg_funcs = dict(zip(sum_cols,['sum'] * len(sum_cols)))
-    agg_funcs.update(min_cols)
-    weather_df = weather_df.groupby([weather_df['rep_time'].dt.dayofyear]).agg(agg_funcs)
+#     min_cols = {'year': 'min','month':'min','day':'min','rep_time':'min','date_int':'min'}
+#     sum_cols = [c for c in weather_df.columns if c not in [min_cols.keys()]]
+#     agg_funcs = dict(zip(sum_cols,['sum'] * len(sum_cols)))
+#     agg_funcs.update(min_cols)
+#     weather_df = weather_df.groupby([weather_df['rep_time'].dt.dayofyear]).agg(agg_funcs)
 
     # Remove the rep_time column, since later stages don't know to expect it.
     weather_df = weather_df.drop('rep_time', axis='columns')
@@ -158,7 +158,7 @@ def read_weather(path: str) -> pd.DataFrame:
 #     weather_df = clean_data(weather_df)
 #     weather_df["date_int"]= weather_df.apply(lambda r : datetime(int(r['Year']), int( r['Month']),int( r['Day']), int(r['Hour']-1)).strftime("%m%d"), axis =1)
 #     weather_df["date_int"]=weather_df["date_int"].apply(lambda r : int(r))
-#     weather_df=weather_df.groupby(['date_int']).agg(lambda x: x.sum())
+    weather_df=weather_df.groupby(['date_int']).agg(lambda x: x.sum())
     logger.debug("weather data shape: %s", weather_df.shape)
     logger.debug("Weather data NA values:\n%s", weather_df.isna().any())
 

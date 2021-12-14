@@ -1,22 +1,22 @@
 '''
 Select features that are used to build the surrogate mode.
 '''
-from sklearn.feature_selection import RFECV 
-from sklearn.linear_model import LinearRegression, LassoCV, Lasso,ElasticNetCV
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.model_selection import KFold
-from sklearn.preprocessing import StandardScaler, MinMaxScaler,RobustScaler
-from sklearn import linear_model
-import numpy as np
-import xgboost as xgb 
-import json
 import argparse
 import json
-import config as acm
+import logging
+
 import numpy as np
 import pandas as pd
 import s3fs
-import logging
+import xgboost as xgb
+from sklearn import linear_model
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.feature_selection import RFECV
+from sklearn.linear_model import ElasticNetCV, Lasso, LassoCV, LinearRegression
+from sklearn.model_selection import KFold
+from sklearn.preprocessing import MinMaxScaler, RobustScaler, StandardScaler
+
+import config as acm
 
 ############################################################
 # feature selection
@@ -38,14 +38,14 @@ def select_features(args):
                             path=args.in_obj_name,
                             data='')
     logger.info("read from mino %s", data)
-    
+
     data = json.load(data)
-    features =data["features"] 
+    features =data["features"]
     X_train = pd.DataFrame(data["X_train"],columns=features)
     X_test = pd.DataFrame(data["X_test"],columns=features)
-    
+
     print(X_train.head(10))
-    
+
     #standardize
     scalerx= RobustScaler()
     scalery= RobustScaler()
@@ -90,7 +90,7 @@ def select_features(args):
                      path=args.output_path,
                      data=data_json)
     logger.info("write to mino %s", write_to_minio)
-    
+
     return
 
 

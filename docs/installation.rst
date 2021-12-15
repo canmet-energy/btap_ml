@@ -31,6 +31,10 @@ Pre-commit hooks
 
    This step is only necessary if you are interested in participating in the development of the model.
 
+.. warning::
+
+   ``pre-commit`` is installed as part of the ``requirements-dev.txt``. Ensure to run that step first.
+
 The project makes use of ``pre-commit``, which is a package that helps to keep source code clean and consistent
 through hooks run against every commit. When these hooks detect something to fix they can cause your commit to fail,
 but often the file just needs to be readded to the commit as a result of changes being applied (fixing whitespace,

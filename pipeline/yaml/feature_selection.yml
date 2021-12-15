@@ -6,14 +6,14 @@ inputs:
 - {name: in_obj_name, type: String, description: 'Name of minio bucket to access data from'}
 - {name: estimator_type, type: String, description: 'Name of minio bucket to access data from'}
 - {name: output_path, type: String, description: 'Path where the output data will be stored.'}
-outputs:
-- {name: Output, type: String, description: 'Path where the output data will be stored.'}
 
 
 implementation:
   container:
     # The strict name of a container image that you've pushed to a container registry.
-    image: k8scc01covidacr.azurecr.io/btap:4b99c6aaa4a19a171209e3d62f8aa71591dbcd71
+    image: k8scc01covidacr.azurecr.io/btap:332df367d6e78da7e0651e2b04752081b787ca58
+    
+    
     command: [
       python3,
 
@@ -27,8 +27,6 @@ implementation:
       {inputValue: estimator_type},
 
       --output_path,
-      {outputPath: output_path},
-
-      --output_paths,
-      {outputPath: Output},
+      {inputValue: output_path},
+      
     ]

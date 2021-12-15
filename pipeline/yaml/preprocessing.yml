@@ -1,4 +1,4 @@
-name: Process data Function
+name: Preprocess data function
 description: Clean and split the data downloaded from minio which is the output from download_data.yaml
 
 inputs:
@@ -11,15 +11,12 @@ inputs:
 - {name: in_build_params_gas, type: String, description: 'The minio location and filename the building simulation I/O file. This would be the path for the gas hourly file if it exist.'}
 - {name: output_path, type: String, description: 'The minio location and filename where the output file should be written.'}
 
-
-
-outputs:
-- {name: Output, type: String, description: 'The minio location and filename where the output file should be written.'}
-
+     
 implementation:
    container:
     # The strict name of a container image that you've pushed to a container registry.
-    image: k8scc01covidacr.azurecr.io/btap:4b99c6aaa4a19a171209e3d62f8aa71591dbcd71
+    image: k8scc01covidacr.azurecr.io/btap:994b5355070db7d518aabe92788231c5075a7e2a
+    
     command: [
       python3,
 
@@ -49,8 +46,8 @@ implementation:
       {inputValue: in_build_params_gas},
 
       --output_path,
-      {outputPath: output_path},
-
-      --output-paths,
-        {outputPath: Output}
+      {inputValue: output_path},
+      
+     
+      
     ]

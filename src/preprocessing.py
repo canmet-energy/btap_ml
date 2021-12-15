@@ -41,7 +41,7 @@ def clean_data(df) -> pd.DataFrame:
       We cant use N/A as it will elimnate the entire row /datapoint_id. Giving the number of features we have to work it its better we eliminate
       columns with features that have too much missing values than to eliminate by rows, which is what N/A will do .
     - dropping columns with 1 unique value
-      For columns with  1 unique values are dropped during data cleaning as they have low variance
+      For columns with  less than 3 unique values are dropped during data cleaning as they have low variance
       and hence have little or no significant contribution to the accuracy of the model.
 
     Args:
@@ -59,7 +59,7 @@ def clean_data(df) -> pd.DataFrame:
     for col in df.columns:
         num = len(df[col].unique())
 
-        if ((len(df[col].unique()) ==1) and (col not in ['energy_eui_additional_fuel_gj_per_m_sq','energy_eui_electricity_gj_per_m_sq','energy_eui_natural_gas_gj_per_m_sq'])):
+        if ((len(df[col].unique()) < 3) and (col not in ['energy_eui_additional_fuel_gj_per_m_sq','energy_eui_electricity_gj_per_m_sq','energy_eui_natural_gas_gj_per_m_sq'])):
             df.drop(col,inplace=True,axis=1)
     return df
 
@@ -113,24 +113,32 @@ def read_weather(path: str) -> pd.DataFrame:
     Returns:
        btap_df: Dataframe containing the clean weather file.
     """
+    # Warn the user if they supply a weather file that looks like a CSV.
+    if path.endswith('.csv'):
+        logger.warn("Weather data must be in parquet format. Ensure %s is valid.", path)
     # Load the data from blob storage.
-    s3 = acm.establish_s3_connection(acm.settings.MINIO_URL, acm.settings.MINIO_ACCESS_KEY, acm.settings.MINIO_SECRET_KEY)
-    logger.info("%s read_weather s3 connection %s", s3)
-    weather_df = pd.read_parquet(s3.open(acm.settings.NAMESPACE.joinpath(path).as_posix()))
+    s3 = acm.establish_s3_connection(settings.MINIO_URL, settings.MINIO_ACCESS_KEY, settings.MINIO_SECRET_KEY)
+    logger.info("read_weather s3 connection %s", s3)
+    try:
+        weather_df = pd.read_parquet(s3.open(settings.NAMESPACE.joinpath(path).as_posix()))
+        logger.debug("weather hours: %s", weather_df['hour'].unique())
+    except pyarrow.lib.ArrowInvalid as err:
+        logger.error("Invalid weather file format supplied. Is %s a parquet file?", path)
+        sys.exit(1)
     #weather_df = pd.read_csv(s3.open(acm.settings.NAMESPACE.joinpath(path).as_posix()))
 
     # Remove spurious columns.
     weather_df = clean_data(weather_df)
 
     # date_int is used later to join data together.
-    #weather_df["date_int"] = weather_df['rep_time'].dt.strftime("%m%d").astype(int)
+    weather_df["date_int"] = weather_df['rep_time'].dt.strftime("%m%d").astype(int)
 
     # Aggregate data by day to reduce the complexity, leaving date values as they are.
-    min_cols = {'year': 'min','month':'min','day':'min','rep_time':'min','date_int':'min'}
-    sum_cols = [c for c in weather_df.columns if c not in [min_cols.keys()]]
-    agg_funcs = dict(zip(sum_cols,['sum'] * len(sum_cols)))
-    agg_funcs.update(min_cols)
-    weather_df = weather_df.groupby([weather_df['rep_time'].dt.day]).agg(agg_funcs)
+#     min_cols = {'year': 'min','month':'min','day':'min','rep_time':'min','date_int':'min'}
+#     sum_cols = [c for c in weather_df.columns if c not in [min_cols.keys()]]
+#     agg_funcs = dict(zip(sum_cols,['sum'] * len(sum_cols)))
+#     agg_funcs.update(min_cols)
+#     weather_df = weather_df.groupby([weather_df['rep_time'].dt.dayofyear]).agg(agg_funcs)
 
     # Remove the rep_time column, since later stages don't know to expect it.
     weather_df = weather_df.drop('rep_time', axis='columns')
@@ -139,7 +147,9 @@ def read_weather(path: str) -> pd.DataFrame:
 #     weather_df = clean_data(weather_df)
 #     weather_df["date_int"]= weather_df.apply(lambda r : datetime(int(r['Year']), int( r['Month']),int( r['Day']), int(r['Hour']-1)).strftime("%m%d"), axis =1)
 #     weather_df["date_int"]=weather_df["date_int"].apply(lambda r : int(r))
-#     weather_df=weather_df.groupby(['date_int']).agg(lambda x: x.sum())
+    weather_df=weather_df.groupby(['date_int']).agg(lambda x: x.sum())
+    logger.debug("weather data shape: %s", weather_df.shape)
+    logger.debug("Weather data NA values:\n%s", weather_df.isna().any())
 
     return weather_df
 
@@ -247,10 +257,10 @@ def train_test_split(energy_daily_df, val_df, valsplit):
     if valsplit == 'yes' :
         y_val = val_df[['energy','datapoint_id','Total Energy']]
         X_val = val_df.drop(['energy'],axis = 1)
-        validate_complete = y_val
+        y_validate_complete = y_val
         X_validate = X_val.drop(drop_list,axis=1)
         X_validate = X_validate.drop(['datapoint_id','Total Energy'],axis = 1)
-
+        y_validate = y_validate_complete[['energy','datapoint_id']]
 
     else:
         y_test = y_test_complete
@@ -363,8 +373,8 @@ def process_data(args):
     logger.info("write to mino  ", write_to_minio)
 
 
-    pl.target_plot(y_train,y_test)
-    pl.corr_plot(energy_daily_df)
+    #pl.target_plot(y_train,y_test)
+    #pl.corr_plot(energy_daily_df)
 
 
 if __name__ == '__main__':

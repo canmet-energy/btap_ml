@@ -270,11 +270,11 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
     output_df = output_df.drop(['y_pred','energy_y','energy_x'],axis=1)
     output_val_df = output_val_df.drop(['y_pred','energy_y','energy_x'],axis=1)
 
-    pl.daily_plot(y_test,'test_set')
-    pl.daily_plot(y_validate,'validation_set')
+#     pl.daily_plot(y_test,'test_set')
+#     pl.daily_plot(y_validate,'validation_set')
 
-    pl.annual_plot(output_df,'test_set')
-    pl.annual_plot(output_val_df,'validation_set')
+#     pl.annual_plot(output_df,'test_set')
+#     pl.annual_plot(output_val_df,'validation_set')
 
 
     print('****************TEST SET****************************')
@@ -503,7 +503,7 @@ if __name__ == '__main__':
 
     fit_evaluate(args)
 
-    # python3 predict.py --param_search no --in_obj_name output_data/preprocessing_out --features output_data/feature_out --output_path output_data/predict_out
+    # python3 predict.py --param_search no --in_obj_name output_data/preprocessing_out --features output_data/feature_out --output_path output_data/predict_out.json
 
     # launch tensorboard
     # python -m tensorboard.main --logdir="./parameter_search/btap/"

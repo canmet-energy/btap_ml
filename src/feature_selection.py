@@ -1,28 +1,28 @@
 '''
 Select features that are used to build the surrogate mode.
 '''
-from sklearn.feature_selection import RFECV 
-from sklearn.linear_model import LinearRegression, LassoCV, Lasso,ElasticNetCV
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.model_selection import KFold
-from sklearn.preprocessing import StandardScaler, MinMaxScaler,RobustScaler
-from sklearn import linear_model
-import numpy as np
-import xgboost as xgb 
-import json
 import argparse
 import json
-import config as acm
+import logging
+
 import numpy as np
 import pandas as pd
 import s3fs
-import logging
+import xgboost as xgb
+from sklearn import linear_model
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.feature_selection import RFECV
+from sklearn.linear_model import ElasticNetCV, Lasso, LassoCV, LinearRegression
+from sklearn.model_selection import KFold
+from sklearn.preprocessing import MinMaxScaler, RobustScaler, StandardScaler
+
+import config as acm
 
 ############################################################
 # feature selection
 ############################################################
 
-logging.basicConfig(filename='../output/log/feature.log', level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def select_features(args):
@@ -38,18 +38,21 @@ def select_features(args):
                             path=args.in_obj_name,
                             data='')
     logger.info("read from mino %s", data)
-    
+
     data = json.load(data)
-    features =data["features"] 
+    features =data["features"]
     X_train = pd.DataFrame(data["X_train"],columns=features)
     X_test = pd.DataFrame(data["X_test"],columns=features)
-    
+
+    print(X_train.head(10))
+
     #standardize
     scalerx= RobustScaler()
     scalery= RobustScaler()
     X_train = scalerx.fit_transform(data["X_train"])
     y_train = pd.read_json(data["y_train"], orient='values').values.ravel()
 
+    logger.info("Run estimator: %s", args.estimator_type)
     if args.estimator_type == "linear":
         estimator = LinearRegression()
         rfecv = RFECV(estimator=estimator, step=1, cv=KFold(10), scoring='neg_mean_squared_error')
@@ -88,7 +91,7 @@ def select_features(args):
                      path=args.output_path,
                      data=data_json)
     logger.info("write to mino %s", write_to_minio)
-    
+
     return
 
 

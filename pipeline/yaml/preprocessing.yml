@@ -15,7 +15,7 @@ inputs:
 implementation:
    container:
     # The strict name of a container image that you've pushed to a container registry.
-    image: k8scc01covidacr.azurecr.io/btap:994b5355070db7d518aabe92788231c5075a7e2a
+    image: k8scc01covidacr.azurecr.io/btap:332df367d6e78da7e0651e2b04752081b787ca58
     
     command: [
       python3,

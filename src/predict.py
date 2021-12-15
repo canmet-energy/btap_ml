@@ -1,5 +1,11 @@
 '''
 Uses the output from preprocessing and feature selection from mino, builds the model and then evaluate the model.
+
+Args:
+    in_obj_name: minio locationa and name of data file to be read, ideally the output file generated from preprocessing i.e. preprocessing_out
+    features: minio locationa and name of data file to be read, ideally the output file generated from feature selection i.e. feature_out
+    param_search: This parameter is used to determine if hyperparameter search can be performed or not, accepted value is yes or no
+    output_path: The minio location and filename where the output file should be written.
 '''
 import argparse
 import datetime
@@ -45,7 +51,7 @@ from tensorflow.keras.optimizers import Adam
 import config as acm
 import plot as pl
 
-logging.basicConfig(filename='../output/log/predict.log', level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 #######################################################
@@ -409,7 +415,7 @@ def fit_evaluate(args):
     data2 = acm.access_minio(operation='read',
                              path=args.features,
                              data='')
-    logger.info("%s read_output s3 connection %s", data)
+    logger.info("read_output s3 connection %s", data)
 
     # removing log directory
     shutil.rmtree('../output/parameter_search/btap', ignore_errors=True)
@@ -486,7 +492,7 @@ def fit_evaluate(args):
                      path=args.output_path,
                      data=data_json)
 
-    logger.info("write to mino  ", write_to_minio)
+    logger.info("write to mino  %s", write_to_minio)
 
     return
 

@@ -2,21 +2,20 @@ apiVersion: argoproj.io/v1alpha1
 kind: Workflow
 metadata:
   generateName: btap-pipeline-
-  annotations: {pipelines.kubeflow.org/kfp_sdk_version: 1.8.6, pipelines.kubeflow.org/pipeline_compilation_time: '2021-12-15T19:59:20.767087',
+  annotations: {pipelines.kubeflow.org/kfp_sdk_version: 1.8.6, pipelines.kubeflow.org/pipeline_compilation_time: '2021-12-15T21:28:05.421119',
     pipelines.kubeflow.org/pipeline_spec: '{"description": "MLP employed for Total
       energy consumed regression problem", "inputs": [{"default": "input_data/output_elec_2021-11-05.xlsx",
       "name": "build_params", "optional": true}, {"default": "input_data/total_hourly_res_elec_2021-11-05.csv",
-      "name": "energy_hour", "optional": true}, {"default": "input_data/montreal_epw.csv",
+      "name": "energy_hour", "optional": true}, {"default": "weather/CAN_QC_Montreal-Trudeau.Intl.AP.716270_CWEC2016.epw.parquet",
       "name": "weather", "optional": true}, {"default": "", "name": "build_params_val",
       "optional": true}, {"default": "", "name": "energy_hour_val", "optional": true},
       {"default": "output_data/preprocessing_out", "name": "output_path", "optional":
       true}, {"default": "output_data/feature_out", "name": "featureoutput_path",
       "optional": true}, {"default": "lasso", "name": "featureestimator", "optional":
       true}, {"default": "no", "name": "param_search", "optional": true}, {"default":
-      "input_data/output_gas_2021-11-05.xlsx", "name": "build_params_gas", "optional":
-      true}, {"default": "input_data/total_hourly_res_gas_2021-11-05.csv", "name":
-      "energy_hour_gas", "optional": true}, {"default": "output_data/predict_out",
-      "name": "predictoutput_path", "optional": true}], "name": "Btap Pipeline"}'}
+      "", "name": "build_params_gas", "optional": true}, {"default": "", "name": "energy_hour_gas",
+      "optional": true}, {"default": "output_data/predict_out", "name": "predictoutput_path",
+      "optional": true}], "name": "Btap Pipeline"}'}
   labels: {pipelines.kubeflow.org/kfp_sdk_version: 1.8.6}
 spec:
   entrypoint: btap-pipeline
@@ -147,7 +146,7 @@ spec:
         '{{inputs.parameters.build_params_val}}', --in_hour_gas, '{{inputs.parameters.energy_hour_gas}}',
         --in_build_params_gas, '{{inputs.parameters.build_params_gas}}', --output_path,
         '{{inputs.parameters.output_path}}']
-      image: k8scc01covidacr.azurecr.io/btap:994b5355070db7d518aabe92788231c5075a7e2a
+      image: k8scc01covidacr.azurecr.io/btap:332df367d6e78da7e0651e2b04752081b787ca58
       resources:
         limits: {memory: 32Gi}
         requests: {memory: 16Gi}
@@ -174,7 +173,7 @@ spec:
           {"inputValue": "in_hour_val"}, "--in_build_params_val", {"inputValue": "in_build_params_val"},
           "--in_hour_gas", {"inputValue": "in_hour_gas"}, "--in_build_params_gas",
           {"inputValue": "in_build_params_gas"}, "--output_path", {"inputValue": "output_path"}],
-          "image": "k8scc01covidacr.azurecr.io/btap:994b5355070db7d518aabe92788231c5075a7e2a"}},
+          "image": "k8scc01covidacr.azurecr.io/btap:332df367d6e78da7e0651e2b04752081b787ca58"}},
           "inputs": [{"description": "The minio location and filename for the hourly
           energy consumption file is located. This would be the path for the electric
           hourly file if it exist.", "name": "in_hour", "type": "String"}, {"description":
@@ -194,7 +193,7 @@ spec:
           "name": "in_build_params_gas", "type": "String"}, {"description": "The minio
           location and filename where the output file should be written.", "name":
           "output_path", "type": "String"}], "name": "Preprocess data function"}',
-        pipelines.kubeflow.org/component_ref: '{"digest": "a9cc3761bc7b70bf5c70777c00c5471785f2988a0cc314b8245f3cff7b6be71a",
+        pipelines.kubeflow.org/component_ref: '{"digest": "85bcd17c42101099a38e93d41c752b601e44bebfbe3b339ec1a02f42ff38c70c",
           "url": "yaml/preprocessing.yml"}', pipelines.kubeflow.org/arguments.parameters: '{"in_build_params":
           "{{inputs.parameters.build_params}}", "in_build_params_gas": "{{inputs.parameters.build_params_gas}}",
           "in_build_params_val": "{{inputs.parameters.build_params_val}}", "in_hour":
@@ -205,7 +204,7 @@ spec:
     parameters:
     - {name: build_params, value: input_data/output_elec_2021-11-05.xlsx}
     - {name: energy_hour, value: input_data/total_hourly_res_elec_2021-11-05.csv}
-    - {name: weather, value: input_data/montreal_epw.csv}
+    - {name: weather, value: weather/CAN_QC_Montreal-Trudeau.Intl.AP.716270_CWEC2016.epw.parquet}
     - {name: build_params_val, value: ''}
     - {name: energy_hour_val, value: ''}
     - {name: output_path, value: output_data/preprocessing_out}
@@ -213,8 +212,8 @@ spec:
     - {name: featureestimator, value: lasso}
     - name: param_search
       value: "no"
-    - {name: build_params_gas, value: input_data/output_gas_2021-11-05.xlsx}
-    - {name: energy_hour_gas, value: input_data/total_hourly_res_gas_2021-11-05.csv}
+    - {name: build_params_gas, value: ''}
+    - {name: energy_hour_gas, value: ''}
     - {name: predictoutput_path, value: output_data/predict_out}
     artifacts:
     - name: output_path

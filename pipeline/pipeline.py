@@ -19,15 +19,15 @@ from pathlib import Path
 #                   build_params_val,energy_hour_gas,build_params_gas,featureestimator,featureoutput_path,param_search):
 def btap_pipeline(  build_params="input_data/output_elec_2021-11-05.xlsx",
                     energy_hour="input_data/total_hourly_res_elec_2021-11-05.csv",
-                    weather="input_data/montreal_epw.csv",
+                    weather="weather/CAN_QC_Montreal-Trudeau.Intl.AP.716270_CWEC2016.epw.parquet",
                     build_params_val="",
                     energy_hour_val="",
                     output_path="output_data/preprocessing_out",
                     featureoutput_path="output_data/feature_out",
                     featureestimator="lasso",
                     param_search="no",
-                    build_params_gas= 'input_data/output_gas_2021-11-05.xlsx',
-                    energy_hour_gas ='input_data/total_hourly_res_gas_2021-11-05.csv',
+                    build_params_gas= '',
+                    energy_hour_gas ='',
                     predictoutput_path="output_data/predict_out",
                     ):
     

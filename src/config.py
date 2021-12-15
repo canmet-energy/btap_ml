@@ -1,5 +1,7 @@
 import json
 import logging
+import sys
+import time
 from pathlib import Path
 from typing import Any, Dict, Union
 
@@ -7,7 +9,6 @@ import pandas as pd
 import s3fs
 from pydantic import AnyHttpUrl, BaseModel, BaseSettings, Field, SecretStr
 
-logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
@@ -20,9 +21,30 @@ class AppConfig(BaseModel):
     # Parent level key in the BTAP CLI config weather data is stored under.
     # The EPW file key will be under this.
     BUILDING_OPTS_KEY: str = ':building_options'
+
+
 # There's a JSON file available with required credentials in it
 def json_config_settings_source(settings: BaseSettings) -> Dict[str, Any]:
-    return json.loads(settings.__config__.json_settings_path.read_text())
+    """Load credentials from the file system."""
+    # Maximum number of attempts befaore failing
+    max_attempts = 3
+    attempt_interval = 5
+
+    creds_file = settings.__config__.json_settings_path
+
+    for attempt in range(max_attempts):
+        if creds_file.exists():
+            logger.info("Credentials file found. Reading from %s", creds_file)
+            return json.loads(creds_file.read_text())
+        else:
+            logger.warn("Credentials file %s not found. Waiting %s seconds to try again.", creds_file, attempt_interval)
+            time.sleep(attempt_interval)
+
+    # Wasn't able to read the credentials. Error out.
+    logger.error("Unable to read storage credentials from %s", creds_file)
+    sys.exit(1)
+
+
 class Settings(BaseSettings):
     """Application settings. All of these can be set by the environment to override anything coded here."""
     # Set up application specific information
@@ -49,15 +71,15 @@ class Settings(BaseSettings):
         def customise_sources(cls, init_settings, env_settings, file_secret_settings):
             return (init_settings, json_config_settings_source, env_settings, file_secret_settings)
 
-settings = Settings()
-logger.debug("Loaded the following settings: %s", settings)
 
 def establish_s3_connection(endpoint_url: str, access_key: str, secret_key: SecretStr) -> s3fs.S3FileSystem:
     """Used to create a connection to an S3 data store.
+
     Args:
         endpoint_url: The URL for the data store.
         access_key: The access key used to access the data store.
         secret_key: The secret key used to access the data store.
+
     Returns:
         An s3fs file system object.
     """
@@ -69,7 +91,6 @@ def establish_s3_connection(endpoint_url: str, access_key: str, secret_key: Secr
         client_kwargs={
             'endpoint_url': endpoint_url,
         },
-        #config_kwargs={'connect_timeout': 10}
     )
     # Wait longer for connections to blob storage to get established
     s3.connect_timeout = 60
@@ -80,23 +101,28 @@ def establish_s3_connection(endpoint_url: str, access_key: str, secret_key: Secr
 def access_minio(path: str, operation: str, data: Union[str, pd.DataFrame]):
     """
     Used to read and write to minio.
+
     Args:
         tenant: default value is standard
         bucket: nrcan-btap
         path: file path where data is to be read from or written to
         data: for write operation, it contains the data to be written to minio
+
     Returns:
        Dataframe containing the data downladed from minio is returned for read operation and for write operation , null value is returned.
     """
 
     logger.info("%s minio data at %s", operation, path)
 
+    # Get settings for the environment
+    settings = Settings()
+
     # Establish S3 connection
     s3 = establish_s3_connection(settings.MINIO_URL,
                                  settings.MINIO_ACCESS_KEY,
                                  settings.MINIO_SECRET_KEY)
 
-    logger.info("%s s3 connection %s", s3)
+    logger.info("s3 connection %s", s3)
 
     # s3fs doesn't seem to like Path objects, so use a posix path string for operations
     full_posix_path = settings.NAMESPACE.joinpath(path).as_posix()

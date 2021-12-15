@@ -1,5 +1,15 @@
 '''
-Downloads all the dataset from minio, preprocess the data, split the data into train, test and validation set.
+Downloads all the datasets from minio, preprocess the data, split the data into train, test and validation set.
+
+Args:
+    in_hour: The minio location and filename for the hourly energy consumption file is located. This would be the path for the electric hourly file if it exist.
+    in_build_params: The minio location and filename the building simulation I/O file. This would be the path for the electric hourly file if it exist.
+    in_weather: The minio location and filename for the converted  weather file to be read
+    in_hour_val: The minio location and filename for the hourly energy consumption file for the validation set, if it exist.
+    in_build_params_val: The minio location and filename for the building simulation I/O file for the validation set, if it exist.
+    in_hour_gas: The minio location and filename for the hourly energy consumption file is located. This would be the path for the gas hourly file if it exist.
+    in_build_params_gas: The minio location and filename the building simulation I/O file. This would be the path for the gas hourly file if it exist.
+    output_path: The minio location and filename where the output file should be written.
 '''
 import argparse
 import copy
@@ -17,6 +27,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import pyarrow
 from minio import Minio
 from sklearn.compose import ColumnTransformer
 from sklearn.model_selection import (GroupShuffleSplit, KFold,
@@ -28,7 +39,7 @@ from sklearn.preprocessing import (LabelEncoder, MinMaxScaler, OneHotEncoder,
 import config as acm
 import plot as pl
 
-logging.basicConfig(filename='../output/log/preprocess2.log', level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -76,12 +87,12 @@ def read_output(path_elec,path_gas):
     """
 
     # Load the data from blob storage.
-    s3 = acm.establish_s3_connection(acm.settings.MINIO_URL, acm.settings.MINIO_ACCESS_KEY, acm.settings.MINIO_SECRET_KEY)
-    logger.info("%s read_output s3 connection %s", s3)
-    btap_df_elec = pd.read_excel(s3.open(acm.settings.NAMESPACE.joinpath(path_elec).as_posix()))
+    s3 = acm.establish_s3_connection(settings.MINIO_URL, settings.MINIO_ACCESS_KEY, settings.MINIO_SECRET_KEY)
+    logger.info("read_output s3 connection %s", s3)
+    btap_df_elec = pd.read_excel(s3.open(settings.NAMESPACE.joinpath(path_elec).as_posix()))
 
     if path_gas:
-        btap_df_gas = pd.read_excel(s3.open(acm.settings.NAMESPACE.joinpath(path_gas).as_posix()))
+        btap_df_gas = pd.read_excel(s3.open(settings.NAMESPACE.joinpath(path_gas).as_posix()))
 
         btap_df = pd.concat([btap_df_elec, btap_df_gas], ignore_index=True)
     else:
@@ -167,12 +178,15 @@ def read_hour_energy(path_elec,path_gas,floor_sq):
        energy_hour_melt: Dataframe containing the clean and transposed hourly energy file.
     """
 
-    s3 = acm.establish_s3_connection(acm.settings.MINIO_URL, acm.settings.MINIO_ACCESS_KEY, acm.settings.MINIO_SECRET_KEY)
-    logger.info("%s read_hour_energy s3 connection %s", s3)
-    energy_hour_df_elec = pd.read_csv(s3.open(acm.settings.NAMESPACE.joinpath(path_elec).as_posix()))
+    s3 = acm.establish_s3_connection(settings.MINIO_URL, settings.MINIO_ACCESS_KEY, settings.MINIO_SECRET_KEY)
+    logger.info("read_hour_energy s3 connection %s", s3)
+    logger.info("Reading data from %s", path_elec)
+    energy_hour_df_elec = pd.read_csv(s3.open(settings.NAMESPACE.joinpath(path_elec).as_posix()))
 
     if path_gas:
-        energy_hour_df_gas = pd.read_csv(s3.open(acm.settings.NAMESPACE.joinpath(path_gas).as_posix()))
+        logger.info("Reading data from %s", path_gas)
+        energy_hour_df_gas = pd.read_csv(s3.open(settings.NAMESPACE.joinpath(path_gas).as_posix()))
+        logger.info("Concatenating data from %s and %s", path_elec, path_gas)
         energy_hour_df = pd.concat([energy_hour_df_elec, energy_hour_df_gas], ignore_index=True)
     else:
         energy_hour_df = copy.deepcopy(energy_hour_df_elec)
@@ -213,6 +227,7 @@ def groupsplit(X, y, valsplit):
        X_test: X testset
        y_test_complete: Dataframe containing the target variable with corresponding datapointid
     """
+    logger.info("groupsplit with valsplit: %s", valsplit)
     if valsplit == 'yes':
         gs = GroupShuffleSplit(n_splits=2, train_size=.7, random_state=42)
     else:
@@ -245,7 +260,7 @@ def train_test_split(energy_daily_df, val_df, valsplit):
        y_validate: y validate set
        y_validate_complete: Dataframe containing the target variable with corresponding datapointid for the validation set
     """
-
+    logger.info("train_test_split with valsplit: %s", valsplit)
     drop_list= ['index',':datapoint_id','level_0', 'index','date_int',':datapoint_id']
 
     #split to train and test datasets
@@ -304,13 +319,14 @@ def categorical_encode(x_train, x_test, x_validate):
     # extracting the categorical columns
     cat_cols = x_train.select_dtypes(include=['object']).columns
     other_cols = x_train.drop(columns=cat_cols).columns
+    logger.info("categorical encode: %s", cat_cols)
     # Create the encoder.
     ct = ColumnTransformer([('ohe', OneHotEncoder(sparse=False,handle_unknown="ignore"), cat_cols)], remainder=MinMaxScaler())
 
 
-    for col in x_train[cat_cols]:
-        print(col)
-        print(x_train[col].unique())
+#     for col in x_train[cat_cols]:
+#         print(col)
+#         print(x_train[col].unique())
     # Apply the encoder.
     x_train_oh = ct.fit_transform(x_train)
     x_test_oh = ct.transform(x_test)
@@ -337,15 +353,19 @@ def process_data(args):
     btap_df,floor_sq = read_output(args.in_build_params,args.in_build_params_gas)
     energy_hour_df = read_hour_energy(args.in_hour,args.in_hour_gas,floor_sq)
     energy_hour_merge = pd.merge(energy_hour_df, btap_df, left_on=['datapoint_id'],right_on=[':datapoint_id'],how='left').reset_index()
+    logger.info("NA values in energy_hour_merge:\n%s", energy_hour_merge.isna().any())
     energy_daily_df = pd.merge(energy_hour_merge, weather_df, on='date_int',how='left').reset_index()
+    logger.info("NA values in energy_daily_df:\n%s", energy_daily_df.isna().any())
 
-    print(energy_daily_df.head)
+#     print(energy_daily_df.head)
 
     if args.in_build_params_val:
         btap_df_val,floor_sq = read_output(args.in_build_params_val,'')
         energy_hour_df_val = read_hour_energy(args.in_hour_val,'',floor_sq)
         energy_hour_merge_val = pd.merge(energy_hour_df_val, btap_df_val, left_on=['datapoint_id'],right_on=[':datapoint_id'],how='left').reset_index()
+        logger.info("NA values in energy_hour_merge_val:\n%s", energy_hour_merge_val.isna().any())
         energy_daily_df_val = pd.merge(energy_hour_merge_val, weather_df, on='date_int',how='left').reset_index()
+        logger.info("NA values in energy_daily_df_val:\n%s", energy_daily_df_val.isna().any())
         X_train, X_test, y_train, y_test, y_test_complete,X_validate, y_validate,y_validate_complete = train_test_split(energy_daily_df,energy_daily_df_val,'yes')
     else:
         energy_hour_df_val= '' ; btap_df_val =''; energy_daily_df_val=''
@@ -370,7 +390,7 @@ def process_data(args):
     write_to_minio = acm.access_minio(operation='copy',
                  path=args.output_path,
                  data=data_json)
-    logger.info("write to mino  ", write_to_minio)
+    logger.info("write to mino %s ", write_to_minio)
 
 
     #pl.target_plot(y_train,y_test)
@@ -378,6 +398,10 @@ def process_data(args):
 
 
 if __name__ == '__main__':
+    # Load settings from the environment
+    settings = acm.Settings()
+
+    # Prepare the argument parser
     parser = argparse.ArgumentParser()
 
     # Paths must be passed in, not hardcoded

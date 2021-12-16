@@ -64,6 +64,21 @@ set and 10% validation set. However, when validation set is provided, the datase
 set and 20% test set. It should be noted that the data splitting is performed using GroupShuffleSplit function which
 ensures that all data instances for a datapoint_id are included in the respective data set they are split into which
 implies a datapoint_id used for training would not have any instance in the test set.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The json file created at the end of preprocessing has the following keys:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">features</span></code>: This is all the features after data cleaning and preprocessing. Note that these are not the final features used for modelling.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">y_train</span></code>: This contains the y_train dataset.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">X_train</span></code>: This contains the X_train dataset.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">X_test</span></code>: This contains the X_test dataset.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">y_test</span></code>: This contains the y_test dataset.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">y_test_complete</span></code>: This is similar to the y_test dataset, but has the additional column datapoint_id which would be used needed in creating the final output file after predict.py is run.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">X_validate</span></code>: This contains the X_validate dataset.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">y_validate</span></code>:  This contains the y_validate dataset.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">y_validate_complete</span></code>: This is similar to the y_validate dataset, but has the additional column datapoint_id which would be used needed in creating the final output file after predict.py is run.</p></li>
+</ul>
+</div>
 </section>
 
 

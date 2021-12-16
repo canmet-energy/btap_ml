@@ -35,38 +35,20 @@
             
   <section id="module-preprocessing">
 <span id="preprocessing"></span><h1>Preprocessing<a class="headerlink" href="#module-preprocessing" title="Permalink to this headline">¶</a></h1>
-<p>Downloads all the datasets from minio, preprocess the data, split the data into train, test and validation set.</p>
-<dl class="field-list simple">
-<dt class="field-odd">param in_hour</dt>
-<dd class="field-odd"><p>The minio location and filename for the hourly energy consumption file is located. This would be the path for the electric hourly file if it exist.</p>
-</dd>
-<dt class="field-even">param in_build_params</dt>
-<dd class="field-even"><p>The minio location and filename the building simulation I/O file. This would be the path for the electric hourly file if it exist.</p>
-</dd>
-<dt class="field-odd">param in_weather</dt>
-<dd class="field-odd"><p>The minio location and filename for the converted  weather file to be read</p>
-</dd>
-<dt class="field-even">param in_hour_val</dt>
-<dd class="field-even"><p>The minio location and filename for the hourly energy consumption file for the validation set, if it exist.</p>
-</dd>
-<dt class="field-odd">param in_build_params_val</dt>
-<dd class="field-odd"><p>The minio location and filename for the building simulation I/O file for the validation set, if it exist.</p>
-</dd>
-<dt class="field-even">param in_hour_gas</dt>
-<dd class="field-even"><p>The minio location and filename for the hourly energy consumption file is located. This would be the path for the gas hourly file if it exist.</p>
-</dd>
-<dt class="field-odd">param in_build_params_gas</dt>
-<dd class="field-odd"><p>The minio location and filename the building simulation I/O file. This would be the path for the gas hourly file if it exist.</p>
-</dd>
-<dt class="field-even">param output_path</dt>
-<dd class="field-even"><p>The minio location and filename where the output file should be written.</p>
-</dd>
-</dl>
+<p>Downloads all the datasets from minio, preprocess the data, split the data into train, test and validation set.
+:param in_hour: The minio location and filename for the hourly energy consumption file is located. This would be the path for the electric hourly file if it exist.
+:param in_build_params: The minio location and filename the building simulation I/O file. This would be the path for the electric hourly file if it exist.
+:param in_weather: The minio location and filename for the converted  weather file to be read
+:param in_hour_val: The minio location and filename for the hourly energy consumption file for the validation set, if it exist.
+:param in_build_params_val: The minio location and filename for the building simulation I/O file for the validation set, if it exist.
+:param in_hour_gas: The minio location and filename for the hourly energy consumption file is located. This would be the path for the gas hourly file if it exist.
+:param in_build_params_gas: The minio location and filename the building simulation I/O file. This would be the path for the gas hourly file if it exist.
+:param output_path: The minio location and filename where the output file should be written.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="preprocessing.categorical_encode">
 <span class="sig-prename descclassname"><span class="pre">preprocessing.</span></span><span class="sig-name descname"><span class="pre">categorical_encode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_train</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_validate</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#preprocessing.categorical_encode" title="Permalink to this definition">¶</a></dt>
-<dd><p>Used to encode the categorical variables contained in the x_train, x_test and x_validate</p>
-<p>Note that the encoded data return creates additional columns equivalent to the unique categorical values in the each categorical column.</p>
+<dd><p>Used to encode the categorical variables contained in the x_train, x_test and x_validate
+Note that the encoded data return creates additional columns equivalent to the unique categorical values in the each categorical column.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -116,10 +98,10 @@ and hence have little or no significant contribution to the accuracy of the mode
 <dl class="py function">
 <dt class="sig sig-object py" id="preprocessing.groupsplit">
 <span class="sig-prename descclassname"><span class="pre">preprocessing.</span></span><span class="sig-name descname"><span class="pre">groupsplit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">valsplit</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#preprocessing.groupsplit" title="Permalink to this definition">¶</a></dt>
-<dd><p>Used to split the dataset by datapoint_id into train and test sets.</p>
-<p>The data is split to ensure all datapoints for each datapoint_id occurs completely in the respective dataset split.</p>
-<p>Note that where there is validation set, data is split with 80% for training and 20% for test set.</p>
-<p>Otherwise, the test set is split further with 60% as test set and 40% as validation set.</p>
+<dd><p>Used to split the dataset by datapoint_id into train and test sets.
+The data is split to ensure all datapoints for each datapoint_id occurs completely in the respective dataset split.
+Note that where there is validation set, data is split with 80% for training and 20% for test set.
+Otherwise, the test set is split further with 60% as test set and 40% as validation set.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -143,14 +125,13 @@ y_test_complete: Dataframe containing the target variable with corresponding dat
 <dl class="py function">
 <dt class="sig sig-object py" id="preprocessing.process_data">
 <span class="sig-prename descclassname"><span class="pre">preprocessing.</span></span><span class="sig-name descname"><span class="pre">process_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#preprocessing.process_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Used to encode the categorical variables contained in the x_train, x_test and x_validate</p>
-<p>Note that the encoded data return creates additional columns equivalent to the unique categorical values in the each categorical column.</p>
+<dd><p>Used to encode the categorical variables contained in the x_train, x_test and x_validate
+Note that the encoded data return creates additional columns equivalent to the unique categorical values in the each categorical column.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>main</strong> (<em>arguements provided from the</em>) – </p>
 </dd>
 </dl>
-<p>Returns:</p>
 </dd></dl>
 
 <dl class="py function">

@@ -46,6 +46,18 @@
 <section id="download-results">
 <h2>Download results<a class="headerlink" href="#download-results" title="Permalink to this headline">¶</a></h2>
 <p>The results from the prediction is available in minio in the <code class="docutils literal notranslate"><span class="pre">output_path</span></code> specified in prediction step.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The json file created at the end of model run has the following keys:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">test_daily_metric</span></code>: This contains the DAILY evaluation result from using the TEST dataset</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">test_annual_metric</span></code>: This contains the ANNUAL evaluation result from using the TEST dataset</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">output_df</span></code>: This is a dataframe containining the datapoint_id, predicted energy value and the actual energy value from using the test dataset. Note the annual energy result is shown here.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">val_daily_metric</span></code>: This contains the DAILY evaluation result from using the VALIDATION dataset</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">val_annual_metric</span></code>: This contains the ANNUAL evaluation result from using the VALIDATION dataset</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">output_val_df</span></code>: This is a dataframe containining the datapoint_id, predicted energy value and the actual energy value from using the VALIDATION dataset. Note the annual energy result is shown here.</p></li>
+</ul>
+</div>
 </section>
 </section>
 

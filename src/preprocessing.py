@@ -1,6 +1,5 @@
 '''
 Downloads all the datasets from minio, preprocess the data, split the data into train, test and validation set.
-
 Args:
     in_hour: The minio location and filename for the hourly energy consumption file is located. This would be the path for the electric hourly file if it exist.
     in_build_params: The minio location and filename the building simulation I/O file. This would be the path for the electric hourly file if it exist.
@@ -25,6 +24,7 @@ from datetime import datetime
 from io import StringIO
 from pathlib import Path
 
+import matplotlib
 import numpy as np
 import pandas as pd
 import pyarrow
@@ -46,18 +46,15 @@ logger = logging.getLogger(__name__)
 def clean_data(df) -> pd.DataFrame:
     """
     Basic cleaning of the data using the following criterion:
-
     - dropping any column with more than 50% missing values
       The 50% threshold is a way to eliminate columns with too much missing values in the dataset.
       We cant use N/A as it will elimnate the entire row /datapoint_id. Giving the number of features we have to work it its better we eliminate
       columns with features that have too much missing values than to eliminate by rows, which is what N/A will do .
     - dropping columns with 1 unique value
-      For columns with  less than 3 unique values are dropped during data cleaning as they have low variance
+      For columns with  1 unique values are dropped during data cleaning as they have low variance
       and hence have little or no significant contribution to the accuracy of the model.
-
     Args:
         df: dataset to be cleaned
-
     Returns:
        clean dataframe
     """
@@ -70,14 +67,13 @@ def clean_data(df) -> pd.DataFrame:
     for col in df.columns:
         num = len(df[col].unique())
 
-        if ((len(df[col].unique()) < 3) and (col not in ['energy_eui_additional_fuel_gj_per_m_sq','energy_eui_electricity_gj_per_m_sq','energy_eui_natural_gas_gj_per_m_sq'])):
+        if ((len(df[col].unique()) ==1) and (col not in ['energy_eui_additional_fuel_gj_per_m_sq','energy_eui_electricity_gj_per_m_sq','energy_eui_natural_gas_gj_per_m_sq'])):
             df.drop(col,inplace=True,axis=1)
     return df
 
 def read_output(path_elec,path_gas):
     """
     Used to read the building simulation I/O file
-
     Args:
         path_elec: file path where data is to be read from in minio. This is a mandatory parameter and in the case where only one simulation I/O file is provided,  the path to this file should be indicated here.
         path_gas: This would be path to the gas output file. This is optional, if there is no gas output file to the loaded, then a value of path_gas ='' should be used
@@ -117,10 +113,8 @@ def read_output(path_elec,path_gas):
 def read_weather(path: str) -> pd.DataFrame:
     """
     Used to read the weather .parque file from minio
-
     Args:
         path: file path where weather file is to be read from in minio
-
     Returns:
        btap_df: Dataframe containing the clean weather file.
     """
@@ -136,28 +130,14 @@ def read_weather(path: str) -> pd.DataFrame:
     except pyarrow.lib.ArrowInvalid as err:
         logger.error("Invalid weather file format supplied. Is %s a parquet file?", path)
         sys.exit(1)
-    #weather_df = pd.read_csv(s3.open(acm.settings.NAMESPACE.joinpath(path).as_posix()))
-
+    
     # Remove spurious columns.
     weather_df = clean_data(weather_df)
-
     # date_int is used later to join data together.
     weather_df["date_int"] = weather_df['rep_time'].dt.strftime("%m%d").astype(int)
 
-    # Aggregate data by day to reduce the complexity, leaving date values as they are.
-#     min_cols = {'year': 'min','month':'min','day':'min','rep_time':'min','date_int':'min'}
-#     sum_cols = [c for c in weather_df.columns if c not in [min_cols.keys()]]
-#     agg_funcs = dict(zip(sum_cols,['sum'] * len(sum_cols)))
-#     agg_funcs.update(min_cols)
-#     weather_df = weather_df.groupby([weather_df['rep_time'].dt.dayofyear]).agg(agg_funcs)
-
     # Remove the rep_time column, since later stages don't know to expect it.
     weather_df = weather_df.drop('rep_time', axis='columns')
-#     weather_drop_list= ['Uncertainty Flags','Extraterrestrial Horizontal Radiation', 'Extraterrestrial Direct Normal Radiation','Global Horizontal Radiation','Global Horizontal Illuminance','Direct Normal Illuminance', 'Diffuse Horizontal Illuminance', 'Zenith Luminance', 'Total Sky Cover', 'Opaque Sky Cover', 'Visibility', 'Ceiling Height', 'Aerosol Optical Depth','Present Weather Codes' ]
-#     weather_df = weather_df.drop(weather_drop_list,axis=1)
-#     weather_df = clean_data(weather_df)
-#     weather_df["date_int"]= weather_df.apply(lambda r : datetime(int(r['Year']), int( r['Month']),int( r['Day']), int(r['Hour']-1)).strftime("%m%d"), axis =1)
-#     weather_df["date_int"]=weather_df["date_int"].apply(lambda r : int(r))
     weather_df=weather_df.groupby(['date_int']).agg(lambda x: x.sum())
     logger.debug("weather data shape: %s", weather_df.shape)
     logger.debug("Weather data NA values:\n%s", weather_df.isna().any())
@@ -169,7 +149,6 @@ def read_weather(path: str) -> pd.DataFrame:
 def read_hour_energy(path_elec,path_gas,floor_sq):
     """
     Used to read the weather epw file from minio
-
     Args:
         path_elec: file path where the electric hourly energy consumed file is to be read from in minio. This is a mandatory parameter and in the case where only one hourly energy output file is provided, the path to this file should be indicated here.
         path_gas: This would be path to the gas output file. This is optional, if there is no gas output file to the loaded, then a value of path_gas ='' should be used
@@ -210,13 +189,9 @@ def read_hour_energy(path_elec,path_gas,floor_sq):
 def groupsplit(X, y, valsplit):
     """
     Used to split the dataset by datapoint_id into train and test sets.
-
     The data is split to ensure all datapoints for each datapoint_id occurs completely in the respective dataset split.
-
     Note that where there is validation set, data is split with 80% for training and 20% for test set.
-
     Otherwise, the test set is split further with 60% as test set and 40% as validation set.
-
     Args:
         X: data excluding the target_variable
         y: target variable with datapoint_id
@@ -246,7 +221,6 @@ def groupsplit(X, y, valsplit):
 def train_test_split(energy_daily_df, val_df, valsplit):
     """
     Used to split the dataset by datapoint_id into train , test and validation sets.
-
     Args:
         energy_daily_df: the merged dataframe for simulation I/O, weather, and hourly energy file.
         val_df: the merged dataframe for simulation I/O, weather, and hourly energy file validation set. Where there is no validation set, its value is null
@@ -272,10 +246,10 @@ def train_test_split(energy_daily_df, val_df, valsplit):
     if valsplit == 'yes' :
         y_val = val_df[['energy','datapoint_id','Total Energy']]
         X_val = val_df.drop(['energy'],axis = 1)
-        y_validate_complete = y_val
+        validate_complete = y_val
         X_validate = X_val.drop(drop_list,axis=1)
         X_validate = X_validate.drop(['datapoint_id','Total Energy'],axis = 1)
-        y_validate = y_validate_complete[['energy','datapoint_id']]
+
 
     else:
         y_test = y_test_complete
@@ -303,9 +277,7 @@ def train_test_split(energy_daily_df, val_df, valsplit):
 def categorical_encode(x_train, x_test, x_validate):
     """
     Used to encode the categorical variables contained in the x_train, x_test and x_validate
-
     Note that the encoded data return creates additional columns equivalent to the unique categorical values in the each categorical column.
-
     Args:
          X_train: X trainset
          X_test:  X testset
@@ -323,10 +295,6 @@ def categorical_encode(x_train, x_test, x_validate):
     # Create the encoder.
     ct = ColumnTransformer([('ohe', OneHotEncoder(sparse=False,handle_unknown="ignore"), cat_cols)], remainder=MinMaxScaler())
 
-
-#     for col in x_train[cat_cols]:
-#         print(col)
-#         print(x_train[col].unique())
     # Apply the encoder.
     x_train_oh = ct.fit_transform(x_train)
     x_test_oh = ct.transform(x_test)
@@ -340,14 +308,10 @@ def categorical_encode(x_train, x_test, x_validate):
 def process_data(args):
     """
     Used to encode the categorical variables contained in the x_train, x_test and x_validate
-
     Note that the encoded data return creates additional columns equivalent to the unique categorical values in the each categorical column.
-
     Args:
          arguements provided from the main
-
     Returns:
-
     """
     weather_df = read_weather(args.in_weather)
     btap_df,floor_sq = read_output(args.in_build_params,args.in_build_params_gas)
@@ -356,8 +320,6 @@ def process_data(args):
     logger.info("NA values in energy_hour_merge:\n%s", energy_hour_merge.isna().any())
     energy_daily_df = pd.merge(energy_hour_merge, weather_df, on='date_int',how='left').reset_index()
     logger.info("NA values in energy_daily_df:\n%s", energy_daily_df.isna().any())
-
-#     print(energy_daily_df.head)
 
     if args.in_build_params_val:
         btap_df_val,floor_sq = read_output(args.in_build_params_val,'')
@@ -392,9 +354,13 @@ def process_data(args):
                  data=data_json)
     logger.info("write to mino %s ", write_to_minio)
 
-
-    #pl.target_plot(y_train,y_test)
-    #pl.corr_plot(energy_daily_df)
+    try:
+        pl.target_plot(y_train,y_test)
+        pl.corr_plot(energy_daily_df)
+    except ValueError as ve:
+        logger.error("Unable to produce plots. Plotting threw an exception: %s", ve)
+    except matplotlib.units.ConversionError as ce:
+        logger.error("Unable to produce plots. matplotlib conversion error: %s", ce)
 
 
 if __name__ == '__main__':

@@ -16,7 +16,7 @@ A minimum of Python 3.8+ is required to reliably run this project.
 Dependencies
 ------------
 
-Basic dependencies required to run the simulations are listed in `requirements.txt`. These can be installed with::
+Basic dependencies required to run the simulations are listed in `requirements.txt`. From the terminal, run the command below and these can be installed with::
 
     pip install -r requirements.txt
 

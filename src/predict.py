@@ -16,6 +16,7 @@ import os
 import shutil
 import time
 from math import sqrt
+
 from keras_tuner import Hyperband
 import numpy as np
 import pandas as pd
@@ -432,17 +433,12 @@ def fit_evaluate(args):
     X_train = X_train[selected_features]
     X_test = X_test[selected_features]
     X_validate = X_validate[selected_features]
-
     col_length = X_train.shape[1]
 
     #extracting the test data for the target variable
     y_test_complete = pd.DataFrame(data["y_test_complete"],columns=['energy','datapoint_id','Total Energy'])
     y_test = pd.DataFrame(data["y_test"],columns=['energy','datapoint_id'])
-    #y_test = y_test.drop(['Total Energy'],axis=1)
-    print(y_test)
     y_validate_complete = pd.DataFrame(data["y_validate_complete"],columns=['energy','datapoint_id','Total Energy'])
-    #y_validate_complete = pd.DataFrame(data["y_validate_complete"],columns=['energy','datapoint_id'])
-    print(y_validate_complete)
     y_validate= pd.DataFrame(data["y_validate"],columns=['energy','datapoint_id'])
 
     scalerx= RobustScaler()

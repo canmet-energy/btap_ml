@@ -61,6 +61,7 @@ def score(y_test, y_pred):
     Args:
         y_test: y testset
         y_pred: y predicted value from the model
+
     Returns:
        mse, rmse, mae and mape scores from comparing the y_test and y_pred values
     """
@@ -82,6 +83,7 @@ def rmse_loss(y_true, y_pred):
     Args:
         y_test: y testset
         y_pred: y predicted value from the model
+
     Returns:
        rmse loss from comparing the y_test and y_pred values
     """
@@ -100,6 +102,7 @@ def model_builder(hp):
 
     Args:
         hp: hyperband object with different hyperparameters to be checked.
+
     Returns:
        model will be built based on the different hyperparameter combinations.
     """

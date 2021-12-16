@@ -24,4 +24,6 @@ other estimator type can be used by specifying the respective esimator type to t
 performing feature selection.
 
 
-.. note:: The json file created has just key value "features" which represents the final features selected for modelling.
+.. note::
+
+    The json file created has just key value "features" which represents the final features selected for modelling.

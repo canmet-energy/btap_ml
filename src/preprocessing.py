@@ -46,6 +46,7 @@ logger = logging.getLogger(__name__)
 def clean_data(df) -> pd.DataFrame:
     """
     Basic cleaning of the data using the following criterion:
+
     - dropping any column with more than 50% missing values
       The 50% threshold is a way to eliminate columns with too much missing values in the dataset.
       We cant use N/A as it will elimnate the entire row /datapoint_id. Giving the number of features we have to work it its better we eliminate
@@ -53,8 +54,10 @@ def clean_data(df) -> pd.DataFrame:
     - dropping columns with 1 unique value
       For columns with  1 unique values are dropped during data cleaning as they have low variance
       and hence have little or no significant contribution to the accuracy of the model.
+
     Args:
         df: dataset to be cleaned
+
     Returns:
        clean dataframe
     """

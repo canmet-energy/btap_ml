@@ -46,7 +46,8 @@ documented here to be able to run on Windows. Some elements of this documentatio
 </section>
 <section id="dependencies">
 <span id="dependency-install"></span><h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h2>
-<p>Basic dependencies required to run the simulations are listed in <cite>requirements.txt</cite>. From the terminal, run the command below and these can be installed with:</p>
+<p>Basic dependencies required to run the simulations are listed in <cite>requirements.txt</cite>. Open a terminal window and
+run <code class="docutils literal notranslate"><span class="pre">pip</span></code> to install the requirements:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">r</span> <span class="n">requirements</span><span class="o">.</span><span class="n">txt</span>
 </pre></div>
 </div>
@@ -59,6 +60,10 @@ documented here to be able to run on Windows. Some elements of this documentatio
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>This step is only necessary if you are interested in participating in the development of the model.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p><code class="docutils literal notranslate"><span class="pre">pre-commit</span></code> is installed as part of the <code class="docutils literal notranslate"><span class="pre">requirements-dev.txt</span></code>. Ensure to run that step first.</p>
 </div>
 <p>The project makes use of <code class="docutils literal notranslate"><span class="pre">pre-commit</span></code>, which is a package that helps to keep source code clean and consistent
 through hooks run against every commit. When these hooks detect something to fix they can cause your commit to fail,

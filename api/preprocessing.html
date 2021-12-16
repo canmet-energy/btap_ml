@@ -35,32 +35,54 @@
             
   <section id="module-preprocessing">
 <span id="preprocessing"></span><h1>Preprocessing<a class="headerlink" href="#module-preprocessing" title="Permalink to this headline">¶</a></h1>
-<p>Downloads all the datasets from minio, preprocess the data, split the data into train, test and validation set.
-:param in_hour: The minio location and filename for the hourly energy consumption file is located. This would be the path for the electric hourly file if it exist.
-:param in_build_params: The minio location and filename the building simulation I/O file. This would be the path for the electric hourly file if it exist.
-:param in_weather: The minio location and filename for the converted  weather file to be read
-:param in_hour_val: The minio location and filename for the hourly energy consumption file for the validation set, if it exist.
-:param in_build_params_val: The minio location and filename for the building simulation I/O file for the validation set, if it exist.
-:param in_hour_gas: The minio location and filename for the hourly energy consumption file is located. This would be the path for the gas hourly file if it exist.
-:param in_build_params_gas: The minio location and filename the building simulation I/O file. This would be the path for the gas hourly file if it exist.
-:param output_path: The minio location and filename where the output file should be written.</p>
+<p>Downloads all the datasets from minio, preprocess the data, split the data into train, test and validation set.</p>
+<dl class="field-list simple">
+<dt class="field-odd">param in_hour</dt>
+<dd class="field-odd"><p>The minio location and filename for the hourly energy consumption file is located. This would be the path for the electric hourly file if it exist.</p>
+</dd>
+<dt class="field-even">param in_build_params</dt>
+<dd class="field-even"><p>The minio location and filename the building simulation I/O file. This would be the path for the electric hourly file if it exist.</p>
+</dd>
+<dt class="field-odd">param in_weather</dt>
+<dd class="field-odd"><p>The minio location and filename for the converted  weather file to be read</p>
+</dd>
+<dt class="field-even">param in_hour_val</dt>
+<dd class="field-even"><p>The minio location and filename for the hourly energy consumption file for the validation set, if it exist.</p>
+</dd>
+<dt class="field-odd">param in_build_params_val</dt>
+<dd class="field-odd"><p>The minio location and filename for the building simulation I/O file for the validation set, if it exist.</p>
+</dd>
+<dt class="field-even">param in_hour_gas</dt>
+<dd class="field-even"><p>The minio location and filename for the hourly energy consumption file is located. This would be the path for the gas hourly file if it exist.</p>
+</dd>
+<dt class="field-odd">param in_build_params_gas</dt>
+<dd class="field-odd"><p>The minio location and filename the building simulation I/O file. This would be the path for the gas hourly file if it exist.</p>
+</dd>
+<dt class="field-even">param output_path</dt>
+<dd class="field-even"><p>The minio location and filename where the output file should be written.</p>
+</dd>
+</dl>
 <dl class="py function">
 <dt class="sig sig-object py" id="preprocessing.categorical_encode">
 <span class="sig-prename descclassname"><span class="pre">preprocessing.</span></span><span class="sig-name descname"><span class="pre">categorical_encode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_train</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_validate</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#preprocessing.categorical_encode" title="Permalink to this definition">¶</a></dt>
-<dd><p>Used to encode the categorical variables contained in the x_train, x_test and x_validate
-Note that the encoded data return creates additional columns equivalent to the unique categorical values in the each categorical column.
-:param X_train: X trainset
-:param X_test: X testset
-:param X_validate: X validation set</p>
+<dd><p>Used to encode the categorical variables contained in the x_train, x_test and x_validate</p>
+<p>Note that the encoded data return creates additional columns equivalent to the unique categorical values in the each categorical column.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>encoded X trainset
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X_train</strong> – X trainset</p></li>
+<li><p><strong>X_test</strong> – X testset</p></li>
+<li><p><strong>X_validate</strong> – X validation set</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>encoded X trainset
 X_test_oh: encoded X testset
 x_val_oh: encoded X validation set
 all_features: all features after encoding.</p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>X_train_oh</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>X_train_oh</p>
 </dd>
 </dl>
 </dd></dl>
@@ -68,14 +90,12 @@ all_features: all features after encoding.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="preprocessing.clean_data">
 <span class="sig-prename descclassname"><span class="pre">preprocessing.</span></span><span class="sig-name descname"><span class="pre">clean_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#preprocessing.clean_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Basic cleaning of the data using the following criterion:
-- dropping any column with more than 50% missing values</p>
-<blockquote>
-<div><p>The 50% threshold is a way to eliminate columns with too much missing values in the dataset.
-We cant use N/A as it will elimnate the entire row /datapoint_id. Giving the number of features we have to work it its better we eliminate
-columns with features that have too much missing values than to eliminate by rows, which is what N/A will do .</p>
-</div></blockquote>
+<dd><p>Basic cleaning of the data using the following criterion:</p>
 <ul class="simple">
+<li><p>dropping any column with more than 50% missing values
+The 50% threshold is a way to eliminate columns with too much missing values in the dataset.
+We cant use N/A as it will elimnate the entire row /datapoint_id. Giving the number of features we have to work it its better we eliminate
+columns with features that have too much missing values than to eliminate by rows, which is what N/A will do .</p></li>
 <li><p>dropping columns with 1 unique value
 For columns with  1 unique values are dropped during data cleaning as they have low variance
 and hence have little or no significant contribution to the accuracy of the model.</p></li>
@@ -96,22 +116,26 @@ and hence have little or no significant contribution to the accuracy of the mode
 <dl class="py function">
 <dt class="sig sig-object py" id="preprocessing.groupsplit">
 <span class="sig-prename descclassname"><span class="pre">preprocessing.</span></span><span class="sig-name descname"><span class="pre">groupsplit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">valsplit</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#preprocessing.groupsplit" title="Permalink to this definition">¶</a></dt>
-<dd><p>Used to split the dataset by datapoint_id into train and test sets.
-The data is split to ensure all datapoints for each datapoint_id occurs completely in the respective dataset split.
-Note that where there is validation set, data is split with 80% for training and 20% for test set.
-Otherwise, the test set is split further with 60% as test set and 40% as validation set.
-:param X: data excluding the target_variable
-:param y: target variable with datapoint_id
-:param valsplit: flag to indicate if there is a dataframe for the validation set. Accepeted values are “yes” or “no”</p>
+<dd><p>Used to split the dataset by datapoint_id into train and test sets.</p>
+<p>The data is split to ensure all datapoints for each datapoint_id occurs completely in the respective dataset split.</p>
+<p>Note that where there is validation set, data is split with 80% for training and 20% for test set.</p>
+<p>Otherwise, the test set is split further with 60% as test set and 40% as validation set.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>X trainset
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> – data excluding the target_variable</p></li>
+<li><p><strong>y</strong> – target variable with datapoint_id</p></li>
+<li><p><strong>valsplit</strong> – flag to indicate if there is a dataframe for the validation set. Accepeted values are “yes” or “no”</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>X trainset
 y_train: y trainset
 X_test: X testset
 y_test_complete: Dataframe containing the target variable with corresponding datapointid</p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>X_train</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>X_train</p>
 </dd>
 </dl>
 </dd></dl>
@@ -119,25 +143,33 @@ y_test_complete: Dataframe containing the target variable with corresponding dat
 <dl class="py function">
 <dt class="sig sig-object py" id="preprocessing.process_data">
 <span class="sig-prename descclassname"><span class="pre">preprocessing.</span></span><span class="sig-name descname"><span class="pre">process_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#preprocessing.process_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Used to encode the categorical variables contained in the x_train, x_test and x_validate
-Note that the encoded data return creates additional columns equivalent to the unique categorical values in the each categorical column.
-:param arguements provided from the main:</p>
+<dd><p>Used to encode the categorical variables contained in the x_train, x_test and x_validate</p>
+<p>Note that the encoded data return creates additional columns equivalent to the unique categorical values in the each categorical column.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>main</strong> (<em>arguements provided from the</em>) – </p>
+</dd>
+</dl>
 <p>Returns:</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="preprocessing.read_hour_energy">
 <span class="sig-prename descclassname"><span class="pre">preprocessing.</span></span><span class="sig-name descname"><span class="pre">read_hour_energy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path_elec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_gas</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">floor_sq</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#preprocessing.read_hour_energy" title="Permalink to this definition">¶</a></dt>
-<dd><p>Used to read the weather epw file from minio
-:param path_elec: file path where the electric hourly energy consumed file is to be read from in minio. This is a mandatory parameter and in the case where only one hourly energy output file is provided, the path to this file should be indicated here.
-:param path_gas: This would be path to the gas output file. This is optional, if there is no gas output file to the loaded, then a value of path_gas =’’ should be used
-:param floor_sq: the square foot of the building</p>
+<dd><p>Used to read the weather epw file from minio</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Dataframe containing the clean and transposed hourly energy file.</p>
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path_elec</strong> – file path where the electric hourly energy consumed file is to be read from in minio. This is a mandatory parameter and in the case where only one hourly energy output file is provided, the path to this file should be indicated here.</p></li>
+<li><p><strong>path_gas</strong> – This would be path to the gas output file. This is optional, if there is no gas output file to the loaded, then a value of path_gas =’’ should be used</p></li>
+<li><p><strong>floor_sq</strong> – the square foot of the building</p></li>
+</ul>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>energy_hour_melt</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Dataframe containing the clean and transposed hourly energy file.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>energy_hour_melt</p>
 </dd>
 </dl>
 </dd></dl>
@@ -145,16 +177,20 @@ Note that the encoded data return creates additional columns equivalent to the u
 <dl class="py function">
 <dt class="sig sig-object py" id="preprocessing.read_output">
 <span class="sig-prename descclassname"><span class="pre">preprocessing.</span></span><span class="sig-name descname"><span class="pre">read_output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path_elec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_gas</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#preprocessing.read_output" title="Permalink to this definition">¶</a></dt>
-<dd><p>Used to read the building simulation I/O file
-:param path_elec: file path where data is to be read from in minio. This is a mandatory parameter and in the case where only one simulation I/O file is provided,  the path to this file should be indicated here.
-:param path_gas: This would be path to the gas output file. This is optional, if there is no gas output file to the loaded, then a value of path_gas =’’ should be used</p>
+<dd><p>Used to read the building simulation I/O file</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Dataframe containing the clean building parameters file.
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path_elec</strong> – file path where data is to be read from in minio. This is a mandatory parameter and in the case where only one simulation I/O file is provided,  the path to this file should be indicated here.</p></li>
+<li><p><strong>path_gas</strong> – This would be path to the gas output file. This is optional, if there is no gas output file to the loaded, then a value of path_gas =’’ should be used</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Dataframe containing the clean building parameters file.
 floor_sq: the square foot of the building</p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>btap_df</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>btap_df</p>
 </dd>
 </dl>
 </dd></dl>
@@ -162,15 +198,16 @@ floor_sq: the square foot of the building</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="preprocessing.read_weather">
 <span class="sig-prename descclassname"><span class="pre">preprocessing.</span></span><span class="sig-name descname"><span class="pre">read_weather</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#preprocessing.read_weather" title="Permalink to this definition">¶</a></dt>
-<dd><p>Used to read the weather .parque file from minio
-:type path: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
-:param path: file path where weather file is to be read from in minio</p>
+<dd><p>Used to read the weather .parque file from minio</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Dataframe containing the clean weather file.</p>
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>path</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – file path where weather file is to be read from in minio</p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>btap_df</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Dataframe containing the clean weather file.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>btap_df</p>
 </dd>
 </dl>
 </dd></dl>
@@ -178,13 +215,17 @@ floor_sq: the square foot of the building</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="preprocessing.train_test_split">
 <span class="sig-prename descclassname"><span class="pre">preprocessing.</span></span><span class="sig-name descname"><span class="pre">train_test_split</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">energy_daily_df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">valsplit</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#preprocessing.train_test_split" title="Permalink to this definition">¶</a></dt>
-<dd><p>Used to split the dataset by datapoint_id into train , test and validation sets.
-:param energy_daily_df: the merged dataframe for simulation I/O, weather, and hourly energy file.
-:param val_df: the merged dataframe for simulation I/O, weather, and hourly energy file validation set. Where there is no validation set, its value is null
-:param valsplit: flag to indicate if there is a dataframe for the validation set. Accepeted values are “yes” or “no”</p>
+<dd><p>Used to split the dataset by datapoint_id into train , test and validation sets.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>X trainset
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>energy_daily_df</strong> – the merged dataframe for simulation I/O, weather, and hourly energy file.</p></li>
+<li><p><strong>val_df</strong> – the merged dataframe for simulation I/O, weather, and hourly energy file validation set. Where there is no validation set, its value is null</p></li>
+<li><p><strong>valsplit</strong> – flag to indicate if there is a dataframe for the validation set. Accepeted values are “yes” or “no”</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>X trainset
 y_train: y trainset
 X_test: X testset
 y_test_complete: Dataframe containing the target variable with corresponding datapointid
@@ -192,8 +233,8 @@ X_validate: X validate set
 y_validate: y validate set
 y_validate_complete: Dataframe containing the target variable with corresponding datapointid for the validation set</p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>X_train</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>X_train</p>
 </dd>
 </dl>
 </dd></dl>

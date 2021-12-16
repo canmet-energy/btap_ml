@@ -33,15 +33,3 @@ set and 10% validation set. However, when validation set is provided, the datase
 set and 20% test set. It should be noted that the data splitting is performed using GroupShuffleSplit function which
 ensures that all data instances for a datapoint_id are included in the respective data set they are split into which
 implies a datapoint_id used for training would not have any instance in the test set.
-
-
-.. note:: The json file created at the end of preprocessing has the following keys:
-    'features': This is all the features after data cleaning and preprocessing. Note that these are not the final features used for modelling.
-    'y_train': This contains the y_train dataset.
-    'X_train': This contains the X_train dataset.
-    'X_test': This contains the X_test dataset.
-    'y_test': This contains the y_test dataset.
-    'y_test_complete': This is similar to the y_test dataset, but has the additional column datapoint_id which would be used needed in creating the final output file after predict.py is run.
-    'X_validate': This contains the X_validate dataset.
-    'y_validate':  This contains the y_validate dataset.
-    'y_validate_complete': This is similar to the y_validate dataset, but has the additional column datapoint_id which would be used needed in creating the final output file after predict.py is run.

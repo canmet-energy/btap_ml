@@ -16,8 +16,7 @@ A minimum of Python 3.8+ is required to reliably run this project.
 Dependencies
 ------------
 
-Basic dependencies required to run the simulations are listed in `requirements.txt`. Open a terminal window and
-run ``pip`` to install the requirements::
+Basic dependencies required to run the simulations are listed in `requirements.txt`. From the terminal, run the command below and these can be installed with::
 
     pip install -r requirements.txt
 
@@ -31,10 +30,6 @@ Pre-commit hooks
 .. note::
 
    This step is only necessary if you are interested in participating in the development of the model.
-
-.. warning::
-
-   ``pre-commit`` is installed as part of the ``requirements-dev.txt``. Ensure to run that step first.
 
 The project makes use of ``pre-commit``, which is a package that helps to keep source code clean and consistent
 through hooks run against every commit. When these hooks detect something to fix they can cause your commit to fail,

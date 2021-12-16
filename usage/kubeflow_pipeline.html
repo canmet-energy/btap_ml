@@ -36,24 +36,37 @@
             
   <section id="kubeflow-pipeline">
 <h1>Kubeflow pipeline<a class="headerlink" href="#kubeflow-pipeline" title="Permalink to this headline">¶</a></h1>
-<p>A kubeflow pipeline exists to run the training and modelling steps automatically.</p>
-<p>Step 1: build the image [THE COMMAND BELOW NEEDS TO BE RECHECKED AND UPDATED]:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>cd pipeline
-docker build -t btap_ml  --build-arg GIT_API_TOKEN=$env:GIT_API_TOKEN .
-</pre></div>
-</div>
-<p>Step 2: run the pipeline</p>
-<p>Check the arguements in the run.py file are correct</p>
+<p>A kubeflow pipeline exists to run the training and modelling steps automatically. To run the pipleline the docker image needs to be built.  Due to restrictions on which image registries are accepted on AAW, for this project images were built on STATCAN AAW contrib. Ideally you should be able to build the docker image on any external registry.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
 <ul class="simple">
-<li><p>in_build_params: the simulation I/O output file used in buiding and testing the model.</p></li>
-<li><p>in_hour: the hourly energy file associated with the in_build_params file.</p></li>
-<li><p>in_build_params_val: the simulation I/O output file used in validating the model.</p></li>
-<li><p>in_hour_val: the hourly energy file associated with the in_build_params_val file.</p></li>
-<li><p>in_weather: the epw file converted to csv.</p></li>
+<li><p>You will need to get the Docker image digest SHA or tag which is to be updated in the yaml files, everytime the image is rebuilt and a new reference is created.</p></li>
+<li><p>The source code and yaml for the pipleline is located in the pipeline folder.</p></li>
 </ul>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python3</span> <span class="n">run</span><span class="o">.</span><span class="n">py</span>
+</div>
+<p>Step 2: Run the pipeline</p>
+<p>Check the arguements in the pipeline.py file are correct</p>
+<ul class="simple">
+<li><p>build_params: The minio location and filename the building simulation I/O file. This would be the path for the electric hourly file if it exist.</p></li>
+<li><p>energy_hour: The minio location and filename for the hourly energy consumption file is located. This would be the path for the electric hourly file if it exist.</p></li>
+<li><p>weather: The minio location and filename for the converted  weather file to be read.</p></li>
+<li><p>build_params_val: The minio location and filename for the building simulation I/O file for the validation set, if it exist.</p></li>
+<li><p>energy_hour_val: The minio location and filename for the hourly energy consumption file for the validation set, if it exist.</p></li>
+<li><p>output_path: The minio location and filename where the output file should be written.</p></li>
+<li><p>featureoutput_path:  The minio location and filename where the feature selection output file should be written.</p></li>
+<li><p>featureestimator: The feature selection estimator type, default value is ‘lasso’</p></li>
+<li><p>param_search: The values are ‘yes’ or ‘no’</p></li>
+<li><p>build_params_gas: The minio location and filename the building simulation I/O file. This would be the path for the gas hourly file if it exist.</p></li>
+<li><p>energy_hour_gas: The minio location and filename for the hourly energy consumption file is located. This would be the path for the gas hourly file if it exist.</p></li>
+<li><p>predictoutput_path:  The minio location and filename where the predict output file should be written.</p></li>
+</ul>
+<p>After ensuring the paths specified in the pipeline.py is verifed:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python3</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">py</span>
+
+<span class="n">python3</span> <span class="n">upload</span><span class="o">-</span><span class="n">pipeline</span><span class="o">.</span><span class="n">py</span>
 </pre></div>
 </div>
+<p>Step 3: Monitor the pipeline run from Kubeflow and once completed successfullly, the respective output files will be stored on minio.</p>
 </section>
 
 

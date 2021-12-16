@@ -22,3 +22,6 @@ For the purpose of this project, XGBRegressor was often slow in selecting the fe
 LassoCV selected same features. Although, LassoCV is used as the default estimator for feature selection, any of the
 other estimator type can be used by specifying the respective esimator type to the estimator_type parameter when
 performing feature selection.
+
+
+.. note:: The json file created has just key value "features" which represents the final features selected for modelling.

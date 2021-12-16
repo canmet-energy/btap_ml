@@ -17,25 +17,20 @@ import shutil
 import time
 from math import sqrt
 
-import keras_tuner as kt
 import numpy as np
 import pandas as pd
 import s3fs
 import tensorflow as tf
 import tensorflow.keras as keras
-# import tensorflow_docs as tfdocs
-# import tensorflow_docs.plots
-# import tensorflow_docs.modeling
-# np.random.seed(1337)
 from keras import backend as K
 from keras import regularizers  # for l2 regularization
 from keras.callbacks import EarlyStopping
-# from keras.layers import Dense, Dropout, GaussianNoise, Conv1D,Flatten
 from keras.layers import BatchNormalization
 from keras.layers.core import Dense, Dropout, Flatten
 from keras.models import Sequential
 from keras.utils import np_utils
 from keras.wrappers.scikit_learn import KerasRegressor
+from keras_tuner import Hyperband
 from matplotlib import pyplot as plt
 from sklearn import metrics
 from sklearn.metrics import mean_absolute_error, mean_squared_error
@@ -66,6 +61,7 @@ def score(y_test, y_pred):
     Args:
         y_test: y testset
         y_pred: y predicted value from the model
+
     Returns:
        mse, rmse, mae and mape scores from comparing the y_test and y_pred values
     """
@@ -87,6 +83,7 @@ def rmse_loss(y_true, y_pred):
     Args:
         y_test: y testset
         y_pred: y predicted value from the model
+
     Returns:
        rmse loss from comparing the y_test and y_pred values
     """
@@ -105,6 +102,7 @@ def model_builder(hp):
 
     Args:
         hp: hyperband object with different hyperparameters to be checked.
+
     Returns:
        model will be built based on the different hyperparameter combinations.
     """
@@ -158,7 +156,7 @@ def predicts_hp(X_train, y_train, X_test, y_test, selected_feature):
     Returns:
        Model built from the set of hyperparameters combined.
     """
-    tuner = kt.Hyperband(model_builder,
+    tuner = Hyperband(model_builder,
                          objective='val_loss',
                          max_epochs=50,
                          overwrite=True,
@@ -276,11 +274,11 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
     output_df = output_df.drop(['y_pred','energy_y','energy_x'],axis=1)
     output_val_df = output_val_df.drop(['y_pred','energy_y','energy_x'],axis=1)
 
-    pl.daily_plot(y_test,'test_set')
-    pl.daily_plot(y_validate,'validation_set')
+#     pl.daily_plot(y_test,'test_set')
+#     pl.daily_plot(y_validate,'validation_set')
 
-    pl.annual_plot(output_df,'test_set')
-    pl.annual_plot(output_val_df,'validation_set')
+#     pl.annual_plot(output_df,'test_set')
+#     pl.annual_plot(output_val_df,'validation_set')
 
 
     print('****************TEST SET****************************')
@@ -439,17 +437,12 @@ def fit_evaluate(args):
     X_train = X_train[selected_features]
     X_test = X_test[selected_features]
     X_validate = X_validate[selected_features]
-
     col_length = X_train.shape[1]
 
     #extracting the test data for the target variable
     y_test_complete = pd.DataFrame(data["y_test_complete"],columns=['energy','datapoint_id','Total Energy'])
     y_test = pd.DataFrame(data["y_test"],columns=['energy','datapoint_id'])
-    #y_test = y_test.drop(['Total Energy'],axis=1)
-    print(y_test)
     y_validate_complete = pd.DataFrame(data["y_validate_complete"],columns=['energy','datapoint_id','Total Energy'])
-    #y_validate_complete = pd.DataFrame(data["y_validate_complete"],columns=['energy','datapoint_id'])
-    print(y_validate_complete)
     y_validate= pd.DataFrame(data["y_validate"],columns=['energy','datapoint_id'])
 
     scalerx= RobustScaler()
@@ -509,7 +502,7 @@ if __name__ == '__main__':
 
     fit_evaluate(args)
 
-    # python3 predict.py --param_search no --in_obj_name output_data/preprocessing_out --features output_data/feature_out --output_path output_data/predict_out
+    # python3 predict.py --param_search no --in_obj_name output_data/preprocessing_out --features output_data/feature_out --output_path output_data/predict_out.json
 
     # launch tensorboard
     # python -m tensorboard.main --logdir="./parameter_search/btap/"

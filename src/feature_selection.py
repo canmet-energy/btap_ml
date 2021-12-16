@@ -29,8 +29,10 @@ def select_features(args):
     """
     Select the feature which contribute most to the prediction for the total energy consumed.
     Default estimator_type used for feature selection is 'LassoCV'
+
     Args:
         args: arguements provided from the main
+
     Returns:
        selected features are returned and uploaded to minio.
     """

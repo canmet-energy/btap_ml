@@ -6,13 +6,14 @@ inputs:
 - {name: in_obj_name, type: String, description: 'Name of the input path for process data'}
 - {name: features, type: String, description: 'Name of the input path for selected features data'}
 - {name: output_path, type: String, description: 'Name of the input path for selected features data'}
-outputs:
-- {name: Output, type: String, description: 'Path where the output data will be stored.'}
+
 
 implementation:
   container:
     # The strict name of a container image that you've pushed to a container registry.
-    image: k8scc01covidacr.azurecr.io/btap:4b99c6aaa4a19a171209e3d62f8aa71591dbcd71
+    image: k8scc01covidacr.azurecr.io/btap:2e0e7e55590eaeb2478f95b23837ce3a77506cba
+
+
     command: [
       python3,
 
@@ -23,14 +24,13 @@ implementation:
       {inputValue: param_search},
 
       --in_obj_name,
-      {inputPath: in_obj_name},
+      {inputValue: in_obj_name},
 
       --features,
-      {inputPath: features},
+      {inputValue: features},
 
       --output_path,
-      {outputPath: output_path},
+      {inputValue: output_path},
 
-      --output_paths,
-      {outputPath: Output},
+
     ]

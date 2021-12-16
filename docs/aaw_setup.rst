@@ -31,7 +31,7 @@ screen. From there you can either use open or create notebooks, or launch VS Cod
 Project source code
 ===================
 
-Once you have the machine set up, you can access the project source code by cloning the git repository. Use the git
+Once you have the machine set up, you can access the project source code by cloning the `git repository <https://github.com/canmet-energy/btap_ml.git>`_. Use the git
 icon on the left side of the Jupyter interface to clone the repository.
 
 The repository is available at https://github.com/canmet-energy/btap_ml. Once the clone is complete you can interact

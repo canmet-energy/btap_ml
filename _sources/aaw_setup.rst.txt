@@ -34,6 +34,10 @@ Project source code
 Once you have the machine set up, you can access the project source code by cloning the git repository. Use the git
 icon on the left side of the Jupyter interface to clone the repository.
 
+The repository is available at https://github.com/canmet-energy/btap_ml. Once the clone is complete you can interact
+with the files through `the jupyter interface <https://statcan.github.io/daaas/en/1-Experiments/Jupyter/>`_, and use
+the launcher interface (top left of interface) to open a new terminal to run the scripts in the project.
+
 Required packages
 -----------------
 

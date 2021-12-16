@@ -36,12 +36,12 @@ implies a datapoint_id used for training would not have any instance in the test
 
 
 .. note:: The json file created at the end of preprocessing has the following keys:
-    'features': This is all the features after data cleaning and preprocessing. Note that these are not the final features used for modelling. 
-    'y_train': This contains the y_train dataset. 
-    'X_train': This contains the X_train dataset. 
-    'X_test': This contains the X_test dataset. 
-    'y_test': This contains the y_test dataset. 
-    'y_test_complete': This is similar to the y_test dataset, but has the additional column datapoint_id which would be used needed in creating the final output file after predict.py is run. 
-    'X_validate': This contains the X_validate dataset. 
-    'y_validate':  This contains the y_validate dataset. 
+    'features': This is all the features after data cleaning and preprocessing. Note that these are not the final features used for modelling.
+    'y_train': This contains the y_train dataset.
+    'X_train': This contains the X_train dataset.
+    'X_test': This contains the X_test dataset.
+    'y_test': This contains the y_test dataset.
+    'y_test_complete': This is similar to the y_test dataset, but has the additional column datapoint_id which would be used needed in creating the final output file after predict.py is run.
+    'X_validate': This contains the X_validate dataset.
+    'y_validate':  This contains the y_validate dataset.
     'y_validate_complete': This is similar to the y_validate dataset, but has the additional column datapoint_id which would be used needed in creating the final output file after predict.py is run.

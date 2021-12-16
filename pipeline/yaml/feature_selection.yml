@@ -12,8 +12,8 @@ implementation:
   container:
     # The strict name of a container image that you've pushed to a container registry.
     image: k8scc01covidacr.azurecr.io/btap:2e0e7e55590eaeb2478f95b23837ce3a77506cba
-    
-    
+
+
     command: [
       python3,
 
@@ -28,5 +28,5 @@ implementation:
 
       --output_path,
       {inputValue: output_path},
-      
+
     ]

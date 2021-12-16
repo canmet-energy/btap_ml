@@ -11,12 +11,12 @@ inputs:
 - {name: in_build_params_gas, type: String, description: 'The minio location and filename the building simulation I/O file. This would be the path for the gas hourly file if it exist.'}
 - {name: output_path, type: String, description: 'The minio location and filename where the output file should be written.'}
 
-     
+
 implementation:
    container:
     # The strict name of a container image that you've pushed to a container registry.
     image: k8scc01covidacr.azurecr.io/btap:2e0e7e55590eaeb2478f95b23837ce3a77506cba
-    
+
     command: [
       python3,
 
@@ -47,7 +47,7 @@ implementation:
 
       --output_path,
       {inputValue: output_path},
-      
-     
-      
+
+
+
     ]

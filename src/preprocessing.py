@@ -130,7 +130,7 @@ def read_weather(path: str) -> pd.DataFrame:
     except pyarrow.lib.ArrowInvalid as err:
         logger.error("Invalid weather file format supplied. Is %s a parquet file?", path)
         sys.exit(1)
-    
+
     # Remove spurious columns.
     weather_df = clean_data(weather_df)
     # date_int is used later to join data together.

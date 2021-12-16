@@ -2,7 +2,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Workflow
 metadata:
   generateName: btap-pipeline-
-  annotations: {pipelines.kubeflow.org/kfp_sdk_version: 1.8.6, pipelines.kubeflow.org/pipeline_compilation_time: '2021-12-15T21:28:05.421119',
+  annotations: {pipelines.kubeflow.org/kfp_sdk_version: 1.8.6, pipelines.kubeflow.org/pipeline_compilation_time: '2021-12-16T15:16:34.424887',
     pipelines.kubeflow.org/pipeline_spec: '{"description": "MLP employed for Total
       energy consumed regression problem", "inputs": [{"default": "input_data/output_elec_2021-11-05.xlsx",
       "name": "build_params", "optional": true}, {"default": "input_data/total_hourly_res_elec_2021-11-05.csv",
@@ -35,9 +35,6 @@ spec:
       - {name: param_search}
       - {name: predictoutput_path}
       - {name: weather}
-      artifacts:
-      - {name: featureoutput_path}
-      - {name: output_path}
     dag:
       tasks:
       - name: feature-selection-function
@@ -47,18 +44,16 @@ spec:
           parameters:
           - {name: featureestimator, value: '{{inputs.parameters.featureestimator}}'}
           - {name: featureoutput_path, value: '{{inputs.parameters.featureoutput_path}}'}
-          artifacts:
-          - {name: output_path, from: '{{inputs.artifacts.output_path}}'}
+          - {name: output_path, value: '{{inputs.parameters.output_path}}'}
       - name: predict-function
         template: predict-function
         dependencies: [feature-selection-function]
         arguments:
           parameters:
+          - {name: featureoutput_path, value: '{{inputs.parameters.featureoutput_path}}'}
+          - {name: output_path, value: '{{inputs.parameters.output_path}}'}
           - {name: param_search, value: '{{inputs.parameters.param_search}}'}
           - {name: predictoutput_path, value: '{{inputs.parameters.predictoutput_path}}'}
-          artifacts:
-          - {name: featureoutput_path, from: '{{inputs.artifacts.featureoutput_path}}'}
-          - {name: output_path, from: '{{inputs.artifacts.output_path}}'}
       - name: preprocess-data-function
         template: preprocess-data-function
         arguments:
@@ -74,16 +69,18 @@ spec:
   - name: feature-selection-function
     container:
       args: []
-      command: [python3, /pipelines/feature_selection.py, --in_obj_name, /tmp/inputs/in_obj_name/data,
+      command: [python3, /pipelines/feature_selection.py, --in_obj_name, '{{inputs.parameters.output_path}}',
         --estimator_type, '{{inputs.parameters.featureestimator}}', --output_path,
         '{{inputs.parameters.featureoutput_path}}']
-      image: k8scc01covidacr.azurecr.io/btap:332df367d6e78da7e0651e2b04752081b787ca58
+      image: k8scc01covidacr.azurecr.io/btap:c542303faef7668c77352d1b86b5e35d5282b709
+      resources:
+        limits: {memory: 32Gi}
+        requests: {memory: 16Gi}
     inputs:
       parameters:
       - {name: featureestimator}
       - {name: featureoutput_path}
-      artifacts:
-      - {name: output_path, path: /tmp/inputs/in_obj_name/data}
+      - {name: output_path}
     metadata:
       labels:
         pipelines.kubeflow.org/kfp_sdk_version: 1.8.6
@@ -92,31 +89,34 @@ spec:
       annotations: {pipelines.kubeflow.org/component_spec: '{"description": "Selects
           the feature that would be used in building the model", "implementation":
           {"container": {"command": ["python3", "/pipelines/feature_selection.py",
-          "--in_obj_name", {"inputPath": "in_obj_name"}, "--estimator_type", {"inputValue":
+          "--in_obj_name", {"inputValue": "in_obj_name"}, "--estimator_type", {"inputValue":
           "estimator_type"}, "--output_path", {"inputValue": "output_path"}], "image":
-          "k8scc01covidacr.azurecr.io/btap:332df367d6e78da7e0651e2b04752081b787ca58"}},
+          "k8scc01covidacr.azurecr.io/btap:c542303faef7668c77352d1b86b5e35d5282b709"}},
           "inputs": [{"description": "Name of minio bucket to access data from", "name":
           "in_obj_name", "type": "String"}, {"description": "Name of minio bucket
           to access data from", "name": "estimator_type", "type": "String"}, {"description":
           "Path where the output data will be stored.", "name": "output_path", "type":
           "String"}], "name": "Feature selection Function"}', pipelines.kubeflow.org/component_ref: '{"digest":
-          "a5acc81645eead3adc797764c1e7b44997990fa4c17d98d4fd3e32b374dcfa4e", "url":
+          "bac4e3d0ba59838aeb502ff187680fffeb073e74e1d8ff254d8c55772f23ba2b", "url":
           "yaml/feature_selection.yml"}', pipelines.kubeflow.org/arguments.parameters: '{"estimator_type":
-          "{{inputs.parameters.featureestimator}}", "output_path": "{{inputs.parameters.featureoutput_path}}"}'}
+          "{{inputs.parameters.featureestimator}}", "in_obj_name": "{{inputs.parameters.output_path}}",
+          "output_path": "{{inputs.parameters.featureoutput_path}}"}'}
   - name: predict-function
     container:
       args: []
       command: [python3, /pipelines/predict.py, --param_search, '{{inputs.parameters.param_search}}',
-        --in_obj_name, /tmp/inputs/in_obj_name/data, --features, /tmp/inputs/features/data,
+        --in_obj_name, '{{inputs.parameters.output_path}}', --features, '{{inputs.parameters.featureoutput_path}}',
         --output_path, '{{inputs.parameters.predictoutput_path}}']
-      image: k8scc01covidacr.azurecr.io/btap:332df367d6e78da7e0651e2b04752081b787ca58
+      image: k8scc01covidacr.azurecr.io/btap:c542303faef7668c77352d1b86b5e35d5282b709
+      resources:
+        limits: {memory: 32Gi}
+        requests: {memory: 16Gi}
     inputs:
       parameters:
+      - {name: featureoutput_path}
+      - {name: output_path}
       - {name: param_search}
       - {name: predictoutput_path}
-      artifacts:
-      - {name: featureoutput_path, path: /tmp/inputs/features/data}
-      - {name: output_path, path: /tmp/inputs/in_obj_name/data}
     metadata:
       labels:
         pipelines.kubeflow.org/kfp_sdk_version: 1.8.6
@@ -125,8 +125,8 @@ spec:
       annotations: {pipelines.kubeflow.org/component_spec: '{"description": "Predicts
           the output variable", "implementation": {"container": {"command": ["python3",
           "/pipelines/predict.py", "--param_search", {"inputValue": "param_search"},
-          "--in_obj_name", {"inputPath": "in_obj_name"}, "--features", {"inputPath":
-          "features"}, "--output_path", {"inputValue": "output_path"}], "image": "k8scc01covidacr.azurecr.io/btap:332df367d6e78da7e0651e2b04752081b787ca58"}},
+          "--in_obj_name", {"inputValue": "in_obj_name"}, "--features", {"inputValue":
+          "features"}, "--output_path", {"inputValue": "output_path"}], "image": "k8scc01covidacr.azurecr.io/btap:c542303faef7668c77352d1b86b5e35d5282b709"}},
           "inputs": [{"description": "Specify whether to search for hyperparameter,
           yes or no", "name": "param_search", "type": "String"}, {"description": "Name
           of the input path for process data", "name": "in_obj_name", "type": "String"},
@@ -134,9 +134,11 @@ spec:
           "features", "type": "String"}, {"description": "Name of the input path for
           selected features data", "name": "output_path", "type": "String"}], "name":
           "Predict Function"}', pipelines.kubeflow.org/component_ref: '{"digest":
-          "a0a1a992e3f13418620dd51fdf4cb435b384b1063913991106e2e89d89dee6ce", "url":
-          "yaml/predict.yml"}', pipelines.kubeflow.org/arguments.parameters: '{"output_path":
-          "{{inputs.parameters.predictoutput_path}}", "param_search": "{{inputs.parameters.param_search}}"}'}
+          "d42cadf100c90a87fc530f23ec20f6ea41f6373f618e464ee09721c9dfdea381", "url":
+          "yaml/predict.yml"}', pipelines.kubeflow.org/arguments.parameters: '{"features":
+          "{{inputs.parameters.featureoutput_path}}", "in_obj_name": "{{inputs.parameters.output_path}}",
+          "output_path": "{{inputs.parameters.predictoutput_path}}", "param_search":
+          "{{inputs.parameters.param_search}}"}'}
   - name: preprocess-data-function
     container:
       args: []
@@ -146,7 +148,7 @@ spec:
         '{{inputs.parameters.build_params_val}}', --in_hour_gas, '{{inputs.parameters.energy_hour_gas}}',
         --in_build_params_gas, '{{inputs.parameters.build_params_gas}}', --output_path,
         '{{inputs.parameters.output_path}}']
-      image: k8scc01covidacr.azurecr.io/btap:332df367d6e78da7e0651e2b04752081b787ca58
+      image: k8scc01covidacr.azurecr.io/btap:c542303faef7668c77352d1b86b5e35d5282b709
       resources:
         limits: {memory: 32Gi}
         requests: {memory: 16Gi}
@@ -173,7 +175,7 @@ spec:
           {"inputValue": "in_hour_val"}, "--in_build_params_val", {"inputValue": "in_build_params_val"},
           "--in_hour_gas", {"inputValue": "in_hour_gas"}, "--in_build_params_gas",
           {"inputValue": "in_build_params_gas"}, "--output_path", {"inputValue": "output_path"}],
-          "image": "k8scc01covidacr.azurecr.io/btap:332df367d6e78da7e0651e2b04752081b787ca58"}},
+          "image": "k8scc01covidacr.azurecr.io/btap:c542303faef7668c77352d1b86b5e35d5282b709"}},
           "inputs": [{"description": "The minio location and filename for the hourly
           energy consumption file is located. This would be the path for the electric
           hourly file if it exist.", "name": "in_hour", "type": "String"}, {"description":
@@ -193,7 +195,7 @@ spec:
           "name": "in_build_params_gas", "type": "String"}, {"description": "The minio
           location and filename where the output file should be written.", "name":
           "output_path", "type": "String"}], "name": "Preprocess data function"}',
-        pipelines.kubeflow.org/component_ref: '{"digest": "85bcd17c42101099a38e93d41c752b601e44bebfbe3b339ec1a02f42ff38c70c",
+        pipelines.kubeflow.org/component_ref: '{"digest": "e0d7e93c67f4051ae128f30878fb1357e702a7d45fc32822084a957235d15ade",
           "url": "yaml/preprocessing.yml"}', pipelines.kubeflow.org/arguments.parameters: '{"in_build_params":
           "{{inputs.parameters.build_params}}", "in_build_params_gas": "{{inputs.parameters.build_params_gas}}",
           "in_build_params_val": "{{inputs.parameters.build_params_val}}", "in_hour":
@@ -215,9 +217,4 @@ spec:
     - {name: build_params_gas, value: ''}
     - {name: energy_hour_gas, value: ''}
     - {name: predictoutput_path, value: output_data/predict_out}
-    artifacts:
-    - name: output_path
-      raw: {data: '{{workflow.parameters.output_path}}'}
-    - name: featureoutput_path
-      raw: {data: '{{workflow.parameters.featureoutput_path}}'}
   serviceAccountName: pipeline-runner

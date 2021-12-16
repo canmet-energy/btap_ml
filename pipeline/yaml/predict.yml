@@ -11,7 +11,7 @@ inputs:
 implementation:
   container:
     # The strict name of a container image that you've pushed to a container registry.
-    image: k8scc01covidacr.azurecr.io/btap:332df367d6e78da7e0651e2b04752081b787ca58
+    image: k8scc01covidacr.azurecr.io/btap:c542303faef7668c77352d1b86b5e35d5282b709
     
         
     command: [
@@ -24,10 +24,10 @@ implementation:
       {inputValue: param_search},
 
       --in_obj_name,
-      {inputPath: in_obj_name},
+      {inputValue: in_obj_name},
 
       --features,
-      {inputPath: features},
+      {inputValue: features},
 
       --output_path,
       {inputValue: output_path},

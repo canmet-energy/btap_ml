@@ -26,6 +26,8 @@ def btap_pipeline(  build_params="input_data/output_elec_2021-11-05.xlsx",
                     featureoutput_path="output_data/feature_out",
                     featureestimator="lasso",
                     param_search="no",
+                    #build_params_gas= 'input_data/output_gas_2021-11-05.xlsx',
+                    #energy_hour_gas ='input_data/total_hourly_res_gas_2021-11-05.csv',
                     build_params_gas= '',
                     energy_hour_gas ='',
                     predictoutput_path="output_data/predict_out",
@@ -52,7 +54,7 @@ def btap_pipeline(  build_params="input_data/output_elec_2021-11-05.xlsx",
                             )
 
     preprocess_.set_memory_request('16Gi').set_memory_limit('32Gi')
-    #preprocess_.set_cpu_request('1').set_cpu_limit('1')
+    
     
     #preprocess_output_ref = preprocess_.output
 
@@ -60,7 +62,7 @@ def btap_pipeline(  build_params="input_data/output_elec_2021-11-05.xlsx",
                                            in_obj_name=output_path,
                                            estimator_type=featureestimator,
                                            output_path=featureoutput_path)
-    #feature_selection_.set_memory_request('32Gi').set_memory_limit('64Gi')
+    feature_selection_.set_memory_request('16Gi').set_memory_limit('32Gi')
     #feature_selection_.set_cpu_request('1').set_cpu_limit('1')
     
     #feature_output_ref = feature_selection_.output
@@ -71,7 +73,7 @@ def btap_pipeline(  build_params="input_data/output_elec_2021-11-05.xlsx",
                        features=featureoutput_path,
                        param_search=param_search,
                        output_path=predictoutput_path )
-    #predict_.set_memory_request('32Gi').set_memory_limit('64Gi')
+    predict_.set_memory_request('16Gi').set_memory_limit('32Gi')
     #predict_.set_cpu_request('1').set_cpu_limit('1')
     predict_.after(feature_selection_)
     

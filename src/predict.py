@@ -16,21 +16,15 @@ import os
 import shutil
 import time
 from math import sqrt
-
-import keras_tuner as kt
+from keras_tuner import Hyperband
 import numpy as np
 import pandas as pd
 import s3fs
 import tensorflow as tf
 import tensorflow.keras as keras
-# import tensorflow_docs as tfdocs
-# import tensorflow_docs.plots
-# import tensorflow_docs.modeling
-# np.random.seed(1337)
 from keras import backend as K
 from keras import regularizers  # for l2 regularization
 from keras.callbacks import EarlyStopping
-# from keras.layers import Dense, Dropout, GaussianNoise, Conv1D,Flatten
 from keras.layers import BatchNormalization
 from keras.layers.core import Dense, Dropout, Flatten
 from keras.models import Sequential
@@ -47,7 +41,6 @@ from sklearn.preprocessing import (MinMaxScaler, Normalizer, RobustScaler,
 from tensorboard.plugins.hparams import api as hp
 from tensorflow.keras import layers
 from tensorflow.keras.optimizers import Adam
-
 import config as acm
 import plot as pl
 
@@ -158,7 +151,7 @@ def predicts_hp(X_train, y_train, X_test, y_test, selected_feature):
     Returns:
        Model built from the set of hyperparameters combined.
     """
-    tuner = kt.Hyperband(model_builder,
+    tuner = Hyperband(model_builder,
                          objective='val_loss',
                          max_epochs=50,
                          overwrite=True,

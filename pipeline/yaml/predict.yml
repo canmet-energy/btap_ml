@@ -14,8 +14,7 @@ implementation:
     image: k8scc01covidacr.azurecr.io/btap:22b925247f1fd668edefc8bf21143a3082864d26
 
 
-    command: [
-      python3,
+    command: [      python3,
 
       # Path of the program inside the container
       /pipelines/predict.py,

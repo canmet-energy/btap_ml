@@ -1,4 +1,4 @@
-keras
+keras==2.6.0
 keras_tuner
 kfp==1.8.6
 kfp_pipeline_spec

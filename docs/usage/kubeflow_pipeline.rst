@@ -37,4 +37,5 @@ After ensuring the paths specified in the pipeline.py is verifed::
 Monitor the pipeline run from `Recent Pipeline Runs on AAW <https://kubeflow.aaw.cloud.statcan.ca/?ns=nrcan-btap>`_   and once completed successfullly, the respective output files will be stored on minio. Alternatively, click on `BTAP ML <https://kubeflow.aaw.cloud.statcan.ca/_/pipeline/#/experiments>`_ , then click on the desired run and check its log to monitor the pipeline run.
 
 
-
+.. note::
+   Ensure you are in nrcan-btap namespace when you check the links above. 

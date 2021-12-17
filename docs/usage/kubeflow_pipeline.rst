@@ -39,3 +39,4 @@ Monitor the pipeline run from `Recent Pipeline Runs on AAW <https://kubeflow.aaw
 
 .. note::
    - Ensure you are in nrcan-btap namespace when you check the links above.
+   - Ensure you are in nrcan-btap namespace when you check the links above.

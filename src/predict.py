@@ -1,6 +1,5 @@
 '''
 Uses the output from preprocessing and feature selection from mino, builds the model and then evaluate the model.
-
 Args:
     in_obj_name: minio locationa and name of data file to be read, ideally the output file generated from preprocessing i.e. preprocessing_out
     features: minio locationa and name of data file to be read, ideally the output file generated from feature selection i.e. feature_out
@@ -57,11 +56,9 @@ logger = logging.getLogger(__name__)
 def score(y_test, y_pred):
     """
     Used to compute the mse, rmse and mae scores
-
     Args:
         y_test: y testset
         y_pred: y predicted value from the model
-
     Returns:
        mse, rmse, mae and mape scores from comparing the y_test and y_pred values
     """
@@ -79,11 +76,9 @@ def score(y_test, y_pred):
 def rmse_loss(y_true, y_pred):
     """
     A customized rmse score that takes a sum of y_pred and y_test before computing the rmse score
-
     Args:
         y_test: y testset
         y_pred: y predicted value from the model
-
     Returns:
        rmse loss from comparing the y_test and y_pred values
     """
@@ -97,12 +92,9 @@ def rmse_loss(y_true, y_pred):
 def model_builder(hp):
     """
     Builds the model that would be used to search for hyperparameter.
-
     The hyperparameters search inclues activation, regularizers, dropout_rate, learning_rate, and optimizer
-
     Args:
         hp: hyperband object with different hyperparameters to be checked.
-
     Returns:
        model will be built based on the different hyperparameter combinations.
     """
@@ -145,14 +137,12 @@ def model_builder(hp):
 def predicts_hp(X_train, y_train, X_test, y_test, selected_feature):
     """
     Using the set of hyperparameter combined,the model built is used to make predictions
-
     Args:
         X_train: X train set
         y_train: y train set
         X_test: X test set
         y_test: y test set
         selected_feature: selected features that would be used to build the model
-
     Returns:
        Model built from the set of hyperparameters combined.
     """
@@ -184,15 +174,14 @@ def predicts_hp(X_train, y_train, X_test, y_test, selected_feature):
     """)
     result = best_hps
 
-    #logdir = os.path.join("../output/parameter_search/btap", datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
-#     hist_callback = tf.keras.callbacks.TensorBoard(
-#             logdir,
-#                                                    histogram_freq=1,
-#                                                    embeddings_freq=1,
-#                                                    update_freq='epoch',
-#                                                    write_graph=True,
-#                                                    write_steps_per_second=False
-#                                                    )
+    logdir = os.path.join("../output/parameter_search/btap", datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
+    hist_callback = tf.keras.callbacks.TensorBoard(logdir,
+                                                   histogram_freq=1,
+                                                   embeddings_freq=1,
+                                                   update_freq='epoch',
+                                                   write_graph=True,
+                                                   write_steps_per_second=False
+                                                   )
 
     # Build the model with the optimal hyperparameters
     model = tuner.hypermodel.build(best_hps)
@@ -203,13 +192,7 @@ def predicts_hp(X_train, y_train, X_test, y_test, selected_feature):
                         validation_split=0.2,
                         callbacks=[stop_early, hist_callback],
                         )
-    try:
-         pl.save_plot(history)
-    except ValueError as ve:
-        logger.error("Unable to produce plots. Plotting threw an exception: %s", ve)
-    except matplotlib.units.ConversionError as ce:
-        logger.error("Unable to produce plots. matplotlib conversion error: %s", ce)
-
+    pl.save_plot(history)
 
     val_acc_per_epoch = history.history['mae']
     best_epoch = val_acc_per_epoch.index(max(val_acc_per_epoch)) + 1
@@ -225,7 +208,6 @@ def predicts_hp(X_train, y_train, X_test, y_test, selected_feature):
 def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete):
     """
     The model selected with the best hyperparameter is used to make predictions.
-
     Args:
         model: model built from training
         X_test: X testset
@@ -234,7 +216,6 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
         X_validate: X validationset
         y_validate: y validationset
         validate: validation dataset
-
     Returns:
         metric: evaluation results containing the loss value from the testset prediction,
         annual_metric: predicted value for each datapooint_id is summed to calculate the annual energy consumed and the loss value from the testset prediction,
@@ -312,9 +293,7 @@ def create_model(dense_layers, activation, optimizer, dropout_rate, length, lear
                  X_validate, y_validate, y_validate_complete):
     """
     Creates a model with defaulted values without need to perform an hyperparameter search at all times.
-
     Its initutive to have run the hyperparameter search beforehand to know the hyperparameter value to set.
-
     Args:
         dense_layers: number of layers for the model architecture e.g for a model with 3 layers, values will be passed as [8,20,30]
         activation: activation function to be used e.g relu, tanh
@@ -332,7 +311,6 @@ def create_model(dense_layers, activation, optimizer, dropout_rate, length, lear
         X_validate: X validation set
         y_validate: y validation set
         y_validate_complete: dataframe containing the target variable with corresponding datapointid for the validation set
-
     Returns:
         metric: evaluation results containing the loss value from the testset prediction,
         annual_metric: predicted value for each datapooint_id is summed to calculate the annual energy consumed and the loss value from the testset prediction,
@@ -368,9 +346,9 @@ def create_model(dense_layers, activation, optimizer, dropout_rate, length, lear
                   metrics=['mae', 'mse', 'mape'])
     # Define callback
     early_stopping = EarlyStopping(monitor='loss', patience=5)
-#     logdir = os.path.join("../output/parameter_search/btap", datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
-#     hist_callback = tf.keras.callbacks.TensorBoard(logdir, histogram_freq=1)
-#     logger = keras.callbacks.CSVLogger('../output/metric.csv', append=True)
+    logdir = os.path.join("../output/parameter_search/btap", datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
+    hist_callback = tf.keras.callbacks.TensorBoard(logdir, histogram_freq=1)
+    logger = keras.callbacks.CSVLogger('../output/metric.csv', append=True)
     output_df = ''
 
     # prepare the model with target scaling
@@ -378,13 +356,14 @@ def create_model(dense_layers, activation, optimizer, dropout_rate, length, lear
     np.random.seed(7)
     history = model.fit(X_train,
                         y_train,
-                        callbacks=[
-                                   #logger,
+                        callbacks=[logger,
                                    early_stopping,
-                                   #hist_callback,
+                                   hist_callback,
                                    ],
                         epochs=epochs,
+                        #batch_size =batch_size,
                         verbose=1,
+                        # shuffle=False,
                         validation_split=0.2)
 #     pl.save_plot(history)
 
@@ -400,10 +379,8 @@ def create_model(dense_layers, activation, optimizer, dropout_rate, length, lear
 def fit_evaluate(args):
     """
     Downloads the output from preprocessing and feature selection from mino, builds the model and then evaluate the model.
-
     Args:
          args: arguements provided from the main
-
     Returns:
         the results from the model prediction is uploaded to minio
     """
@@ -421,13 +398,13 @@ def fit_evaluate(args):
                              data='')
     logger.info("read_output s3 connection %s", data)
 
-#     # removing log directory
-#     shutil.rmtree('../output/parameter_search/btap', ignore_errors=True)
+    # removing log directory
+    shutil.rmtree('../output/parameter_search/btap', ignore_errors=True)
 
-#     try:
-#         os.remove('../output/metric.csv')
-#     except OSError:
-#         pass
+    try:
+        os.remove('../output/metric.csv')
+    except OSError:
+        pass
 
     data = json.load(data)
     data2 = json.load(data2)
@@ -513,3 +490,15 @@ if __name__ == '__main__':
     # launch tensorboard
     # python -m tensorboard.main --logdir="./parameter_search/btap/"
     # https://kubeflow.aaw.cloud.statcan.ca/notebook/nrcan-btap/reg-cpu-notebook/proxy/6007/
+© 2021 GitHub, Inc.
+Terms
+Privacy
+Security
+Status
+Docs
+Contact GitHub
+Pricing
+API
+Training
+Blog
+About

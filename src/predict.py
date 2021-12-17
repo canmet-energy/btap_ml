@@ -209,7 +209,7 @@ def predicts_hp(X_train, y_train, X_test, y_test, selected_feature):
         logger.error("Unable to produce plots. Plotting threw an exception: %s", ve)
     except matplotlib.units.ConversionError as ce:
         logger.error("Unable to produce plots. matplotlib conversion error: %s", ce)
-   
+
 
     val_acc_per_epoch = history.history['mae']
     best_epoch = val_acc_per_epoch.index(max(val_acc_per_epoch)) + 1

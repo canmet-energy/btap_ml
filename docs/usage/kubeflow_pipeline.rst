@@ -34,4 +34,4 @@ After ensuring the paths specified in the pipeline.py is verifed::
    python3 upload-pipeline.py
    
 
-Step 3: Monitor the pipeline run from Kubeflow and once completed successfullly, the respective output files will be stored on minio. 
+Step 3: Monitor the pipeline run from `Recent Pipeline Runs on AAW <https://kubeflow.aaw.cloud.statcan.ca/?ns=nrcan-btap>`_   and once completed successfullly, the respective output files will be stored on minio. 

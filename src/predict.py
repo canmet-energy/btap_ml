@@ -180,14 +180,15 @@ def predicts_hp(X_train, y_train, X_test, y_test, selected_feature):
     """)
     result = best_hps
 
-    logdir = os.path.join("../output/parameter_search/btap", datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
-    hist_callback = tf.keras.callbacks.TensorBoard(logdir,
-                                                   histogram_freq=1,
-                                                   embeddings_freq=1,
-                                                   update_freq='epoch',
-                                                   write_graph=True,
-                                                   write_steps_per_second=False
-                                                   )
+    #logdir = os.path.join("../output/parameter_search/btap", datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
+#     hist_callback = tf.keras.callbacks.TensorBoard(
+#             logdir,
+#                                                    histogram_freq=1,
+#                                                    embeddings_freq=1,
+#                                                    update_freq='epoch',
+#                                                    write_graph=True,
+#                                                    write_steps_per_second=False
+#                                                    )
 
     # Build the model with the optimal hyperparameters
     model = tuner.hypermodel.build(best_hps)
@@ -198,7 +199,13 @@ def predicts_hp(X_train, y_train, X_test, y_test, selected_feature):
                         validation_split=0.2,
                         callbacks=[stop_early, hist_callback],
                         )
-    pl.save_plot(history)
+    try:
+         pl.save_plot(history)
+    except ValueError as ve:
+        logger.error("Unable to produce plots. Plotting threw an exception: %s", ve)
+    except matplotlib.units.ConversionError as ce:
+        logger.error("Unable to produce plots. matplotlib conversion error: %s", ce)
+   
 
     val_acc_per_epoch = history.history['mae']
     best_epoch = val_acc_per_epoch.index(max(val_acc_per_epoch)) + 1
@@ -357,9 +364,9 @@ def create_model(dense_layers, activation, optimizer, dropout_rate, length, lear
                   metrics=['mae', 'mse', 'mape'])
     # Define callback
     early_stopping = EarlyStopping(monitor='loss', patience=5)
-    logdir = os.path.join("../output/parameter_search/btap", datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
-    hist_callback = tf.keras.callbacks.TensorBoard(logdir, histogram_freq=1)
-    logger = keras.callbacks.CSVLogger('../output/metric.csv', append=True)
+#     logdir = os.path.join("../output/parameter_search/btap", datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
+#     hist_callback = tf.keras.callbacks.TensorBoard(logdir, histogram_freq=1)
+#     logger = keras.callbacks.CSVLogger('../output/metric.csv', append=True)
     output_df = ''
 
     # prepare the model with target scaling
@@ -367,14 +374,13 @@ def create_model(dense_layers, activation, optimizer, dropout_rate, length, lear
     np.random.seed(7)
     history = model.fit(X_train,
                         y_train,
-                        callbacks=[logger,
+                        callbacks=[
+                                   #logger,
                                    early_stopping,
-                                   hist_callback,
+                                   #hist_callback,
                                    ],
                         epochs=epochs,
-                        #batch_size =batch_size,
                         verbose=1,
-                        # shuffle=False,
                         validation_split=0.2)
 #     pl.save_plot(history)
 
@@ -411,13 +417,13 @@ def fit_evaluate(args):
                              data='')
     logger.info("read_output s3 connection %s", data)
 
-    # removing log directory
-    shutil.rmtree('../output/parameter_search/btap', ignore_errors=True)
+#     # removing log directory
+#     shutil.rmtree('../output/parameter_search/btap', ignore_errors=True)
 
-    try:
-        os.remove('../output/metric.csv')
-    except OSError:
-        pass
+#     try:
+#         os.remove('../output/metric.csv')
+#     except OSError:
+#         pass
 
     data = json.load(data)
     data2 = json.load(data2)

@@ -34,4 +34,7 @@ After ensuring the paths specified in the pipeline.py is verifed::
    python3 pipeline.py
    python3 upload-pipeline.py
 
-Monitor the pipeline run from `Recent Pipeline Runs on AAW <https://kubeflow.aaw.cloud.statcan.ca/?ns=nrcan-btap>`_   and once completed successfullly, the respective output files will be stored on minio.
+Monitor the pipeline run from `Recent Pipeline Runs on AAW <https://kubeflow.aaw.cloud.statcan.ca/?ns=nrcan-btap>`_   and once completed successfullly, the respective output files will be stored on minio. Alternatively, click on `BTAP ML <https://kubeflow.aaw.cloud.statcan.ca/_/pipeline/#/experiments>`_ , then click on the desired run and check its log to monitor the pipeline run.
+
+
+

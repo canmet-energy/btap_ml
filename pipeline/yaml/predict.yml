@@ -11,9 +11,15 @@ inputs:
 implementation:
   container:
     # The strict name of a container image that you've pushed to a container registry.
+<<<<<<< HEAD
     image: k8scc01covidacr.azurecr.io/btap:22b925247f1fd668edefc8bf21143a3082864d26
     
         
+=======
+    image: k8scc01covidacr.azurecr.io/btap:2e0e7e55590eaeb2478f95b23837ce3a77506cba
+
+
+>>>>>>> 0bc7fa3dba8ffebb68ceeea7d548d058fa59b0fc
     command: [
       python3,
 
@@ -32,5 +38,5 @@ implementation:
       --output_path,
       {inputValue: output_path},
 
-      
+
     ]

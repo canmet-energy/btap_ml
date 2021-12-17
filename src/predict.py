@@ -17,7 +17,6 @@ import shutil
 import time
 from math import sqrt
 
-from keras_tuner import Hyperband
 import numpy as np
 import pandas as pd
 import s3fs
@@ -31,6 +30,7 @@ from keras.layers.core import Dense, Dropout, Flatten
 from keras.models import Sequential
 from keras.utils import np_utils
 from keras.wrappers.scikit_learn import KerasRegressor
+from keras_tuner import Hyperband
 from matplotlib import pyplot as plt
 from sklearn import metrics
 from sklearn.metrics import mean_absolute_error, mean_squared_error
@@ -42,6 +42,7 @@ from sklearn.preprocessing import (MinMaxScaler, Normalizer, RobustScaler,
 from tensorboard.plugins.hparams import api as hp
 from tensorflow.keras import layers
 from tensorflow.keras.optimizers import Adam
+
 import config as acm
 import plot as pl
 
@@ -60,6 +61,7 @@ def score(y_test, y_pred):
     Args:
         y_test: y testset
         y_pred: y predicted value from the model
+
     Returns:
        mse, rmse, mae and mape scores from comparing the y_test and y_pred values
     """
@@ -81,6 +83,7 @@ def rmse_loss(y_true, y_pred):
     Args:
         y_test: y testset
         y_pred: y predicted value from the model
+
     Returns:
        rmse loss from comparing the y_test and y_pred values
     """
@@ -99,6 +102,7 @@ def model_builder(hp):
 
     Args:
         hp: hyperband object with different hyperparameters to be checked.
+
     Returns:
        model will be built based on the different hyperparameter combinations.
     """

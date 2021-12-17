@@ -1,15 +1,17 @@
 Kubeflow pipeline
 =================
 
-A kubeflow pipeline exists to run the training and modelling steps automatically. To run the pipleline the docker image needs to be built.  Due to restrictions on which image registries are accepted on AAW, for this project images were built on STATCAN AAW contrib. Ideally you should be able to build the docker image on any external registry. 
+A kubeflow pipeline exists to run the training and modelling steps automatically. To run the pipleline the docker
+image needs to be built.  Due to restrictions on which image registries are accepted on AAW, for this project images
+were built on `STATCAN AAW contrib <https://github.com/StatCan/aaw-contrib-containers>`_. Other platforms may allow
+to build the docker image on any external registry.
 
 .. note::
 
-   - You will need to get the Docker image digest SHA or tag which is to be updated in the yaml files, everytime the image is rebuilt and a new reference is created.
-   - The source code and yaml for the pipleline is located in the pipeline folder. 
-   
-   
-Step 2: Run the pipeline 
+   - You will need to get the Docker image digest SHA or tag which is to be updated in the yaml files, everytime the
+     image is rebuilt and a new reference is created.
+   - The source code and yaml for the pipleline is located in the pipeline folder.
+
 
 Check the arguements in the pipeline.py file are correct
 
@@ -30,8 +32,6 @@ Check the arguements in the pipeline.py file are correct
 After ensuring the paths specified in the pipeline.py is verifed::
 
    python3 pipeline.py
-   
    python3 upload-pipeline.py
-   
 
-Step 3: Monitor the pipeline run from `Recent Pipeline Runs on AAW <https://kubeflow.aaw.cloud.statcan.ca/?ns=nrcan-btap>`_   and once completed successfullly, the respective output files will be stored on minio. 
+Monitor the pipeline run from `Recent Pipeline Runs on AAW <https://kubeflow.aaw.cloud.statcan.ca/?ns=nrcan-btap>`_   and once completed successfullly, the respective output files will be stored on minio. 

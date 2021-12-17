@@ -46,6 +46,7 @@ logger = logging.getLogger(__name__)
 def clean_data(df) -> pd.DataFrame:
     """
     Basic cleaning of the data using the following criterion:
+
     - dropping any column with more than 50% missing values
       The 50% threshold is a way to eliminate columns with too much missing values in the dataset.
       We cant use N/A as it will elimnate the entire row /datapoint_id. Giving the number of features we have to work it its better we eliminate
@@ -53,8 +54,10 @@ def clean_data(df) -> pd.DataFrame:
     - dropping columns with 1 unique value
       For columns with  1 unique values are dropped during data cleaning as they have low variance
       and hence have little or no significant contribution to the accuracy of the model.
+
     Args:
         df: dataset to be cleaned
+
     Returns:
        clean dataframe
     """
@@ -74,9 +77,11 @@ def clean_data(df) -> pd.DataFrame:
 def read_output(path_elec,path_gas):
     """
     Used to read the building simulation I/O file
+
     Args:
         path_elec: file path where data is to be read from in minio. This is a mandatory parameter and in the case where only one simulation I/O file is provided,  the path to this file should be indicated here.
         path_gas: This would be path to the gas output file. This is optional, if there is no gas output file to the loaded, then a value of path_gas ='' should be used
+
     Returns:
        btap_df: Dataframe containing the clean building parameters file.
        floor_sq: the square foot of the building
@@ -113,8 +118,10 @@ def read_output(path_elec,path_gas):
 def read_weather(path: str) -> pd.DataFrame:
     """
     Used to read the weather .parque file from minio
+
     Args:
         path: file path where weather file is to be read from in minio
+
     Returns:
        btap_df: Dataframe containing the clean weather file.
     """
@@ -130,7 +137,7 @@ def read_weather(path: str) -> pd.DataFrame:
     except pyarrow.lib.ArrowInvalid as err:
         logger.error("Invalid weather file format supplied. Is %s a parquet file?", path)
         sys.exit(1)
-    
+
     # Remove spurious columns.
     weather_df = clean_data(weather_df)
     # date_int is used later to join data together.
@@ -149,10 +156,12 @@ def read_weather(path: str) -> pd.DataFrame:
 def read_hour_energy(path_elec,path_gas,floor_sq):
     """
     Used to read the weather epw file from minio
+
     Args:
         path_elec: file path where the electric hourly energy consumed file is to be read from in minio. This is a mandatory parameter and in the case where only one hourly energy output file is provided, the path to this file should be indicated here.
         path_gas: This would be path to the gas output file. This is optional, if there is no gas output file to the loaded, then a value of path_gas ='' should be used
         floor_sq: the square foot of the building
+
     Returns:
        energy_hour_melt: Dataframe containing the clean and transposed hourly energy file.
     """
@@ -192,10 +201,12 @@ def groupsplit(X, y, valsplit):
     The data is split to ensure all datapoints for each datapoint_id occurs completely in the respective dataset split.
     Note that where there is validation set, data is split with 80% for training and 20% for test set.
     Otherwise, the test set is split further with 60% as test set and 40% as validation set.
+
     Args:
         X: data excluding the target_variable
         y: target variable with datapoint_id
         valsplit: flag to indicate if there is a dataframe for the validation set. Accepeted values are "yes" or "no"
+
     Returns:
        X_train: X trainset
        y_train: y trainset
@@ -221,10 +232,12 @@ def groupsplit(X, y, valsplit):
 def train_test_split(energy_daily_df, val_df, valsplit):
     """
     Used to split the dataset by datapoint_id into train , test and validation sets.
+
     Args:
         energy_daily_df: the merged dataframe for simulation I/O, weather, and hourly energy file.
         val_df: the merged dataframe for simulation I/O, weather, and hourly energy file validation set. Where there is no validation set, its value is null
         valsplit: flag to indicate if there is a dataframe for the validation set. Accepeted values are "yes" or "no"
+
     Returns:
        X_train: X trainset
        y_train: y trainset
@@ -278,10 +291,12 @@ def categorical_encode(x_train, x_test, x_validate):
     """
     Used to encode the categorical variables contained in the x_train, x_test and x_validate
     Note that the encoded data return creates additional columns equivalent to the unique categorical values in the each categorical column.
+
     Args:
          X_train: X trainset
          X_test:  X testset
          X_validate: X validation set
+
     Returns:
         X_train_oh: encoded X trainset
         X_test_oh: encoded X testset
@@ -309,9 +324,9 @@ def process_data(args):
     """
     Used to encode the categorical variables contained in the x_train, x_test and x_validate
     Note that the encoded data return creates additional columns equivalent to the unique categorical values in the each categorical column.
+
     Args:
          arguements provided from the main
-    Returns:
     """
     weather_df = read_weather(args.in_weather)
     btap_df,floor_sq = read_output(args.in_build_params,args.in_build_params_gas)

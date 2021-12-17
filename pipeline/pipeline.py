@@ -1,13 +1,12 @@
-import kfp
-import pandas as pd
-from kfp import dsl
-from kfp.components import func_to_container_op, load_component_from_file
-from minio import Minio
-from kfp import components
-
 #import config as acm
 import time
 from pathlib import Path
+
+import kfp
+import pandas as pd
+from kfp import components, dsl
+from kfp.components import func_to_container_op, load_component_from_file
+from minio import Minio
 
 
 @dsl.pipeline(name='Btap Pipeline',
@@ -32,13 +31,13 @@ def btap_pipeline(  build_params="input_data/output_elec_2021-11-05.xlsx",
                     energy_hour_gas ='',
                     predictoutput_path="output_data/predict_out",
                     ):
-    
+
 
     # Loads the yaml manifest for each component
     preprocess = load_component_from_file('yaml/preprocessing.yml')
     feature_selection = load_component_from_file('yaml/feature_selection.yml')
     predict = load_component_from_file('yaml/predict.yml')
-    
+
     preprocess_ = preprocess(
 
                              in_hour=energy_hour,
@@ -54,8 +53,8 @@ def btap_pipeline(  build_params="input_data/output_elec_2021-11-05.xlsx",
                             )
 
     preprocess_.set_memory_request('16Gi').set_memory_limit('32Gi')
-    
-    
+
+
     #preprocess_output_ref = preprocess_.output
 
     feature_selection_ = feature_selection(
@@ -64,10 +63,10 @@ def btap_pipeline(  build_params="input_data/output_elec_2021-11-05.xlsx",
                                            output_path=featureoutput_path)
     feature_selection_.set_memory_request('16Gi').set_memory_limit('32Gi')
     #feature_selection_.set_cpu_request('1').set_cpu_limit('1')
-    
+
     #feature_output_ref = feature_selection_.output
     feature_selection_.after(preprocess_)
-    
+
     predict_ = predict(
                        in_obj_name=output_path,
                        features=featureoutput_path,
@@ -76,8 +75,8 @@ def btap_pipeline(  build_params="input_data/output_elec_2021-11-05.xlsx",
     predict_.set_memory_request('16Gi').set_memory_limit('32Gi')
     #predict_.set_cpu_request('1').set_cpu_limit('1')
     predict_.after(feature_selection_)
-    
-    
+
+
 if __name__ == '__main__':
     experiment_yaml_zip = 'pipeline.yaml'
     kfp.compiler.Compiler().compile(btap_pipeline, experiment_yaml_zip)

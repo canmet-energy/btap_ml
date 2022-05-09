@@ -1,19 +1,13 @@
-'''
-Downloads all the datasets from minio, preprocess the data, split the data into train, test and validation set.
-Args:
-    in_hour: The minio location and filename for the hourly energy consumption file is located. This would be the path for the electric hourly file if it exist.
-    in_build_params: The minio location and filename the building simulation I/O file. This would be the path for the electric hourly file if it exist.
-    in_weather: The minio location and filename for the converted  weather file to be read
-    in_hour_val: The minio location and filename for the hourly energy consumption file for the validation set, if it exist.
-    in_build_params_val: The minio location and filename for the building simulation I/O file for the validation set, if it exist.
-    in_hour_gas: The minio location and filename for the hourly energy consumption file is located. This would be the path for the gas hourly file if it exist.
-    in_build_params_gas: The minio location and filename the building simulation I/O file. This would be the path for the gas hourly file if it exist.
-    output_path: The minio location and filename where the output file should be written.
-'''
+"""
+Preprocesses each dataset and splits the data into train, test and validation set.
+
+CLI arguments match those defined by ``main()``.
+"""
+# TODO: Remove all deep copy calls, limiting number of copies in memory
+
 import argparse
 import copy
 import glob
-# from kfp import dsl
 import io
 import json
 import logging
@@ -28,6 +22,7 @@ import matplotlib
 import numpy as np
 import pandas as pd
 import pyarrow
+import typer
 from minio import Minio
 from sklearn.compose import ColumnTransformer
 from sklearn.model_selection import (GroupShuffleSplit, KFold,
@@ -36,7 +31,7 @@ from sklearn.model_selection import (GroupShuffleSplit, KFold,
 from sklearn.preprocessing import (LabelEncoder, MinMaxScaler, OneHotEncoder,
                                    StandardScaler)
 
-import config as acm
+import config
 import plot as pl
 
 logging.basicConfig(level=logging.INFO)
@@ -59,7 +54,7 @@ def clean_data(df) -> pd.DataFrame:
         df: dataset to be cleaned
 
     Returns:
-       clean dataframe
+       df: cleaned dataframe
     """
     df = df.copy()
     # Drop any column with more than 50% missing values
@@ -74,30 +69,24 @@ def clean_data(df) -> pd.DataFrame:
             df.drop(col,inplace=True,axis=1)
     return df
 
-def read_output(path_elec,path_gas):
+def process_building_files(path_elec, path_gas):
     """
     Used to read the building simulation I/O file
 
     Args:
-        path_elec: file path where data is to be read from in minio. This is a mandatory parameter and in the case where only one simulation I/O file is provided,  the path to this file should be indicated here.
+        path_elec: file path where data is to be read. This is a mandatory parameter and in the case where only one simulation I/O file is provided, the path to this file should be indicated here.
         path_gas: This would be path to the gas output file. This is optional, if there is no gas output file to the loaded, then a value of path_gas ='' should be used
 
     Returns:
        btap_df: Dataframe containing the clean building parameters file.
        floor_sq: the square foot of the building
     """
+    btap_df = None
 
-    # Load the data from blob storage.
-    s3 = acm.establish_s3_connection(settings.MINIO_URL, settings.MINIO_ACCESS_KEY, settings.MINIO_SECRET_KEY)
-    logger.info("read_output s3 connection %s", s3)
-    btap_df_elec = pd.read_excel(s3.open(settings.NAMESPACE.joinpath(path_elec).as_posix()))
-
+    btap_df = pd.read_excel(path_elec)
     if path_gas:
-        btap_df_gas = pd.read_excel(s3.open(settings.NAMESPACE.joinpath(path_gas).as_posix()))
+        btap_df = pd.concat([btap_df, pd.read_excel(path_gas)], ignore_index=True)
 
-        btap_df = pd.concat([btap_df_elec, btap_df_gas], ignore_index=True)
-    else:
-        btap_df = copy.deepcopy(btap_df_elec)
     floor_sq = btap_df['bldg_conditioned_floor_area_m_sq'].unique()
 
     # dropping output features present in the output file and dropping columns with one unique value
@@ -111,16 +100,15 @@ def read_output(path_elec,path_gas):
     drop_list=['energy_eui_additional_fuel_gj_per_m_sq','energy_eui_electricity_gj_per_m_sq','energy_eui_natural_gas_gj_per_m_sq','net_site_eui_gj_per_m_sq']
     btap_df = btap_df.drop(drop_list,axis=1)
 
-
     return btap_df,floor_sq
 
 
 def read_weather(path: str) -> pd.DataFrame:
     """
-    Used to read the weather .parque file from minio
+    Used to read the weather .parquet file
 
     Args:
-        path: file path where weather file is to be read from in minio
+        path: file path where weather file is to be read
 
     Returns:
        btap_df: Dataframe containing the clean weather file.
@@ -129,10 +117,10 @@ def read_weather(path: str) -> pd.DataFrame:
     if path.endswith('.csv'):
         logger.warn("Weather data must be in parquet format. Ensure %s is valid.", path)
     # Load the data from blob storage.
-    s3 = acm.establish_s3_connection(settings.MINIO_URL, settings.MINIO_ACCESS_KEY, settings.MINIO_SECRET_KEY)
-    logger.info("read_weather s3 connection %s", s3)
+    weather_df = None
+
     try:
-        weather_df = pd.read_parquet(s3.open(settings.NAMESPACE.joinpath(path).as_posix()))
+        weather_df = pd.read_parquet(path)
         logger.debug("weather hours: %s", weather_df['hour'].unique())
     except pyarrow.lib.ArrowInvalid as err:
         logger.error("Invalid weather file format supplied. Is %s a parquet file?", path)
@@ -151,39 +139,28 @@ def read_weather(path: str) -> pd.DataFrame:
 
     return weather_df
 
-
-
-def read_hour_energy(path_elec,path_gas,floor_sq):
+def process_hourly_energy(path_elec, path_gas, floor_sq):
     """
-    Used to read the weather epw file from minio
+    Used to read the hourly energy file(s)
 
     Args:
-        path_elec: file path where the electric hourly energy consumed file is to be read from in minio. This is a mandatory parameter and in the case where only one hourly energy output file is provided, the path to this file should be indicated here.
+        path_elec: file path where the electric hourly energy consumed file is to be read. This is a mandatory parameter and in the case where only one hourly energy output file is provided, the path to this file should be indicated here.
         path_gas: This would be path to the gas output file. This is optional, if there is no gas output file to the loaded, then a value of path_gas ='' should be used
         floor_sq: the square foot of the building
 
     Returns:
        energy_hour_melt: Dataframe containing the clean and transposed hourly energy file.
     """
-
-    s3 = acm.establish_s3_connection(settings.MINIO_URL, settings.MINIO_ACCESS_KEY, settings.MINIO_SECRET_KEY)
-    logger.info("read_hour_energy s3 connection %s", s3)
-    logger.info("Reading data from %s", path_elec)
-    energy_hour_df_elec = pd.read_csv(s3.open(settings.NAMESPACE.joinpath(path_elec).as_posix()))
-
+    energy_hour_df = None
+    energy_hour_df = pd.read_csv(path_elec)
     if path_gas:
-        logger.info("Reading data from %s", path_gas)
-        energy_hour_df_gas = pd.read_csv(s3.open(settings.NAMESPACE.joinpath(path_gas).as_posix()))
-        logger.info("Concatenating data from %s and %s", path_elec, path_gas)
-        energy_hour_df = pd.concat([energy_hour_df_elec, energy_hour_df_gas], ignore_index=True)
-    else:
-        energy_hour_df = copy.deepcopy(energy_hour_df_elec)
+        energy_hour_df = pd.concat([energy_hour_df, pd.read_csv(path_gas)], ignore_index=True)
 
     eletricity_hour_df = energy_hour_df[energy_hour_df['Name'] != "Electricity:Facility"].groupby(['datapoint_id']).sum()
     energy_df = eletricity_hour_df.agg(lambda x: x / (floor_sq * 1000000))
     energy_df = energy_df.drop(['KeyValue'], axis=1)
-
     energy_df = clean_data(energy_df)
+
     energy_hour_df = energy_df.reset_index()
     energy_hour_melt =energy_hour_df.melt(id_vars=['datapoint_id'],var_name='Timestamp', value_name='energy')
     energy_hour_melt["date_int"]=energy_hour_melt['Timestamp'].apply(lambda r : datetime.strptime(r, '%Y-%m-%d %H:%M'))
@@ -195,7 +172,7 @@ def read_hour_energy(path_elec,path_gas,floor_sq):
     return energy_hour_melt
 
 
-def groupsplit(X, y, valsplit):
+def groupsplit(X, y, valsplit, random_seed=42):
     """
     Used to split the dataset by datapoint_id into train and test sets.
     The data is split to ensure all datapoints for each datapoint_id occurs completely in the respective dataset split.
@@ -206,6 +183,7 @@ def groupsplit(X, y, valsplit):
         X: data excluding the target_variable
         y: target variable with datapoint_id
         valsplit: flag to indicate if there is a dataframe for the validation set. Accepeted values are "yes" or "no"
+        random_seed: random seed to be passed for when splitting the data
 
     Returns:
        X_train: X trainset
@@ -215,9 +193,9 @@ def groupsplit(X, y, valsplit):
     """
     logger.info("groupsplit with valsplit: %s", valsplit)
     if valsplit == 'yes':
-        gs = GroupShuffleSplit(n_splits=2, train_size=.7, random_state=42)
+        gs = GroupShuffleSplit(n_splits=2, train_size=.7, random_state=random_seed)
     else:
-        gs = GroupShuffleSplit(n_splits=2, test_size=.4, random_state=42)
+        gs = GroupShuffleSplit(n_splits=2, test_size=.4, random_state=random_seed)
 
     train_ix, test_ix = next(gs.split(X, y, groups=X.datapoint_id))
 
@@ -229,7 +207,7 @@ def groupsplit(X, y, valsplit):
     return X_train, y_train, X_test, y_test_complete
 
 
-def train_test_split(energy_daily_df, val_df, valsplit):
+def create_dataset(energy_daily_df, val_df, valsplit, random_seed):
     """
     Used to split the dataset by datapoint_id into train , test and validation sets.
 
@@ -237,6 +215,7 @@ def train_test_split(energy_daily_df, val_df, valsplit):
         energy_daily_df: the merged dataframe for simulation I/O, weather, and hourly energy file.
         val_df: the merged dataframe for simulation I/O, weather, and hourly energy file validation set. Where there is no validation set, its value is null
         valsplit: flag to indicate if there is a dataframe for the validation set. Accepeted values are "yes" or "no"
+        random_seed: random seed to be passed for when splitting the data
 
     Returns:
        X_train: X trainset
@@ -248,44 +227,58 @@ def train_test_split(energy_daily_df, val_df, valsplit):
        y_validate_complete: Dataframe containing the target variable with corresponding datapointid for the validation set
     """
     logger.info("train_test_split with valsplit: %s", valsplit)
-    drop_list= ['index',':datapoint_id','level_0', 'index','date_int',':datapoint_id']
+    drop_list= ['index', ':datapoint_id', 'level_0', 'index', 'date_int', ':datapoint_id']
 
     #split to train and test datasets
-    y = energy_daily_df[['energy','datapoint_id','Total Energy']]
-    X = energy_daily_df.drop(['energy'],axis = 1)
-    X_train, y_train,X_test,y_test_complete = groupsplit(X,y,valsplit)
+    y = energy_daily_df[['energy', 'datapoint_id', 'Total Energy']]
+    X = energy_daily_df.drop(['energy'], axis = 1)
+    X_train, y_train, X_test, y_test_complete = groupsplit(X, y, valsplit, random_seed)
     y_test = y_test_complete[['energy','datapoint_id']]
 
     if valsplit == 'yes' :
-        y_val = val_df[['energy','datapoint_id','Total Energy']]
-        X_val = val_df.drop(['energy'],axis = 1)
+        y_val = val_df[['energy', 'datapoint_id', 'Total Energy']]
+        X_val = val_df.drop(['energy'], axis = 1)
         validate_complete = y_val
-        X_validate = X_val.drop(drop_list,axis=1)
-        X_validate = X_validate.drop(['datapoint_id','Total Energy'],axis = 1)
-
-
+        X_validate = X_val.drop(drop_list, axis=1)
+        X_validate = X_validate.drop(['datapoint_id', 'Total Energy'], axis = 1)
     else:
         y_test = y_test_complete
         X_test = X_test.reset_index(drop=True)
         y_test = y_test.reset_index(drop=True)
-        X_test,y_test,X_validate,y_validate_complete = groupsplit(X_test,y_test,valsplit)
-        y_test_complete =  y_test
-        y_validate = y_validate_complete[['energy','datapoint_id']]
-        y_test = y_test[['energy','datapoint_id']]
-        X_validate = X_validate.drop(drop_list,axis=1)
-        X_validate = X_validate.drop(['datapoint_id','Total Energy'],axis = 1)
+        X_test,y_test,X_validate,y_validate_complete = groupsplit(X_test, y_test, valsplit, random_seed)
+        y_test_complete = y_test
+        y_validate = y_validate_complete[['energy', 'datapoint_id']]
+        y_test = y_test[['energy', 'datapoint_id']]
+        # TODO: Move to central call since many duplicate/uneeded lines
+        X_validate = X_validate.drop(drop_list, axis=1)
+        X_validate = X_validate.drop(['datapoint_id', 'Total Energy'], axis = 1)
+    # TODO: Remove since not needed
+    energy_daily_df = energy_daily_df.drop(drop_list, axis = 1)
 
-
-
-    energy_daily_df= energy_daily_df.drop(drop_list,axis = 1)
-    X_train = X_train.drop(drop_list,axis=1)
-    X_test = X_test.drop(drop_list,axis=1)
+    X_train = X_train.drop(drop_list, axis=1)
+    X_test = X_test.drop(drop_list, axis=1)
     y_train = y_train['energy']
     X_train = X_train.drop(['datapoint_id', 'Total Energy'], axis=1)
     X_test = X_test.drop(['datapoint_id', 'Total Energy'], axis=1)
 
     return X_train, X_test, y_train, y_test, y_test_complete, X_validate, y_validate, y_validate_complete
 
+def generate_only_samples(energy_daily_df):
+    """
+    Used to split the dataset by datapoint_id into a single dataset to then be used passed through to a stored model.
+
+    Args:
+        energy_daily_df: the merged dataframe for simulation I/O, weather, and hourly energy file.
+
+    Returns:
+       X: dataset containing preprocessed samples without labels
+    """
+    logger.info("Generating dataset to get predictions for.")
+    drop_list= ['index', ':datapoint_id', 'level_0', 'index', 'date_int', ':datapoint_id']
+    y = energy_daily_df[['energy', 'datapoint_id', 'Total Energy']]
+    X = energy_daily_df.drop(['energy'], axis = 1)
+
+    return energy_daily_df
 
 def categorical_encode(x_train, x_test, x_validate):
     """
@@ -303,54 +296,109 @@ def categorical_encode(x_train, x_test, x_validate):
         x_val_oh: encoded X validation set
         all_features: all features after encoding.
     """
+    logger.info("Encoding any categorical features.")
     # extracting the categorical columns
     cat_cols = x_train.select_dtypes(include=['object']).columns
     other_cols = x_train.drop(columns=cat_cols).columns
     logger.info("categorical encode: %s", cat_cols)
     # Create the encoder.
-    ct = ColumnTransformer([('ohe', OneHotEncoder(sparse=False,handle_unknown="ignore"), cat_cols)], remainder=MinMaxScaler())
+    ct = ColumnTransformer([('ohe', OneHotEncoder(sparse=False, handle_unknown="ignore"), cat_cols)], remainder=MinMaxScaler())
 
     # Apply the encoder.
     x_train_oh = ct.fit_transform(x_train)
-    x_test_oh = ct.transform(x_test)
-    x_val_oh = ct.transform(x_validate)
+    # Set default values in case only a set is passed under x_train
+    x_test_oh, x_val_oh = np.array([]), np.array([])
+    if x_test is not None:
+        x_test_oh = ct.transform(x_test)
+        x_val_oh = ct.transform(x_validate)
     encoded_cols = ct.named_transformers_.ohe.get_feature_names(cat_cols)
     all_features = np.concatenate([encoded_cols, other_cols])
 
     return x_train_oh, x_test_oh, x_val_oh, all_features
 
-
-def process_data(args):
+def main(config_file: str = typer.Argument(..., help="Location of the .yml config file (default name is input_config.yml)."),
+         hourly_energy_electric_file: str = typer.Option("", help="Location and name of a electricity energy file to be used if the config file is not used."),
+         building_params_electric_file: str = typer.Option("", help="Location and name of a electricity building parameters file to be used if the config file is not used."),
+         weather_file: str = typer.Argument("", help="Location and name of a .parquet weather file to be used."),
+         val_hourly_energy_file: str = typer.Option("", help="Location and name of a electricity energy validation file to be used if the config file is not used."),
+         val_building_params_file: str = typer.Option("", help="Location and name of a electricity building parameters validation file to be used if the config file is not used."),
+         hourly_energy_gas_file: str = typer.Option("", help="Location and name of a gas energy file to be used if the config file is not used."),
+         building_params_gas_file: str = typer.Option("", help="Location and name of a gas building parameters file to be used if the config file is not used."),
+         output_path: str = typer.Option("", help="Folder location where output files should be placed."),
+         preprocess_only_samples: bool = typer.Option(False, help="True if the data to be preprocessed is to be used for prediction, not for training."),
+         random_seed: int = typer.Option(42, help="The random seed to be used when splitting the data."),
+        ) -> str:
     """
     Used to encode the categorical variables contained in the x_train, x_test and x_validate
     Note that the encoded data return creates additional columns equivalent to the unique categorical values in the each categorical column.
 
     Args:
-         arguements provided from the main
+        config_file: Location of the .yml config file (default name is input_config.yml).
+        hourly_energy_electric_file: Location and name of a electricity energy file to be used if the config file is not used.
+        building_params_electric_file: Location and name of a electricity building parameters file to be used if the config file is not used.
+        weather_file: Location and name of a .parquet weather file to be used.
+        val_hourly_energy_file: Location and name of a electricity energy validation file to be used if the config file is not used.
+        val_building_params_file: Location and name of a electricity building parameters validation file to be used if the config file is not used.
+        hourly_energy_gas_file: Location and name of a gas energy file to be used if the config file is not used.
+        building_params_gas_file: Location and name of a gas building parameters file to be used if the config file is not used.
+        output_path: Folder location where output files should be placed.
+        preprocess_only_samples: True if the data to be preprocessed is to be used for prediction, not for training.
+        random_seed: The random seed to be used when splitting the data.
     """
-    weather_df = read_weather(args.in_weather)
-    btap_df,floor_sq = read_output(args.in_build_params,args.in_build_params_gas)
-    energy_hour_df = read_hour_energy(args.in_hour,args.in_hour_gas,floor_sq)
+    logger.info("Beginning the weather, energy, and building preprocessing step.")
+    # Load all content stored from the config file, if provided
+    if len(config_file) > 0:
+        # Load the specified config file
+        cfg = config.get_config(config_file)
+        # Load the stored output path
+        if len(output_path) < 1:
+            output_path = cfg.get(config.Settings().APP_CONFIG.OUTPUT_PATH)
+        # Load the stored building parameter filenames for the train and val sets
+        building_params = cfg.get(config.Settings().APP_CONFIG.BUILDING_PARAM_FILES)
+        building_params_electric_file, building_params_gas_file = building_params[0], building_params[1]
+        val_building_params_file = cfg.get(config.Settings().APP_CONFIG.VAL_BUILDING_PARAM_FILES)[0]
+        # Load the stored hourly energy filenames for the train and val sets
+        energy_params = cfg.get(config.Settings().APP_CONFIG.ENERGY_PARAM_FILES)
+        hourly_energy_electric_file, hourly_energy_gas_file = energy_params[0], energy_params[1]
+        val_hourly_energy_file = cfg.get(config.Settings().APP_CONFIG.VAL_ENERGY_PARAM_FILES)[0]
+
+    # Load the weather data from the specified path
+    logger.info("Loading and preparing the weather file %s.", weather_file)
+    weather_df = read_weather(weather_file)
+    # Building parameters (electric - mandatory, gas - optional)
+    logger.info("Loading and preparing the building file(s).")
+    btap_df, floor_sq = process_building_files(building_params_electric_file, building_params_gas_file)
+    # Hourly energy consumption (electric - mandatory, gas - optional)
+    logger.info("Loading and preparing the energy file(s).")
+    energy_hour_df = process_hourly_energy(hourly_energy_electric_file, hourly_energy_gas_file, floor_sq)
+    # Merge the building parameters with the hourly energy consuption
     energy_hour_merge = pd.merge(energy_hour_df, btap_df, left_on=['datapoint_id'],right_on=[':datapoint_id'],how='left').reset_index()
     logger.info("NA values in energy_hour_merge:\n%s", energy_hour_merge.isna().any())
+    # Derive a daily consumption dataframe between the weather and hourly energy consumption
     energy_daily_df = pd.merge(energy_hour_merge, weather_df, on='date_int',how='left').reset_index()
     logger.info("NA values in energy_daily_df:\n%s", energy_daily_df.isna().any())
-
-    if args.in_build_params_val:
-        btap_df_val,floor_sq = read_output(args.in_build_params_val,'')
-        energy_hour_df_val = read_hour_energy(args.in_hour_val,'',floor_sq)
-        energy_hour_merge_val = pd.merge(energy_hour_df_val, btap_df_val, left_on=['datapoint_id'],right_on=[':datapoint_id'],how='left').reset_index()
-        logger.info("NA values in energy_hour_merge_val:\n%s", energy_hour_merge_val.isna().any())
-        energy_daily_df_val = pd.merge(energy_hour_merge_val, weather_df, on='date_int',how='left').reset_index()
-        logger.info("NA values in energy_daily_df_val:\n%s", energy_daily_df_val.isna().any())
-        X_train, X_test, y_train, y_test, y_test_complete,X_validate, y_validate,y_validate_complete = train_test_split(energy_daily_df,energy_daily_df_val,'yes')
+    # Proceed normally to construct the train/test/val sets only if the data will be used for training
+    if not preprocess_only_samples:
+        if val_building_params_file:
+            print("Using val files")
+            btap_df_val, floor_sq = process_building_files(val_building_params_file, '')
+            energy_hour_df_val = process_hourly_energy(val_hourly_energy_file, '', floor_sq)
+            energy_hour_merge_val = pd.merge(energy_hour_df_val, btap_df_val, left_on=['datapoint_id'],right_on=[':datapoint_id'],how='left').reset_index()
+            logger.info("NA values in energy_hour_merge_val:\n%s", energy_hour_merge_val.isna().any())
+            energy_daily_df_val = pd.merge(energy_hour_merge_val, weather_df, on='date_int',how='left').reset_index()
+            logger.info("NA values in energy_daily_df_val:\n%s", energy_daily_df_val.isna().any())
+            X_train, X_test, y_train, y_test, y_test_complete, X_validate, y_validate, y_validate_complete = create_dataset(energy_daily_df, energy_daily_df_val, 'yes', random_seed)
+        else:
+            energy_hour_df_val= '' ; btap_df_val =''; energy_daily_df_val=''
+            X_train, X_test, y_train, y_test, y_test_complete, X_validate, y_validate, y_validate_complete = create_dataset(energy_daily_df, energy_daily_df_val, 'no', random_seed)
+    # Otherwise generate the samples to get predictions for
     else:
-        energy_hour_df_val= '' ; btap_df_val =''; energy_daily_df_val=''
-        X_train, X_test, y_train, y_test, y_test_complete,X_validate, y_validate,y_validate_complete = train_test_split(energy_daily_df,energy_daily_df_val,'no')
+        X_train = generate_only_samples(energy_daily_df)
+        X_test, X_validate = None, None
+    # Encode any categorical features
+    X_train_oh, X_test_oh, X_val_oh, all_features = categorical_encode(X_train, X_test, X_validate)
 
-    X_train_oh, X_test_oh, X_val_oh, all_features= categorical_encode(X_train,X_test,X_validate)
-
-
+    logger.info("Preparing json file of the train/test/validation sets.")
     #Creates `data` structure to save and share train and test datasets.
     data = {
             'features': all_features.tolist(),
@@ -363,11 +411,22 @@ def process_data(args):
             'y_validate': y_validate.values.tolist(),
             'y_validate_complete': y_validate_complete.values.tolist()}
 
-    data_json = json.dumps(data).encode('utf-8')
-    write_to_minio = acm.access_minio(operation='copy',
-                 path=args.output_path,
-                 data=data_json)
-    logger.info("write to mino %s ", write_to_minio)
+    # Before saving, ensure that the directory exists
+    # Bucket used to store weather data.
+    preprocessing_path = Path(output_path).joinpath(config.Settings().APP_CONFIG.PREPROCESSING_BUCKET_NAME)
+
+    # Make sure the bucket for weather data exists to avoid write errors
+    logger.info("Creating directory %s.", str(preprocessing_path))
+    config.create_directory(str(preprocessing_path))
+
+    # Save the json file
+    output_file = str(preprocessing_path.joinpath(config.Settings().APP_CONFIG.PREPROCESSING_FILENAME + ".json"))
+    logger.info("Saving json file %s.", output_file)
+    with open(output_file, 'w', encoding='utf8') as json_output:
+        json.dump(data, json_output)
+
+    logger.info("Preprocessing file has been saved as %s.", output_file)
+    return output_file
 
     try:
         pl.target_plot(y_train,y_test)
@@ -377,29 +436,8 @@ def process_data(args):
     except matplotlib.units.ConversionError as ce:
         logger.error("Unable to produce plots. matplotlib conversion error: %s", ce)
 
-
 if __name__ == '__main__':
     # Load settings from the environment
-    settings = acm.Settings()
-
-    # Prepare the argument parser
-    parser = argparse.ArgumentParser()
-
-    # Paths must be passed in, not hardcoded
-    parser.add_argument('--in_hour', type=str, help='The minio location and filename for the hourly energy consumption file is located. This would be the path for the electric hourly file if it exist.')
-    parser.add_argument('--in_build_params', type=str, help='The minio location and filename the building simulation I/O file. This would be the path for the electric hourly file if it exist.')
-    parser.add_argument('--in_weather', type=str, help='The minio location and filename for the converted  weather file to be read')
-    parser.add_argument('--in_hour_val', type=str, help='The minio location and filename for the hourly energy consumption file for the validation set, if it exist.')
-    parser.add_argument('--in_build_params_val', type=str, help='The minio location and filename for the building simulation I/O file for the validation set, if it exist.')
-    parser.add_argument('--in_hour_gas', type=str, help='The minio location and filename for the hourly energy consumption file is located. This would be the path for the gas hourly file if it exist.')
-    parser.add_argument('--in_build_params_gas', type=str, help='The minio location and filename the building simulation I/O file. This would be the path for the gas hourly file if it exist.')
-    parser.add_argument('--output_path', type=str, help='The minio location and filename where the output file should be written.')
-    args = parser.parse_args()
-
-    process_data(args)
-
-    # to run the program use the command below
-# python3 preprocessing.py --in_build_params input_data/output_elec_2021-11-05.xlsx --in_hour input_data/total_hourly_res_elec_2021-11-05.csv --in_weather weather/CAN_QC_Montreal-Trudeau.Intl.AP.716270_CWEC2016.epw.parquet --output_path output_data/preprocessing_out --in_build_params_gas input_data/output_gas_2021-11-05.xlsx --in_hour_gas input_data/total_hourly_res_gas_2021-11-05.csv
-
-
-# python3 preprocessing.py --in_build_params input_data/output_elec_2021-11-05.xlsx --in_hour input_data/total_hourly_res_elec_2021-11-05.csv --in_weather input_data/montreal_epw.csv --output_path output_data/preprocessing_out --in_build_params_gas input_data/output_gas_2021-11-05.xlsx --in_hour_gas input_data/total_hourly_res_gas_2021-11-05.csv
+    settings = config.Settings()
+    # Run the CLI interface
+    typer.run(main)

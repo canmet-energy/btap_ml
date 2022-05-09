@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 import sys
 import time
 from pathlib import Path
@@ -7,6 +8,7 @@ from typing import Any, Dict, Union
 
 import pandas as pd
 import s3fs
+import yaml
 from pydantic import AnyHttpUrl, BaseModel, BaseSettings, Field, SecretStr
 
 logger = logging.getLogger(__name__)
@@ -14,14 +16,38 @@ logger = logging.getLogger(__name__)
 
 class AppConfig(BaseModel):
     """Application configuration."""
+    # Bucket prefix to be used as part of the run folder being created for training and running
+    TRAIN_BUCKET_NAME: str = 'training_model_'
+    RUN_BUCKET_NAME: str = 'running_model_'
     # Bucket used to store weather data
     WEATHER_BUCKET_NAME: str = 'weather'
+    # Bucket used to store building/energy preprocessing data
+    PREPROCESSING_BUCKET_NAME: str = 'preprocessing'
+    # Bucket used to store feature selection data
+    FEATURE_SELECTION_BUCKET_NAME: str = 'feature_selection'
+    # Bucket used to store model training data
+    TRAINING_BUCKET_NAME: str = 'model_training'
     # URL where weather files are stored
     WEATHER_DATA_STORE: AnyHttpUrl = 'https://raw.githubusercontent.com/NREL/openstudio-standards/nrcan/data/weather/'
     # Parent level key in the BTAP CLI config weather data is stored under.
     # The EPW file key will be under this.
-    BUILDING_OPTS_KEY: str = ':building_options'
-
+    #BUILDING_OPTS_KEY: str = ':building_options'
+    OUTPUT_PATH: str = ':output_path'
+    RANDOM_SEED: str = ':random_seed'
+    WEATHER_KEY: str = ':epw_file'
+    BUILDING_PARAM_FILES: str = ':building_param_files'
+    VAL_BUILDING_PARAM_FILES: str = ':val_building_param_files'
+    ENERGY_PARAM_FILES: str = ':energy_param_files'
+    VAL_ENERGY_PARAM_FILES: str = ':val_energy_param_files'
+    ESTIMATOR_TYPE: str = ':estimator_type'
+    PARAM_SEARCH: str = ':param_search'
+    FEATURES_FILE: str = ':features_file'
+    TRAINED_MODEL_FILE: str = ':trained_model_file'
+    # Specify any static filename keys
+    PREPROCESSING_FILENAME: str = 'preprocessing'
+    FEATURE_SELECTION_FILENAME: str = 'feature_selection_'
+    TRAINED_MODEL_FILENAME: str = 'trained_model'
+    TRAINING_RESULTS_FILENAME: str = 'training_results'
 
 # There's a JSON file available with required credentials in it
 def json_config_settings_source(settings: BaseSettings) -> Dict[str, Any]:
@@ -50,11 +76,14 @@ class Settings(BaseSettings):
     # Set up application specific information
     APP_CONFIG: AppConfig = AppConfig()
 
+    """
+    TODO: Remove if credentials are not needed in the program
     MINIO_URL: AnyHttpUrl = Field(..., env='MINIO_URL')
     MINIO_ACCESS_KEY: str = Field(..., env='MINIO_ACCESS_KEY')
     MINIO_SECRET_KEY: SecretStr = Field(..., env='MINIO_SECRET_KEY')
 
     NAMESPACE: Path = Path('nrcan-btap')
+    """
 
     class Config:
         # Prefix our variables to avoid collisions with other programs
@@ -66,10 +95,12 @@ class Settings(BaseSettings):
 
         # Ignore extra values present in the JSON data
         extra = 'ignore'
-
+        """
+        TODO: Remove if credentials are not needed in the program
         @classmethod
         def customise_sources(cls, init_settings, env_settings, file_secret_settings):
             return (init_settings, json_config_settings_source, env_settings, file_secret_settings)
+        """
 
 
 def establish_s3_connection(endpoint_url: str, access_key: str, secret_key: SecretStr) -> s3fs.S3FileSystem:
@@ -97,6 +128,20 @@ def establish_s3_connection(endpoint_url: str, access_key: str, secret_key: Secr
 
     return s3
 
+def get_config(config_file: str):
+    """Load the specified configuration file from blob storage.
+
+    Args:
+        config_file: Path to the config file relative to the default bucket.
+
+    Returns:
+        Dictionary of configuration information.
+    """
+    # Create a path to the config from the namespace
+    config_file_path = Path(config_file)
+    with open(str(config_file_path), 'rb') as outfile:
+        contents = yaml.safe_load(outfile)
+    return contents
 
 def access_minio(path: str, operation: str, data: Union[str, pd.DataFrame]):
     """
@@ -135,8 +180,20 @@ def access_minio(path: str, operation: str, data: Union[str, pd.DataFrame]):
         else:
             data = s3.open(full_posix_path, mode='rb')
     else:
-        with s3.open(full_posix_path, 'wb') as f:
-            f.write(data)
-            data = ''
+        # If no data is pathed, pass the opened file to write directly to
+        if data == '':
+            data = s3.open(full_posix_path, mode='wb')
+        # If data is passed, directly write the data to the file
+        else:
+            with s3.open(full_posix_path, 'wb') as f:
+                f.write(data)
+                data = ''
 
     return data
+
+def create_directory(path: str) -> None:
+    """
+    Given a path, create the directory if it exists
+    """
+    if not os.path.isdir(path):
+        os.mkdir(path)

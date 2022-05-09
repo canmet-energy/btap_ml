@@ -4,6 +4,8 @@
 CLI arguments match those defined by ``main()``.
 """
 import logging
+import os
+from pathlib import Path
 
 import pandas as pd
 import typer
@@ -15,28 +17,6 @@ import config
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
-def get_config(config_file: str):
-    """Load the specified configuration file from blob storage.
-
-    Args:
-        config_file: Path to the config file relative to the default bucket.
-
-    Returns:
-        Dictionary of configuration information.
-    """
-    logger.info("Establishing connection to S3 store at %s", settings.MINIO_URL)
-    s3 = config.establish_s3_connection(settings.MINIO_URL,
-                                        settings.MINIO_ACCESS_KEY,
-                                        settings.MINIO_SECRET_KEY)
-
-    # Create a path to the config from the namespace
-    config_file_path = settings.NAMESPACE.joinpath(config_file).as_posix()
-    logger.info("Reading config from file %s", config_file_path)
-    contents = yaml.safe_load(s3.open(config_file_path, mode='rb'))
-    return contents
-
-
 def get_weather_df(filename: str) -> pd.DataFrame:
     """Fetch weather data from the main storage location.
     Loads weather files from the NREL/openstudio-standards GitHub repository where they are managed.
@@ -47,7 +27,7 @@ def get_weather_df(filename: str) -> pd.DataFrame:
     Returns:
         A dataframe of weather data summarized by day.
     """
-    epw_file_store = settings.APP_CONFIG.WEATHER_DATA_STORE
+    epw_file_store = config.Settings().APP_CONFIG.WEATHER_DATA_STORE
 
     # Number of rows in the file that are just providing metadata
     meta_row_count = 8
@@ -68,7 +48,7 @@ def get_weather_df(filename: str) -> pd.DataFrame:
     return df
 
 
-def save_epw(df: pd.DataFrame, filename: str) -> None:
+def save_epw(df: pd.DataFrame, filename: str, output_path: str) -> None:
     """Save preprared EPW data out to blob storage.
     The filename of the original file is used, with the extension replaced with .parquet.
 
@@ -79,28 +59,22 @@ def save_epw(df: pd.DataFrame, filename: str) -> None:
     logger.debug("Data shape being saved: %s", df.shape)
     # Add a parquet extension to the file name
     if not filename.endswith(".parquet"):
+        filename = filename.replace(".epw", "")
         filename = f"{filename}.parquet"
 
     # Bucket used to store weather data.
-    weather_bucket_path = settings.NAMESPACE.joinpath(settings.APP_CONFIG.WEATHER_BUCKET_NAME)
+    #weather_bucket_path = config.Settings().NAMESPACE.joinpath(config.Settings().APP_CONFIG.WEATHER_BUCKET_NAME)
+    weather_bucket_path = output_path.joinpath(config.Settings().APP_CONFIG.WEATHER_BUCKET_NAME)
     logger.info("Weather data will be placed under '%s'", weather_bucket_path)
 
-    # Establish a connection to the blob store.
-    s3 = config.establish_s3_connection(settings.MINIO_URL,
-                                        settings.MINIO_ACCESS_KEY,
-                                        settings.MINIO_SECRET_KEY)
-
-    # Make sure the bucket for weather data exists to avoid write errors
-    existing_items = s3.ls(settings.NAMESPACE.as_posix())
-    if str(weather_bucket_path) not in existing_items:
-        logger.info("Weather bucket not found in %s, creating %s", existing_items, weather_bucket_path)
-        s3.mkdir(weather_bucket_path.as_posix())
-
-    # Write the data to s3
-    file_path = weather_bucket_path.joinpath(filename).as_posix()
-    logger.info("Saving weather data to %s", file_path)
-    with s3.open(file_path, 'wb') as outfile:
+    file_path = str(weather_bucket_path.joinpath(filename))
+    # Create the weather directory in the mounted drive
+    logger.info("Creating directory %s.", str(weather_bucket_path))
+    config.create_directory(str(weather_bucket_path))
+    # Write the weather file as a parquet file
+    with open(file_path, 'wb') as outfile:
         df.to_parquet(outfile)
+    return file_path
 
 
 def adjust_hour(df: pd.DataFrame, colname: str = 'hour'):
@@ -114,6 +88,7 @@ def adjust_hour(df: pd.DataFrame, colname: str = 'hour'):
         df: A pd.DataFrame object where the hour column has been adjusted to 0 - 23 hours.
 
     """
+    # TODO: Why do we copy here?
     df = df.copy()
     logger.info("Adjusting %s column by -1", colname)
     df[colname] = df[colname] - 1
@@ -146,43 +121,45 @@ def process_weather_file(filename: str):
     return df
 
 
-def main(config_file: str = typer.Argument(..., help="Path to configuration YAML file for BTAP CLI."),
-         epw_file_key: str = typer.Option(':epw_file', help="Key used to store EPW file names.")) -> None:
+def main(config_file: str = typer.Argument(..., help="Path to configuration YAML file."),
+         epw_files: str = typer.Option("", help="The epw key to be used if the config file is not used."),
+         output_path: str = typer.Option("", help="The output path to be used."),
+         ) -> str:
     """Take raw EPW files as defined in BTAP YAML configuration and prepare it for use by the model.
     Uses the EnergyPlus configuration to identify and process weather data in EPW format. The weather data is then
     saved to blob storage for use in later processing stages.
 
     Args:
         config_file: Path to the configuration file used for EnergyPlus.
-        epw_file_key: The key in the configuration file that has the weather file name(s). Default is ``:epw_file``.
+        epw_files: The epw key to be used if the config file is not use.
+        output_path: Where output data should be placed.
     """
-    cfg = get_config(config_file)
-    building_opts_key = settings.APP_CONFIG.BUILDING_OPTS_KEY
-
-    # Guard against incorrect or undefined file key.
-    # EPW information should be under the building options.
-    logger.debug("Looking for %s in %s", epw_file_key, building_opts_key)
-    if epw_file_key not in cfg.get(building_opts_key):
-        raise AttributeError(f"EPW file specification not found under {building_opts_key}.")
-
-    epw_files = cfg.get(building_opts_key).get(epw_file_key)
-    logger.info("Found %s weather files to process", len(epw_files))
+    logger.info("Beginning the weather processing step.")
+    # Load the information from the config file, if provided
+    if len(config_file) > 0:
+        # Load the specified config file
+        cfg = config.get_config(config_file)
+        weather_key = config.Settings().APP_CONFIG.WEATHER_KEY
+        output_key = config.Settings().APP_CONFIG.OUTPUT_PATH
+        epw_file = cfg.get(weather_key)
+        if len(output_path) < 1:
+            output_path = cfg.get(output_key)
 
     # Data could be a single file or a list of files
-    if isinstance(epw_files, str):
-        data = process_weather_file(epw_files)
-        logger.debug("Data shape after processin: %s", data.shape)
-        save_epw(data, epw_files)
-    else:
-        for name in epw_files:
-            data = process_weather_file(name)
-            logger.debug("Data shape after processing: %s", data.shape)
-            save_epw(data, name)
+    # The application assumes that a list will have a maximum size of one
+    if not isinstance(epw_file, str):
+        epw_file = epw_file[0]
+
+    logger.info("Beginning the loading process for the weather file with the key %s.", epw_file)
+    data = process_weather_file(epw_file)
+    logger.debug("Data shape after processing: %s", data.shape)
+    output_filepath = save_epw(data, epw_file, Path(output_path))
+    logger.info("Weather file has been saved as %s.", output_filepath)
+    return output_filepath
 
 
 if __name__ == '__main__':
     # Load settings from the environment.
     settings = config.Settings()
-
     # Run the CLI interface.
     typer.run(main)

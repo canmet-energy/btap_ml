@@ -10,9 +10,12 @@ The goal is to develop surrogate models that generate data to inform in the desi
 Refer to the [documentation](docs/) to see how to install and run the model.
 
 ## Structure
-- Block Storage Guide.ipynb: sample notebook of how to access minio using s3f3.
+- Block Storage Guide.ipynb: sample notebook of how to access minio using s3f3. Note that direct minio use has been decommissioned starting May 6, 2022 and now requires a drive to be mounted before running.
 - tensorboard.ipynb: use this notebook to start the tensorboard dashboard for metrics visualization and scrutinization of the surrogate model.
-- src: Contain all source code used in building the surrogate model.
+- src: Contains all source code used in building the surrogate model.
+    - train_model_pipeline.py: runs all preprocessing steps for the provided input data, using the outputs to train a surrogate model for future use
+    - run_model.py: given a dataset and trained model, outputs the energy use predictions for the dataset
+    - prepare_weather.py: downloads a specified weather file and saves it as a .parquet file in the specified output directory
     - preprocessing.py: downloads all the dataset from minio, preprocess the data, split the data into train, test and validation set.
     - feature_selection.py: use the output from preprocoessing to extract the features that would be used in building the surrogate model
     - predict.py: builds the surrogate model using the preprocessed data and the selected features described above

@@ -15,6 +15,7 @@ def show_var(btap_data_df: pd.DataFrame) -> None:
     plt.savefig('../output/numerical_val_plot.png')
 
 
+'''
 def corr_plot(btap_data_df):
     # Using Pearson Correlation
     plt.figure(figsize=(20, 20))
@@ -28,7 +29,7 @@ def target_plot(y_test):
     plt.plot(y_test['energy'])
     plt.ylabel("Energy")
     plt.savefig('../output/daily_energy_test.png')
-
+'''
 
 def norm_res(btap_data_df: pd.DataFrame):
     results_normed = (btap_data_df - np.mean(btap_data_df)) / np.std(btap_data_df)

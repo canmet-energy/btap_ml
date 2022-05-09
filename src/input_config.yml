@@ -1,0 +1,96 @@
+# Each value is used for the BTAP surrogate model program
+
+# Specify the output path to be used throughout the pipeline
+:output_path: '../testing/train_pipeline'
+# Random seed
+:random_seed: 7
+
+###################################
+##
+## FOR WEATHER PROCESSING
+##
+###################################
+# Specify the epw key to be used
+:epw_file: [
+  'CAN_QC_Montreal-Trudeau.Intl.AP.716270_CWEC2016.epw',
+# 'CAN_NS_Halifax.Dockyard.713280_CWEC2016.epw',
+# 'CAN_AB_Edmonton.Intl.AP.711230_CWEC2016.epw',
+# 'CAN_BC_Vancouver.Intl.AP.718920_CWEC2016.epw',
+# 'CAN_AB_Calgary.Intl.AP.718770_CWEC2016.epw',
+# 'CAN_ON_Toronto.Pearson.Intl.AP.716240_CWEC2016.epw',
+# 'CAN_YT_Whitehorse.Intl.AP.719640_CWEC2016.epw'
+]
+
+###################################
+##
+## FOR INPUT PREPROCESSING
+##
+###################################
+# Specify the inputs for the building file(s) to be used for training
+:building_param_files: [
+  # Electricity file (mandatory)
+  '../testing/output_elec_2021-11-05.xlsx',
+  # Gas file (optional, comment out as needed)
+  ''
+]
+# Specify the inputs for the building file(s) to be used for train validation (optional)
+# For now, only the first entry is used (so the electricity file, although gas can be insertted)
+:val_building_param_files: [
+  # Electricity file
+  '',
+  # Gas file
+  ''
+]
+# Specify the inputs for the energy file(s) to be used for training
+:energy_param_files: [
+  # Electricity file (mandatory)
+  '../testing/total_hourly_res_elec_2021-11-05.csv',
+  # Gas file (optional, comment out as needed)
+  ''
+]
+# Specify the inputs for the energy file(s) to be used for train validation
+# For now, only the first entry is used (so the electricity file, although gas can be insertted)
+:val_energy_param_files: [
+  # Electricity file (mandatory)
+  '',
+  # Gas file (optional, comment out as needed)
+  ''
+]
+
+###################################
+##
+## FOR FEATURE SELECTION
+##
+###################################
+# Specify the estmator type to be used (lasso is the default if blank or unspecified)
+# As of 04-27-2022, the options are:
+#     linear
+#     elasticnet
+#     xgb
+#     lasso (DEFAULT if empty)
+:estimator_type: ''
+
+###################################
+##
+## FOR MODEL TRAINING AFTER PREPROCESSING
+##
+###################################
+# Determine whether the training should perform a hyperparameter search
+# Selecting yes will increase the training time
+# Either 'yes' or 'no'
+:param_search: 'no'
+
+###################################
+##
+## FOR RUNNING A TRAINED MODEL
+##
+## NOTE: The input data will be taken from building_param_files and energy_param_files.
+##       The output path will be the :output_path: key/value
+##
+###################################
+# Filepath and filename of the trained ML model to be used (output from the training step)
+:trained_model_file: ''
+# Filepath and filename of the feature selection file to be used for training
+:features_file: ''
+
+:batch_inputs: '/path_to_files/.../test_these_June/'

@@ -37,17 +37,42 @@
   <section id="module-feature_selection">
 <span id="feature-selection"></span><h1>Feature selection<a class="headerlink" href="#module-feature_selection" title="Permalink to this headline">¶</a></h1>
 <p>Select features that are used to build the surrogate mode.</p>
+<p>CLI arguments match those defined by <code class="docutils literal notranslate"><span class="pre">main()</span></code>.</p>
 <dl class="py function">
-<dt class="sig sig-object py" id="feature_selection.select_features">
-<span class="sig-prename descclassname"><span class="pre">feature_selection.</span></span><span class="sig-name descname"><span class="pre">select_features</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#feature_selection.select_features" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="feature_selection.main">
+<span class="sig-prename descclassname"><span class="pre">feature_selection.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_file=&lt;typer.models.ArgumentInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preprocessed_data_file=&lt;typer.models.ArgumentInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">estimator_type=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#feature_selection.main" title="Permalink to this definition">¶</a></dt>
 <dd><p>Select the feature which contribute most to the prediction for the total energy consumed.
 Default estimator_type used for feature selection is ‘LassoCV’</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>args</strong> – arguements provided from the main</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location of the .yml config file (default name is input_config.yml).</p></li>
+<li><p><strong>preprocessed_data_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location and name of a .json preprocessing file to be used.</p></li>
+<li><p><strong>estimator_type</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – The type of feature selection to be performed. The default is lasso, which will be used if nothing is passed.
+The other options are ‘linear’, ‘elasticnet’, and ‘xgb’.</p></li>
+<li><p><strong>output_path</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Folder location where output files should be placed.</p></li>
+</ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>selected features are returned and uploaded to minio.</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="feature_selection.select_features">
+<span class="sig-prename descclassname"><span class="pre">feature_selection.</span></span><span class="sig-name descname"><span class="pre">select_features</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preprocessed_data_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">estimator_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#feature_selection.select_features" title="Permalink to this definition">¶</a></dt>
+<dd><p>Select the feature which contribute most to the prediction for the total energy consumed.
+Default estimator_type used for feature selection is ‘LassoCV’</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config_file</strong> – Location of the .yml config file (default name is input_config.yml).</p></li>
+<li><p><strong>preprocessed_data_file</strong> – Location and name of a .json preprocessing file to be used if the preprocessing is skipped.</p></li>
+<li><p><strong>estimator_type</strong> – The type of feature selection to be performed. The default is lasso, which will be used if nothing is passed.
+The other options are ‘linear’, ‘elasticnet’, and ‘xgb’.</p></li>
+<li><p><strong>output_path</strong> – Folder location where output files should be placed.</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>

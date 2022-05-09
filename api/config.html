@@ -41,8 +41,98 @@
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">config.</span></span><span class="sig-name descname"><span class="pre">AppConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#config.AppConfig" title="Permalink to this definition">¶</a></dt>
 <dd><p>Application configuration.</p>
 <dl class="py attribute">
-<dt class="sig sig-object py" id="config.AppConfig.BUILDING_OPTS_KEY">
-<span class="sig-name descname"><span class="pre">BUILDING_OPTS_KEY</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#config.AppConfig.BUILDING_OPTS_KEY" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="config.AppConfig.BUILDING_PARAM_FILES">
+<span class="sig-name descname"><span class="pre">BUILDING_PARAM_FILES</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#config.AppConfig.BUILDING_PARAM_FILES" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="config.AppConfig.ENERGY_PARAM_FILES">
+<span class="sig-name descname"><span class="pre">ENERGY_PARAM_FILES</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#config.AppConfig.ENERGY_PARAM_FILES" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="config.AppConfig.ESTIMATOR_TYPE">
+<span class="sig-name descname"><span class="pre">ESTIMATOR_TYPE</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#config.AppConfig.ESTIMATOR_TYPE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="config.AppConfig.FEATURES_FILE">
+<span class="sig-name descname"><span class="pre">FEATURES_FILE</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#config.AppConfig.FEATURES_FILE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="config.AppConfig.FEATURE_SELECTION_BUCKET_NAME">
+<span class="sig-name descname"><span class="pre">FEATURE_SELECTION_BUCKET_NAME</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#config.AppConfig.FEATURE_SELECTION_BUCKET_NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="config.AppConfig.FEATURE_SELECTION_FILENAME">
+<span class="sig-name descname"><span class="pre">FEATURE_SELECTION_FILENAME</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#config.AppConfig.FEATURE_SELECTION_FILENAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="config.AppConfig.OUTPUT_PATH">
+<span class="sig-name descname"><span class="pre">OUTPUT_PATH</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#config.AppConfig.OUTPUT_PATH" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="config.AppConfig.PARAM_SEARCH">
+<span class="sig-name descname"><span class="pre">PARAM_SEARCH</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#config.AppConfig.PARAM_SEARCH" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="config.AppConfig.PREPROCESSING_BUCKET_NAME">
+<span class="sig-name descname"><span class="pre">PREPROCESSING_BUCKET_NAME</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#config.AppConfig.PREPROCESSING_BUCKET_NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="config.AppConfig.PREPROCESSING_FILENAME">
+<span class="sig-name descname"><span class="pre">PREPROCESSING_FILENAME</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#config.AppConfig.PREPROCESSING_FILENAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="config.AppConfig.RANDOM_SEED">
+<span class="sig-name descname"><span class="pre">RANDOM_SEED</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#config.AppConfig.RANDOM_SEED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="config.AppConfig.RUN_BUCKET_NAME">
+<span class="sig-name descname"><span class="pre">RUN_BUCKET_NAME</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#config.AppConfig.RUN_BUCKET_NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="config.AppConfig.TRAINED_MODEL_FILE">
+<span class="sig-name descname"><span class="pre">TRAINED_MODEL_FILE</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#config.AppConfig.TRAINED_MODEL_FILE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="config.AppConfig.TRAINED_MODEL_FILENAME">
+<span class="sig-name descname"><span class="pre">TRAINED_MODEL_FILENAME</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#config.AppConfig.TRAINED_MODEL_FILENAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="config.AppConfig.TRAINING_BUCKET_NAME">
+<span class="sig-name descname"><span class="pre">TRAINING_BUCKET_NAME</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#config.AppConfig.TRAINING_BUCKET_NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="config.AppConfig.TRAINING_RESULTS_FILENAME">
+<span class="sig-name descname"><span class="pre">TRAINING_RESULTS_FILENAME</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#config.AppConfig.TRAINING_RESULTS_FILENAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="config.AppConfig.TRAIN_BUCKET_NAME">
+<span class="sig-name descname"><span class="pre">TRAIN_BUCKET_NAME</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#config.AppConfig.TRAIN_BUCKET_NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="config.AppConfig.VAL_BUILDING_PARAM_FILES">
+<span class="sig-name descname"><span class="pre">VAL_BUILDING_PARAM_FILES</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#config.AppConfig.VAL_BUILDING_PARAM_FILES" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="config.AppConfig.VAL_ENERGY_PARAM_FILES">
+<span class="sig-name descname"><span class="pre">VAL_ENERGY_PARAM_FILES</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#config.AppConfig.VAL_ENERGY_PARAM_FILES" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -55,6 +145,11 @@
 <span class="sig-name descname"><span class="pre">WEATHER_DATA_STORE</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">pydantic.networks.AnyHttpUrl</span></em><a class="headerlink" href="#config.AppConfig.WEATHER_DATA_STORE" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="config.AppConfig.WEATHER_KEY">
+<span class="sig-name descname"><span class="pre">WEATHER_KEY</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#config.AppConfig.WEATHER_KEY" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
@@ -64,17 +159,22 @@
 <dl class="py attribute">
 <dt class="sig sig-object py" id="config.Settings.APP_CONFIG">
 <span class="sig-name descname"><span class="pre">APP_CONFIG</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#config.AppConfig" title="config.AppConfig"><span class="pre">config.AppConfig</span></a></em><a class="headerlink" href="#config.Settings.APP_CONFIG" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Remove if credentials are not needed in the program
+MINIO_URL: AnyHttpUrl = Field(…, env=’MINIO_URL’)
+MINIO_ACCESS_KEY: str = Field(…, env=’MINIO_ACCESS_KEY’)
+MINIO_SECRET_KEY: SecretStr = Field(…, env=’MINIO_SECRET_KEY’)</p>
+<p>NAMESPACE: Path = Path(‘nrcan-btap’)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>TODO</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="config.Settings.Config">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Config</span></span><a class="headerlink" href="#config.Settings.Config" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="py method">
-<dt class="sig sig-object py" id="config.Settings.Config.customise_sources">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">customise_sources</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">init_settings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_settings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_secret_settings</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#config.Settings.Config.customise_sources" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
+<dd><dl class="py attribute">
 <dt class="sig sig-object py" id="config.Settings.Config.env_prefix">
 <span class="sig-name descname"><span class="pre">env_prefix</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'BTAP_'</span></em><a class="headerlink" href="#config.Settings.Config.env_prefix" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -82,7 +182,18 @@
 <dl class="py attribute">
 <dt class="sig sig-object py" id="config.Settings.Config.extra">
 <span class="sig-name descname"><span class="pre">extra</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'ignore'</span></em><a class="headerlink" href="#config.Settings.Config.extra" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Remove if credentials are not needed in the program
+&#64;classmethod
+def customise_sources(cls, init_settings, env_settings, file_secret_settings):</p>
+<blockquote>
+<div><p>return (init_settings, json_config_settings_source, env_settings, file_secret_settings)</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>TODO</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="config.Settings.Config.json_settings_path">
@@ -95,26 +206,6 @@
 <dd></dd></dl>
 
 </dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="config.Settings.MINIO_ACCESS_KEY">
-<span class="sig-name descname"><span class="pre">MINIO_ACCESS_KEY</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#config.Settings.MINIO_ACCESS_KEY" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="config.Settings.MINIO_SECRET_KEY">
-<span class="sig-name descname"><span class="pre">MINIO_SECRET_KEY</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">pydantic.types.SecretStr</span></em><a class="headerlink" href="#config.Settings.MINIO_SECRET_KEY" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="config.Settings.MINIO_URL">
-<span class="sig-name descname"><span class="pre">MINIO_URL</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">pydantic.networks.AnyHttpUrl</span></em><a class="headerlink" href="#config.Settings.MINIO_URL" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="config.Settings.NAMESPACE">
-<span class="sig-name descname"><span class="pre">NAMESPACE</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">pathlib.Path</span></em><a class="headerlink" href="#config.Settings.NAMESPACE" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
 
 </dd></dl>
 
@@ -138,6 +229,17 @@
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="config.create_directory">
+<span class="sig-prename descclassname"><span class="pre">config.</span></span><span class="sig-name descname"><span class="pre">create_directory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#config.create_directory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a path, create the directory if it exists</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="config.establish_s3_connection">
 <span class="sig-prename descclassname"><span class="pre">config.</span></span><span class="sig-name descname"><span class="pre">establish_s3_connection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">endpoint_url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">access_key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">secret_key</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#config.establish_s3_connection" title="Permalink to this definition">¶</a></dt>
 <dd><p>Used to create a connection to an S3 data store.</p>
@@ -154,6 +256,20 @@
 </dd>
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>An s3fs file system object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="config.get_config">
+<span class="sig-prename descclassname"><span class="pre">config.</span></span><span class="sig-name descname"><span class="pre">get_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_file</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#config.get_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load the specified configuration file from blob storage.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>config_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Path to the config file relative to the default bucket.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Dictionary of configuration information.</p>
 </dd>
 </dl>
 </dd></dl>

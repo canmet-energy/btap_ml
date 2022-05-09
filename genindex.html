@@ -45,10 +45,12 @@
  | <a href="#J"><strong>J</strong></a>
  | <a href="#M"><strong>M</strong></a>
  | <a href="#N"><strong>N</strong></a>
+ | <a href="#O"><strong>O</strong></a>
  | <a href="#P"><strong>P</strong></a>
  | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
+ | <a href="#V"><strong>V</strong></a>
  | <a href="#W"><strong>W</strong></a>
  
 </div>
@@ -73,7 +75,7 @@
 <h2 id="B">B</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/config.html#config.AppConfig.BUILDING_OPTS_KEY">BUILDING_OPTS_KEY (config.AppConfig attribute)</a>
+      <li><a href="api/config.html#config.AppConfig.BUILDING_PARAM_FILES">BUILDING_PARAM_FILES (config.AppConfig attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -96,7 +98,11 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/plot.html#plot.corr_plot">corr_plot() (in module plot)</a>
 </li>
-      <li><a href="api/config.html#config.Settings.Config.customise_sources">customise_sources() (config.Settings.Config class method)</a>
+      <li><a href="api/preprocessing.html#preprocessing.create_dataset">create_dataset() (in module preprocessing)</a>
+</li>
+      <li><a href="api/config.html#config.create_directory">create_directory() (in module config)</a>
+</li>
+      <li><a href="api/predict.html#predict.create_model">create_model() (in module predict)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -112,11 +118,17 @@
 <h2 id="E">E</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/config.html#config.AppConfig.ENERGY_PARAM_FILES">ENERGY_PARAM_FILES (config.AppConfig attribute)</a>
+</li>
       <li><a href="api/config.html#config.Settings.Config.env_prefix">env_prefix (config.Settings.Config attribute)</a>
+</li>
+      <li><a href="api/config.html#config.establish_s3_connection">establish_s3_connection() (in module config)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/config.html#config.establish_s3_connection">establish_s3_connection() (in module config)</a>
+      <li><a href="api/config.html#config.AppConfig.ESTIMATOR_TYPE">ESTIMATOR_TYPE (config.AppConfig attribute)</a>
+</li>
+      <li><a href="api/predict.html#predict.evaluate">evaluate() (in module predict)</a>
 </li>
       <li><a href="api/config.html#config.Settings.Config.extra">extra (config.Settings.Config attribute)</a>
 </li>
@@ -133,13 +145,25 @@
         <li><a href="api/feature_selection.html#module-feature_selection">module</a>
 </li>
       </ul></li>
+      <li><a href="api/config.html#config.AppConfig.FEATURE_SELECTION_BUCKET_NAME">FEATURE_SELECTION_BUCKET_NAME (config.AppConfig attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/config.html#config.AppConfig.FEATURE_SELECTION_FILENAME">FEATURE_SELECTION_FILENAME (config.AppConfig attribute)</a>
+</li>
+      <li><a href="api/config.html#config.AppConfig.FEATURES_FILE">FEATURES_FILE (config.AppConfig attribute)</a>
+</li>
+      <li><a href="api/predict.html#predict.fit_evaluate">fit_evaluate() (in module predict)</a>
+</li>
   </ul></td>
 </tr></table>
 
 <h2 id="G">G</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/prepare_weather.html#prepare_weather.get_config">get_config() (in module prepare_weather)</a>
+      <li><a href="api/preprocessing.html#preprocessing.generate_only_samples">generate_only_samples() (in module preprocessing)</a>
+</li>
+      <li><a href="api/config.html#config.get_config">get_config() (in module config)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -165,15 +189,19 @@
 <h2 id="M">M</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/prepare_weather.html#prepare_weather.main">main() (in module prepare_weather)</a>
+      <li><a href="api/feature_selection.html#feature_selection.main">main() (in module feature_selection)</a>
+
+      <ul>
+        <li><a href="api/predict.html#predict.main">(in module predict)</a>
 </li>
-      <li><a href="api/config.html#config.Settings.MINIO_ACCESS_KEY">MINIO_ACCESS_KEY (config.Settings attribute)</a>
+        <li><a href="api/prepare_weather.html#prepare_weather.main">(in module prepare_weather)</a>
 </li>
-      <li><a href="api/config.html#config.Settings.MINIO_SECRET_KEY">MINIO_SECRET_KEY (config.Settings attribute)</a>
+        <li><a href="api/preprocessing.html#preprocessing.main">(in module preprocessing)</a>
 </li>
+      </ul></li>
       <li><a href="api/config.html#config.Settings.Config.minio_tenant">minio_tenant (config.Settings.Config attribute)</a>
 </li>
-      <li><a href="api/config.html#config.Settings.MINIO_URL">MINIO_URL (config.Settings attribute)</a>
+      <li><a href="api/predict.html#predict.model_builder">model_builder() (in module predict)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -187,6 +215,8 @@
 </li>
         <li><a href="api/plot.html#module-plot">plot</a>
 </li>
+        <li><a href="api/predict.html#module-predict">predict</a>
+</li>
         <li><a href="api/prepare_weather.html#module-prepare_weather">prepare_weather</a>
 </li>
         <li><a href="api/preprocessing.html#module-preprocessing">preprocessing</a>
@@ -198,13 +228,19 @@
 <h2 id="N">N</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/config.html#config.Settings.NAMESPACE">NAMESPACE (config.Settings attribute)</a>
+      <li><a href="api/plot.html#plot.norm_res">norm_res() (in module plot)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/plot.html#plot.norm_res">norm_res() (in module plot)</a>
-</li>
       <li><a href="api/plot.html#plot.norm_res_plot">norm_res_plot() (in module plot)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="O">O</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/config.html#config.AppConfig.OUTPUT_PATH">OUTPUT_PATH (config.AppConfig attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -212,6 +248,8 @@
 <h2 id="P">P</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/config.html#config.AppConfig.PARAM_SEARCH">PARAM_SEARCH (config.AppConfig attribute)</a>
+</li>
       <li>
     plot
 
@@ -220,6 +258,15 @@
 </li>
       </ul></li>
       <li><a href="api/plot.html#plot.plot_metric">plot_metric() (in module plot)</a>
+</li>
+      <li>
+    predict
+
+      <ul>
+        <li><a href="api/predict.html#module-predict">module</a>
+</li>
+      </ul></li>
+      <li><a href="api/predict.html#predict.predicts_hp">predicts_hp() (in module predict)</a>
 </li>
       <li>
     prepare_weather
@@ -237,7 +284,13 @@
         <li><a href="api/preprocessing.html#module-preprocessing">module</a>
 </li>
       </ul></li>
-      <li><a href="api/preprocessing.html#preprocessing.process_data">process_data() (in module preprocessing)</a>
+      <li><a href="api/config.html#config.AppConfig.PREPROCESSING_BUCKET_NAME">PREPROCESSING_BUCKET_NAME (config.AppConfig attribute)</a>
+</li>
+      <li><a href="api/config.html#config.AppConfig.PREPROCESSING_FILENAME">PREPROCESSING_FILENAME (config.AppConfig attribute)</a>
+</li>
+      <li><a href="api/preprocessing.html#preprocessing.process_building_files">process_building_files() (in module preprocessing)</a>
+</li>
+      <li><a href="api/preprocessing.html#preprocessing.process_hourly_energy">process_hourly_energy() (in module preprocessing)</a>
 </li>
       <li><a href="api/prepare_weather.html#prepare_weather.process_weather_file">process_weather_file() (in module prepare_weather)</a>
 </li>
@@ -247,13 +300,15 @@
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/preprocessing.html#preprocessing.read_hour_energy">read_hour_energy() (in module preprocessing)</a>
+      <li><a href="api/config.html#config.AppConfig.RANDOM_SEED">RANDOM_SEED (config.AppConfig attribute)</a>
+</li>
+      <li><a href="api/preprocessing.html#preprocessing.read_weather">read_weather() (in module preprocessing)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/preprocessing.html#preprocessing.read_output">read_output() (in module preprocessing)</a>
+      <li><a href="api/predict.html#predict.rmse_loss">rmse_loss() (in module predict)</a>
 </li>
-      <li><a href="api/preprocessing.html#preprocessing.read_weather">read_weather() (in module preprocessing)</a>
+      <li><a href="api/config.html#config.AppConfig.RUN_BUCKET_NAME">RUN_BUCKET_NAME (config.AppConfig attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -265,10 +320,12 @@
 </li>
       <li><a href="api/plot.html#plot.save_plot">save_plot() (in module plot)</a>
 </li>
-      <li><a href="api/feature_selection.html#feature_selection.select_features">select_features() (in module feature_selection)</a>
+      <li><a href="api/predict.html#predict.score">score() (in module predict)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/feature_selection.html#feature_selection.select_features">select_features() (in module feature_selection)</a>
+</li>
       <li><a href="api/config.html#config.Settings">Settings (class in config)</a>
 </li>
       <li><a href="api/config.html#config.Settings.Config">Settings.Config (class in config)</a>
@@ -283,9 +340,29 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/plot.html#plot.target_plot">target_plot() (in module plot)</a>
 </li>
+      <li><a href="api/config.html#config.AppConfig.TRAIN_BUCKET_NAME">TRAIN_BUCKET_NAME (config.AppConfig attribute)</a>
+</li>
+      <li><a href="api/config.html#config.AppConfig.TRAINED_MODEL_FILE">TRAINED_MODEL_FILE (config.AppConfig attribute)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/preprocessing.html#preprocessing.train_test_split">train_test_split() (in module preprocessing)</a>
+      <li><a href="api/config.html#config.AppConfig.TRAINED_MODEL_FILENAME">TRAINED_MODEL_FILENAME (config.AppConfig attribute)</a>
+</li>
+      <li><a href="api/config.html#config.AppConfig.TRAINING_BUCKET_NAME">TRAINING_BUCKET_NAME (config.AppConfig attribute)</a>
+</li>
+      <li><a href="api/config.html#config.AppConfig.TRAINING_RESULTS_FILENAME">TRAINING_RESULTS_FILENAME (config.AppConfig attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="V">V</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/config.html#config.AppConfig.VAL_BUILDING_PARAM_FILES">VAL_BUILDING_PARAM_FILES (config.AppConfig attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/config.html#config.AppConfig.VAL_ENERGY_PARAM_FILES">VAL_ENERGY_PARAM_FILES (config.AppConfig attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -298,6 +375,8 @@
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/config.html#config.AppConfig.WEATHER_DATA_STORE">WEATHER_DATA_STORE (config.AppConfig attribute)</a>
+</li>
+      <li><a href="api/config.html#config.AppConfig.WEATHER_KEY">WEATHER_KEY (config.AppConfig attribute)</a>
 </li>
   </ul></td>
 </tr></table>

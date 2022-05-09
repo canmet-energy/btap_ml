@@ -34,8 +34,158 @@
 
           <div class="body" role="main">
             
-  <section id="predict">
-<h1>Predict<a class="headerlink" href="#predict" title="Permalink to this headline">¶</a></h1>
+  <section id="module-predict">
+<span id="predict"></span><h1>Predict<a class="headerlink" href="#module-predict" title="Permalink to this headline">¶</a></h1>
+<p>Uses the output from preprocessing and feature selection from mino, builds the model and then evaluate the model.</p>
+<p>CLI arguments match those defined by <code class="docutils literal notranslate"><span class="pre">main()</span></code>.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="predict.create_model">
+<span class="sig-prename descclassname"><span class="pre">predict.</span></span><span class="sig-name descname"><span class="pre">create_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dense_layers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_train</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_train</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test_complete</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scalery</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_validate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_validate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_validate_complete</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#predict.create_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a model with defaulted values without need to perform an hyperparameter search at all times.
+Its initutive to have run the hyperparameter search beforehand to know the hyperparameter value to set.
+:param dense_layers: number of layers for the model architecture e.g for a model with 3 layers, values will be passed as [8,20,30]
+:param activation: activation function to be used e.g relu, tanh
+:param optimizer: optimizer to be used in compiling the model e.g relu, rmsprop, adam
+:param dropout_rate: used to make the model avoid overfitting, value should be less than 1 e.g 0.3
+:param length: length of the trainset
+:param learning_rate: learning rate determines how fast or how slow the model will converge to an optimal loss value. Value should be less or equal 0.1 e.g 0.001
+:param epochs: number of iterations the model should perform
+:param X_train: X trainset
+:param y_train: y trainset
+:param X_test: X testset
+:param y_test: y testset
+:param y_test_complete: dataframe containing the target variable with corresponding datapointid for the test set
+:param scalery: y scaler used to transform the y values to the original scale
+:param X_validate: X validation set
+:param y_validate: y validation set
+:param y_validate_complete: dataframe containing the target variable with corresponding datapointid for the validation set</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>evaluation results containing the loss value from the testset prediction,
+annual_metric: predicted value for each datapooint_id is summed to calculate the annual energy consumed and the loss value from the testset prediction,
+output_df: merge of y_pred, y_test, datapoint_id, the final dataframe showing the model output using the testset
+val_metric:evaluation results containing the loss value from the validationset prediction,
+val_annual_metric:predicted value for each datapooint_id is summed to calculate the annual energy consumed and the loss value from the validationset prediction,,
+output_val_df: merge of y_pred, y_validate, datapoint_id, the final dataframe showing the model output using the validation set</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>metric</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="predict.evaluate">
+<span class="sig-prename descclassname"><span class="pre">predict.</span></span><span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scalery</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_validate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_validate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test_complete</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_validate_complete</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#predict.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd><p>The model selected with the best hyperparameter is used to make predictions.
+:param model: model built from training
+:param X_test: X testset
+:param y_test: y testset
+:param scalery: y scaler used to transform the y values to the original scale
+:param X_validate: X validationset
+:param y_validate: y validationset
+:param validate: validation dataset</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>evaluation results containing the loss value from the testset prediction,
+annual_metric: predicted value for each datapooint_id is summed to calculate the annual energy consumed and the loss value from the testset prediction,
+output_df: merge of y_pred, y_test, datapoint_id, the final dataframe showing the model output using the testset
+val_metric:evaluation results containing the loss value from the validationset prediction,
+val_annual_metric:predicted value for each datapooint_id is summed to calculate the annual energy consumed and the loss value from the validationset prediction,,
+output_val_df: merge of y_pred, y_validate, datapoint_id, the final dataframe showing the model output using the validation set</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>metric</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="predict.fit_evaluate">
+<span class="sig-prename descclassname"><span class="pre">predict.</span></span><span class="sig-name descname"><span class="pre">fit_evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preprocessed_data_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selected_features_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">param_search</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#predict.fit_evaluate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Downloads the output from preprocessing and feature selection from mino, builds the model and then evaluate the model.
+:param args: arguements provided from the main</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the results from the model prediction is uploaded to minio</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="predict.main">
+<span class="sig-prename descclassname"><span class="pre">predict.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_file=&lt;typer.models.ArgumentInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preprocessed_data_file=&lt;typer.models.ArgumentInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selected_features_file=&lt;typer.models.ArgumentInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perform_param_search=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#predict.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Select the feature which contribute most to the prediction for the total energy consumed.
+Default estimator_type used for feature selection is ‘LassoCV’</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location of the .yml config file (default name is input_config.yml).</p></li>
+<li><p><strong>preprocessed_data_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location and name of a .json preprocessing file to be used.</p></li>
+<li><p><strong>selected_features_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location and name of a .json feature selection file to be used.</p></li>
+<li><p><strong>perform_param_search</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – ‘yes’ if hyperparameter tuning should be performed (increases runtime), ‘no’ if the default hyperparameters should be used.</p></li>
+<li><p><strong>output_path</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Folder location where output files should be placed.</p></li>
+<li><p><strong>random_seed</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – Random seed to be used when training.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="predict.model_builder">
+<span class="sig-prename descclassname"><span class="pre">predict.</span></span><span class="sig-name descname"><span class="pre">model_builder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hp</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#predict.model_builder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds the model that would be used to search for hyperparameter.
+The hyperparameters search inclues activation, regularizers, dropout_rate, learning_rate, and optimizer
+:param hp: hyperband object with different hyperparameters to be checked.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>model will be built based on the different hyperparameter combinations.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="predict.predicts_hp">
+<span class="sig-prename descclassname"><span class="pre">predict.</span></span><span class="sig-name descname"><span class="pre">predicts_hp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X_train</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_train</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selected_feature</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#predict.predicts_hp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Using the set of hyperparameter combined,the model built is used to make predictions
+:param X_train: X train set
+:param y_train: y train set
+:param X_test: X test set
+:param y_test: y test set
+:param selected_feature: selected features that would be used to build the model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Model built from the set of hyperparameters combined.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="predict.rmse_loss">
+<span class="sig-prename descclassname"><span class="pre">predict.</span></span><span class="sig-name descname"><span class="pre">rmse_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#predict.rmse_loss" title="Permalink to this definition">¶</a></dt>
+<dd><p>A customized rmse score that takes a sum of y_pred and y_test before computing the rmse score
+:param y_test: y testset
+:param y_pred: y predicted value from the model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>rmse loss from comparing the y_test and y_pred values</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="predict.score">
+<span class="sig-prename descclassname"><span class="pre">predict.</span></span><span class="sig-name descname"><span class="pre">score</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#predict.score" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used to compute the mse, rmse and mae scores
+:param y_test: y testset
+:param y_pred: y predicted value from the model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>mse, rmse, mae and mape scores from comparing the y_test and y_pred values</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 
 

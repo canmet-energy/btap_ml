@@ -59,20 +59,6 @@
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="prepare_weather.get_config">
-<span class="sig-prename descclassname"><span class="pre">prepare_weather.</span></span><span class="sig-name descname"><span class="pre">get_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_file</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prepare_weather.get_config" title="Permalink to this definition">¶</a></dt>
-<dd><p>Load the specified configuration file from blob storage.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>config_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Path to the config file relative to the default bucket.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Dictionary of configuration information.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
 <dt class="sig sig-object py" id="prepare_weather.get_weather_df">
 <span class="sig-prename descclassname"><span class="pre">prepare_weather.</span></span><span class="sig-name descname"><span class="pre">get_weather_df</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prepare_weather.get_weather_df" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fetch weather data from the main storage location.
@@ -92,7 +78,7 @@ Loads weather files from the NREL/openstudio-standards GitHub repository where t
 
 <dl class="py function">
 <dt class="sig sig-object py" id="prepare_weather.main">
-<span class="sig-prename descclassname"><span class="pre">prepare_weather.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_file=&lt;typer.models.ArgumentInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epw_file_key=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prepare_weather.main" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">prepare_weather.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_file=&lt;typer.models.ArgumentInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epw_files=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prepare_weather.main" title="Permalink to this definition">¶</a></dt>
 <dd><p>Take raw EPW files as defined in BTAP YAML configuration and prepare it for use by the model.
 Uses the EnergyPlus configuration to identify and process weather data in EPW format. The weather data is then
 saved to blob storage for use in later processing stages.</p>
@@ -100,11 +86,12 @@ saved to blob storage for use in later processing stages.</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>config_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Path to the configuration file used for EnergyPlus.</p></li>
-<li><p><strong>epw_file_key</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – The key in the configuration file that has the weather file name(s). Default is <code class="docutils literal notranslate"><span class="pre">:epw_file</span></code>.</p></li>
+<li><p><strong>epw_files</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – The epw key to be used if the config file is not use.</p></li>
+<li><p><strong>output_path</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Where output data should be placed.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -125,7 +112,7 @@ saved to blob storage for use in later processing stages.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="prepare_weather.save_epw">
-<span class="sig-prename descclassname"><span class="pre">prepare_weather.</span></span><span class="sig-name descname"><span class="pre">save_epw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prepare_weather.save_epw" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">prepare_weather.</span></span><span class="sig-name descname"><span class="pre">save_epw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prepare_weather.save_epw" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save preprared EPW data out to blob storage.
 The filename of the original file is used, with the extension replaced with .parquet.</p>
 <dl class="field-list simple">

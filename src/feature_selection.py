@@ -131,8 +131,8 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
     # If the output path is blank, map to the docker output path
     if len(output_path) < 1:
         output_path = config.Settings().APP_CONFIG.DOCKER_OUTPUT_PATH
-    # Add the docker input path as a prefix to the preprocessing file
-    preprocessed_data_file = DOCKER_INPUT_PATH + preprocessed_data_file
+    # Since the preprocessing file may already be a full path from a pipeline, check if the input path is needed
+    if os.path.exists(DOCKER_INPUT_PATH + preprocessed_data_file): preprocessed_data_file = DOCKER_INPUT_PATH + preprocessed_data_file
     # Perform the feature selection
     features_filepath = select_features(config_file, preprocessed_data_file, estimator_type, output_path)
     return features_filepath

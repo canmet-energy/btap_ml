@@ -533,8 +533,9 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
         cfg = config.get_config(DOCKER_INPUT_PATH + config_file)
         random_seed = cfg.get(config.Settings().APP_CONFIG.RANDOM_SEED)
         perform_param_search = cfg.get(config.Settings().APP_CONFIG.PARAM_SEARCH)
-    preprocessed_data_file = DOCKER_INPUT_PATH + preprocessed_data_file
-    selected_features_file = DOCKER_INPUT_PATH + selected_features_file
+    # Since the data and features files may already be a full path from a pipeline, check if the input path is needed
+    if os.path.exists(DOCKER_INPUT_PATH + preprocessed_data_file): preprocessed_data_file = DOCKER_INPUT_PATH + preprocessed_data_file
+    if os.path.exists(DOCKER_INPUT_PATH + selected_features_file): selected_features_file = DOCKER_INPUT_PATH + selected_features_file
     # If the output path is blank, map to the docker output path
     if len(output_path) < 1:
         output_path = config.Settings().APP_CONFIG.DOCKER_OUTPUT_PATH

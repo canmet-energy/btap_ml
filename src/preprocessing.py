@@ -419,6 +419,7 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
     """
     logger.info("Beginning the weather, energy, and building preprocessing step.")
     DOCKER_INPUT_PATH = config.Settings().APP_CONFIG.DOCKER_INPUT_PATH
+    DOCKER_OUTPUT_PATH = config.Settings().APP_CONFIG.DOCKER_OUTPUT_PATH
     # Load all content stored from the config file, if provided
     if len(config_file) > 0:
         # Load the specified config file
@@ -443,7 +444,8 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
     # For each mandatory input file, append the docker input path
     hourly_energy_electric_file = DOCKER_INPUT_PATH + hourly_energy_electric_file
     building_params_electric_file = DOCKER_INPUT_PATH + building_params_electric_file
-    weather_file = DOCKER_INPUT_PATH + weather_file
+    # Since the weather file may already be a full path from a pipeline, check if the input path is needed
+    if os.path.exists(DOCKER_INPUT_PATH + weather_file): weather_file = DOCKER_INPUT_PATH + weather_file
     # For each optional file, add the prefix only if it is not empty
     if len(building_params_folder) > 0: building_params_folder = DOCKER_INPUT_PATH + building_params_folder
     if len(val_hourly_energy_file) > 0: val_hourly_energy_file = DOCKER_INPUT_PATH + val_hourly_energy_file

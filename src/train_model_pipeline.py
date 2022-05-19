@@ -36,7 +36,6 @@ def load_and_validate_config(config_file: str):
     return
 
 def main(config_file: str = typer.Argument(..., help="Location of the .yml config file (default name is input_config.yml)."),
-         output_path: str = typer.Option("", help="Folder location where output files should be placed."),
          random_seed: int = typer.Option(7, help="The random seed to be used when training."),
         # Weather
          weather_file: str = typer.Option("", help="Location and name of a .parquet weather file to be used if weather generation is skipped."),
@@ -70,7 +69,6 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
 
     Args:
         config_file: Location of the .yml config file (default name is input_config.yml).
-        output_path: Folder location where output files should be placed.
         random_seed: Random seed to be used when training.
         weather_file: Location and name of a .parquet weather file to be used if weather generation is skipped.
         skip_weather_generation: True if the .parquet weather file generation should be skipped,
@@ -93,16 +91,17 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
         skip_model_training: True if the model training should be skipped. Useful if only the preprocessing steps should be performed.
     """
     logger.info("Beginning the training process.")
+    DOCKER_INPUT_PATH = config.Settings().APP_CONFIG.DOCKER_INPUT_PATH
     # Load the settings
     settings = config.Settings()
     # Load and validate anything from the config file
     if len(config_file) > 0:
         logger.info("Loading provided configuration file.")
-        load_and_validate_config(config_file)
-        cfg = config.get_config(config_file)
-        output_path = cfg.get(settings.APP_CONFIG.OUTPUT_PATH)
+        load_and_validate_config(DOCKER_INPUT_PATH + config_file)
+        cfg = config.get_config(DOCKER_INPUT_PATH + config_file)
     # Create directory to hold all data for the run (datetime/...)
     # If used, copy the config file within the directory to log the input values
+    output_path = config.Settings().APP_CONFIG.DOCKER_OUTPUT_PATH
     output_path = Path(output_path).joinpath(settings.APP_CONFIG.TRAIN_BUCKET_NAME + str(datetime.now()))
     # Create the root directory in the mounted drive
     logger.info("Creating output directory %s.", str(output_path))
@@ -110,16 +109,20 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
     # If the config file is used, copy it into the output folder
     logger.info("Copying config file into %s.", str(output_path))
     if len(config_file) > 0:
-        shutil.copy(config_file, str(output_path.joinpath("input_config.yml")))
+        shutil.copy(DOCKER_INPUT_PATH + config_file, str(output_path.joinpath("input_config.yml")))
     output_path = str(output_path)
     # Prepare weather (perhaps can allow a .csv to require processing while .parquet skips processing)
     if not skip_weather_generation:
         weather_file = prepare_weather.main(config_file, output_path=output_path)
     # Preprocess the data (generates json with train, test, validate)
     if not skip_file_preprocessing:
-        preprocessed_data_file = preprocessing.main(config_file, hourly_energy_electric_file, building_params_electric_file,
-                                                    weather_file, val_hourly_energy_file, val_building_params_file,
-                                                    hourly_energy_gas_file, building_params_gas_file, output_path, False, random_seed)
+        preprocessed_data_file = preprocessing.main(config_file=config_file, hourly_energy_electric_file=hourly_energy_electric_file,
+                                                    building_params_electric_file=building_params_electric_file,
+                                                    weather_file=weather_file, val_hourly_energy_file=val_hourly_energy_file,
+                                                    val_building_params_file=val_building_params_file, hourly_energy_gas_file=hourly_energy_gas_file,
+                                                    building_params_gas_file=building_params_gas_file, output_path=output_path,
+                                                    preprocess_only_for_predictions=False, random_seed=random_seed,
+                                                    building_params_folder='', start_date='', end_date='', ohe_file='')
     # Perform feature selection (retrieve the features to be used)
     if not skip_feature_selection:
        selected_features_file = feature_selection.main(config_file, preprocessed_data_file, estimator_type, output_path)

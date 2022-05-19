@@ -16,6 +16,9 @@ logger = logging.getLogger(__name__)
 
 class AppConfig(BaseModel):
     """Application configuration."""
+    # Paths to all BTAP calls within the docker container
+    DOCKER_INPUT_PATH: str = ''
+    DOCKER_OUTPUT_PATH: str = '../testing/train_pipeline/'
     # Bucket prefix to be used as part of the run folder being created for training and running
     TRAIN_BUCKET_NAME: str = 'training_model_'
     RUN_BUCKET_NAME: str = 'running_model_'
@@ -29,10 +32,7 @@ class AppConfig(BaseModel):
     TRAINING_BUCKET_NAME: str = 'model_training'
     # URL where weather files are stored
     WEATHER_DATA_STORE: AnyHttpUrl = 'https://raw.githubusercontent.com/NREL/openstudio-standards/nrcan/data/weather/'
-    # Parent level key in the BTAP CLI config weather data is stored under.
-    # The EPW file key will be under this.
-    #BUILDING_OPTS_KEY: str = ':building_options'
-    OUTPUT_PATH: str = ':output_path'
+    # Parent level key within input_config.yml
     RANDOM_SEED: str = ':random_seed'
     WEATHER_KEY: str = ':epw_file'
     BUILDING_PARAM_FILES: str = ':building_param_files'
@@ -43,11 +43,21 @@ class AppConfig(BaseModel):
     PARAM_SEARCH: str = ':param_search'
     FEATURES_FILE: str = ':features_file'
     TRAINED_MODEL_FILE: str = ':trained_model_file'
+    OHE_FILE: str = ':ohe_file'
+    SCALER_X_FILE: str = ':scaler_X_file'
+    SCALER_Y_FILE: str = ':scaler_y_file'
+    BUILDING_BATCH_PATH: str = ':batch_building_inputs'
+    SIMULATION_START_DATE: str = ':simulation_start_date'
+    SIMULATION_END_DATE: str = ':simulation_end_date'
     # Specify any static filename keys
     PREPROCESSING_FILENAME: str = 'preprocessing'
-    FEATURE_SELECTION_FILENAME: str = 'feature_selection_'
-    TRAINED_MODEL_FILENAME: str = 'trained_model'
+    FEATURE_SELECTION_FILENAME: str = 'feature_selection'
+    TRAINED_MODEL_FILENAME: str = 'trained_model.h5'
+    SCALERX_FILENAME: str = 'scaler_X.pkl'
+    SCALERY_FILENAME: str = 'scaler_y.pkl'
     TRAINING_RESULTS_FILENAME: str = 'training_results'
+    RUNNING_DAILY_RESULTS_FILENAME: str = 'daily_energy_predictions.csv'
+    RUNNING_AGGREGATED_RESULTS_FILENAME: str = 'aggregated_energy_predictions.csv'
 
 # There's a JSON file available with required credentials in it
 def json_config_settings_source(settings: BaseSettings) -> Dict[str, Any]:
@@ -75,16 +85,6 @@ class Settings(BaseSettings):
     """Application settings. All of these can be set by the environment to override anything coded here."""
     # Set up application specific information
     APP_CONFIG: AppConfig = AppConfig()
-
-    """
-    TODO: Remove if credentials are not needed in the program
-    MINIO_URL: AnyHttpUrl = Field(..., env='MINIO_URL')
-    MINIO_ACCESS_KEY: str = Field(..., env='MINIO_ACCESS_KEY')
-    MINIO_SECRET_KEY: SecretStr = Field(..., env='MINIO_SECRET_KEY')
-
-    NAMESPACE: Path = Path('nrcan-btap')
-    """
-
     class Config:
         # Prefix our variables to avoid collisions with other programs
         env_prefix = 'BTAP_'
@@ -95,12 +95,6 @@ class Settings(BaseSettings):
 
         # Ignore extra values present in the JSON data
         extra = 'ignore'
-        """
-        TODO: Remove if credentials are not needed in the program
-        @classmethod
-        def customise_sources(cls, init_settings, env_settings, file_secret_settings):
-            return (init_settings, json_config_settings_source, env_settings, file_secret_settings)
-        """
 
 
 def establish_s3_connection(endpoint_url: str, access_key: str, secret_key: SecretStr) -> s3fs.S3FileSystem:
@@ -194,6 +188,9 @@ def access_minio(path: str, operation: str, data: Union[str, pd.DataFrame]):
 def create_directory(path: str) -> None:
     """
     Given a path, create the directory if it exists
+
+    Args:
+        path: directory to be created
     """
     if not os.path.isdir(path):
         os.mkdir(path)

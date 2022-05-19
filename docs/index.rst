@@ -17,10 +17,10 @@ associated with calculating such a large solution space. Even with High Performa
 stock of models is estimated to take 57 centuries. Surrogate models significantly reduce the time and resources
 required to produce usable outputs.
 
-After installation, running the processing will generally follow this order:
+After installation, the processing can either take the form of running a model training pipeline or of running a trained model to obtain predictions:
 
 .. graphviz::
-   :name: Processing overview
+   :name: Training a model
 
    digraph G {
       bgcolor=transparent;
@@ -33,6 +33,22 @@ After installation, running the processing will generally follow this order:
       preprocess [label="Run preprocessing"];
       features [label="Feature selection"];
       build [label="Build the model"];
+      end [shape=Msquare];
+    }
+
+.. graphviz::
+   :name: Obtaining predictions
+
+   digraph G {
+      bgcolor=transparent;
+      rankdir=LR;
+
+      start -> weather -> preprocess -> run -> end;
+
+      start [shape=Mdiamond];
+      weather [label="Prepare weather"];
+      preprocess [label="Preprocess data"];
+      run [label="Obtain predictions"];
       end [shape=Msquare];
     }
 
@@ -54,8 +70,7 @@ Once installation is complete, a good place to get an overview of the complete p
 
    usage/quickstart
    usage/retrain
-   usage/model_run
-   usage/kubeflow_pipeline
+   usage/run_model
 
 
 .. toctree::
@@ -68,6 +83,8 @@ Once installation is complete, a good place to get an overview of the complete p
    api/predict
    api/prepare_weather
    api/preprocessing
+   api/run_model
+   api/train_model_pipeline
 
 
 Indices and tables

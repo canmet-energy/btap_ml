@@ -1,13 +1,29 @@
-# Each value is used for the BTAP surrogate model program
+###################################
+##
+## BTAP ML - INPUT CONFIGURATION FILE
+##
+## Each value is used for the BTAP surrogate model program, but can also
+## be provided through the designed CLI.
+##
+## NOTE: The docker image uses the root path '/home/btap_ml/'
+##       The input data will be placed in the drive mounted to '/home/btap_ml/input/'
+##       The output data will be placed in the drive mounted to '/home/btap_ml/output/'
+##       Thus, all input paths specified in this file should be relative to the drive mounted
+##       to '/home/btap_ml/input/'.
+##       Example: If you mount 'C:/Users/username/Downloads/' to 'home/btap_ml/input' when running,
+##       and you use the 'input_config.yml' file within 'C:/Users/username/Downloads/config/input_config.yml',
+##       then the value which will be passed when calling the program will be:
+##         python <filename>.py config/input_config.yml
+##       This applies to any input path location specified in this file.
+##
+###################################
 
-# Specify the output path to be used throughout the pipeline
-:output_path: '../testing/train_pipeline'
 # Random seed
 :random_seed: 7
 
 ###################################
 ##
-## FOR WEATHER PROCESSING
+## FOR WEATHER PROCESSING (USED FOR BOTH TRAINING AND RUNNING A MODEL)
 ##
 ###################################
 # Specify the epw key to be used
@@ -21,45 +37,45 @@
 # 'CAN_YT_Whitehorse.Intl.AP.719640_CWEC2016.epw'
 ]
 
-###################################
+###################################/
 ##
-## FOR INPUT PREPROCESSING
+## FOR INPUT PREPROCESSING (ONLY USED FOR TRAINING)
 ##
 ###################################
 # Specify the inputs for the building file(s) to be used for training
 :building_param_files: [
   # Electricity file (mandatory)
-  '../testing/output_elec_2021-11-05.xlsx',
-  # Gas file (optional, comment out as needed)
+  '',
+  # Gas file (optional, leave as an empty string if unused)
   ''
 ]
 # Specify the inputs for the building file(s) to be used for train validation (optional)
-# For now, only the first entry is used (so the electricity file, although gas can be insertted)
+# For now, only the first entry is used
 :val_building_param_files: [
-  # Electricity file
+  # Validation building file path and name
   '',
-  # Gas file
+  # UNUSED FOR VALIDATION SET, TO BE REMOVED
   ''
 ]
 # Specify the inputs for the energy file(s) to be used for training
 :energy_param_files: [
   # Electricity file (mandatory)
-  '../testing/total_hourly_res_elec_2021-11-05.csv',
-  # Gas file (optional, comment out as needed)
+  '',
+  # Gas file (optional, leave as an empty string if unused)
   ''
 ]
 # Specify the inputs for the energy file(s) to be used for train validation
-# For now, only the first entry is used (so the electricity file, although gas can be insertted)
+# For now, only the first entry is used
 :val_energy_param_files: [
-  # Electricity file (mandatory)
+  # Validation energy file path and name
   '',
-  # Gas file (optional, comment out as needed)
+  # UNUSED FOR VALIDATION SET, TO BE REMOVED
   ''
 ]
 
 ###################################
 ##
-## FOR FEATURE SELECTION
+## FOR FEATURE SELECTION (ONLY USED FOR TRAINING)
 ##
 ###################################
 # Specify the estmator type to be used (lasso is the default if blank or unspecified)
@@ -72,7 +88,7 @@
 
 ###################################
 ##
-## FOR MODEL TRAINING AFTER PREPROCESSING
+## FOR MODEL TRAINING AFTER PREPROCESSING (ONLY FOR TRAINING)
 ##
 ###################################
 # Determine whether the training should perform a hyperparameter search
@@ -82,15 +98,30 @@
 
 ###################################
 ##
-## FOR RUNNING A TRAINED MODEL
+## EACH VALUE BELOW IS USED FOR RUNNING A TRAINED MODEL
 ##
-## NOTE: The input data will be taken from building_param_files and energy_param_files.
-##       The output path will be the :output_path: key/value
+## NOTE: The weather key to be used is the value used by the :epw_file key.
 ##
 ###################################
 # Filepath and filename of the trained ML model to be used (output from the training step)
 :trained_model_file: ''
-# Filepath and filename of the feature selection file to be used for training
+# Filepath and filename of the ohe.pkl file generated from the preprocessing step when training a model
+# ***NOTE: If a trained model only used electricity training data without gas data, using the saved ohe.pkl
+#          file will cause the predictions to fail. To obtain predictions on gas building data with
+#          a model trained on only electric data, leave the :ohe_file value below as an empty string to have
+#          it be generated to work with the gas data, then the data will be converted to the proper
+#          electricity format. If the trained model included a gas file, the ohe.pkl file can be used as normal.
+:ohe_file: ''
+# Filepath and filename of the scaler_X.pkl and scaler_y.pkl files to be used (located within the trained model output)
+:scaler_X_file: ''
+:scaler_y_file: ''
+# Filepath and filename of the feature selection file to be used for training (located in training output)
 :features_file: ''
-
-:batch_inputs: '/path_to_files/.../test_these_June/'
+# Folder path containing one or more .xlsx building paramter files
+# All .xlsx files within the specified folder must be valid building files
+:batch_building_inputs: ''
+# Start and end dates to be used when preprocessing data to receive predictions for
+# Typically will remain as 1-1 to 12-31
+# Expected format: Month_number-Day_number
+:simulation_start_date: '1-1'
+:simulation_end_date: '12-31'

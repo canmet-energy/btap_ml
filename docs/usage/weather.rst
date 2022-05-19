@@ -2,19 +2,21 @@ EnergyPlus uses weather data in the EPW file format, as defined in the `Auxiliar
 Programs <https://energyplus.net/assets/nrel_custom/pdfs/pdfs_v9.6.0/AuxiliaryPrograms.pdf>`_ documentation. In
 order to be consumed by the model, the data needs to undergo several steps before it can be used.
 
-Weather data can be automatically preprared from the information found in the BTAP CLI configuration YAML. The
-``prepare_weather.py`` script can be used to process weather data and save it to blob storage.
+The weather data is received from a `GitHub repo <https://raw.githubusercontent.com/NREL/openstudio-standards/nrcan/data/weather/>`.
+
+Weather data can be automatically preprared from the information found in the ``input_config.yml`` configuration YAML. The
+``prepare_weather.py`` script can be used to process and save weather data.
 
 .. code::
 
-   $ python prepare_weather.py input_data/sample-lhs_2021-10-04.yml
+    python prepare_weather.py input_config.yml
 
 .. note::
 
-   The input to ``prepare_weather.py`` is the same configuration file that is given to BTAP CLI. The script will
-   look for the file on blob storage, relative to the project namespace (``nrcan-btap`` on AAW).
+   The input to ``prepare_weather.py`` is the same configuration file that is given to ``train_model_pipeline.py``
+   and to ``run_model.py``. The CLI can also be used to invoke the process without a complete configuration file.
 
-Outputs are placed in the ``weather`` bucket (by default) in storage as parquet files. The name of the weather files
+Outputs are placed into a ``/weather`` folder (by default) in storage as parquet files. The name of the weather files
 will match the input name found in the YAML file, but with a ``.parquet`` file extension.
 
 What this does
@@ -46,7 +48,7 @@ for predicting building energy use. Columns marked as not used by EnergyPlus are
 .. note::
 
    The ``year`` column is marked as not being used by EnergyPlus, but is kept for use in creating a datetime index
-   of the data.
+   of the data. Only the month and day values are used when merging with building and energy data.
 
 Summarize by day
 """"""""""""""""

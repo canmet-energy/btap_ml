@@ -1,29 +1,31 @@
-After preprocessing the data, the features to be used in building the surrogate model can be selected::
+After preprocessing the data, the features to be used in building the surrogate model can be selected
+(with all inputs coming from the command line or from the ``input_config.yml`` file)::
 
-    $ python3 feature_selection.py --in_obj_name output_data/preprocessing_out --output_path output_data/feature_out --estimator_type lasso
+    python feature_selection.py input_config.yml
 
-The parameters to the above script are documented in the :py:mod:`feature_selection`.
+The parameters to the above script are documented at :py:mod:`feature_selection`.
 
-In order to ensure the most relevant features are used in building the surrogage model, feature_selection is performed
-to search for the most optimal features from preprocessed data.
+To ensure that the most relevant features are used in building the surrogage model, feature selection is performed
+to search for the most optimal features from the preprocessed data.
 
 .. note::
 
     Feature selection is performed using the X_train and the y_train set.
 
-Feature selection could be perfomed using either of the following estimator type listed below:
+Feature selection can be perfomed using any of the following estimator types:
 
 * Linear Regression
 * XGBRegressor
 * ElasticnetCV
 * LassoCV
 
-For the purpose of this project, XGBRegressor was often slow in selecting the features. Often times, ElasticnetCV and
-LassoCV selected same features. Although, LassoCV is used as the default estimator for feature selection, any of the
-other estimator type can be used by specifying the respective esimator type to the estimator_type parameter when
-performing feature selection.
+Some details on the options are:
 
+* XGBRegressor is often slow in selecting the features.
+* ElasticnetCV and LassoCV frequently selected same features.
+* Although, LassoCV is used as the default estimator for feature selection, any of the other estimator type can be
+used by specifying the respective esimator type to the estimator_type parameter when performing feature selection.
 
 .. note::
 
-    The json file created has just key value "features" which represents the final features selected for modelling.
+    The json file that is created contains the key value "features" which represents the final features selected for modelling.

@@ -40,7 +40,7 @@
 <p>CLI arguments match those defined by <code class="docutils literal notranslate"><span class="pre">main()</span></code>.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="predict.create_model">
-<span class="sig-prename descclassname"><span class="pre">predict.</span></span><span class="sig-name descname"><span class="pre">create_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dense_layers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_train</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_train</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test_complete</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scalery</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_validate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_validate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_validate_complete</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#predict.create_model" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">predict.</span></span><span class="sig-name descname"><span class="pre">create_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dense_layers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_train</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_train</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test_complete</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scalery</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_validate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_validate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_validate_complete</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#predict.create_model" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a model with defaulted values without need to perform an hyperparameter search at all times.
 Its initutive to have run the hyperparameter search beforehand to know the hyperparameter value to set.
 :param dense_layers: number of layers for the model architecture e.g for a model with 3 layers, values will be passed as [8,20,30]
@@ -58,7 +58,8 @@ Its initutive to have run the hyperparameter search beforehand to know the hyper
 :param scalery: y scaler used to transform the y values to the original scale
 :param X_validate: X validation set
 :param y_validate: y validation set
-:param y_validate_complete: dataframe containing the target variable with corresponding datapointid for the validation set</p>
+:param y_validate_complete: dataframe containing the target variable with corresponding datapointid for the validation set
+:param output_path: Where the outputs will be placed/</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>evaluation results containing the loss value from the testset prediction,
@@ -124,7 +125,7 @@ Default estimator_type used for feature selection is ‘LassoCV’</p>
 <li><p><strong>preprocessed_data_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location and name of a .json preprocessing file to be used.</p></li>
 <li><p><strong>selected_features_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location and name of a .json feature selection file to be used.</p></li>
 <li><p><strong>perform_param_search</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – ‘yes’ if hyperparameter tuning should be performed (increases runtime), ‘no’ if the default hyperparameters should be used.</p></li>
-<li><p><strong>output_path</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Folder location where output files should be placed.</p></li>
+<li><p><strong>output_path</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Where output data should be placed. Note that this value should be empty unless this file is called from a pipeline.</p></li>
 <li><p><strong>random_seed</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – Random seed to be used when training.</p></li>
 </ul>
 </dd>
@@ -146,13 +147,15 @@ The hyperparameters search inclues activation, regularizers, dropout_rate, learn
 
 <dl class="py function">
 <dt class="sig sig-object py" id="predict.predicts_hp">
-<span class="sig-prename descclassname"><span class="pre">predict.</span></span><span class="sig-name descname"><span class="pre">predicts_hp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X_train</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_train</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selected_feature</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#predict.predicts_hp" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">predict.</span></span><span class="sig-name descname"><span class="pre">predicts_hp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X_train</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_train</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selected_feature</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#predict.predicts_hp" title="Permalink to this definition">¶</a></dt>
 <dd><p>Using the set of hyperparameter combined,the model built is used to make predictions
 :param X_train: X train set
 :param y_train: y train set
 :param X_test: X test set
 :param y_test: y test set
-:param selected_feature: selected features that would be used to build the model</p>
+:param selected_feature: selected features that would be used to build the model
+:param output_path: Where the output files should be placed.
+:param random_seed: The random seed to be used</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>Model built from the set of hyperparameters combined.</p>
@@ -215,8 +218,7 @@ The hyperparameters search inclues activation, regularizers, dropout_rate, learn
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../usage/quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../usage/retrain.html">Train the model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../usage/model_run.html">Re-run Model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../usage/kubeflow_pipeline.html">Kubeflow pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/run_model.html">Running a model</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API</span></p>
 <ul class="current">
@@ -226,6 +228,8 @@ The hyperparameters search inclues activation, regularizers, dropout_rate, learn
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Predict</a></li>
 <li class="toctree-l1"><a class="reference internal" href="prepare_weather.html">Prepare weather</a></li>
 <li class="toctree-l1"><a class="reference internal" href="preprocessing.html">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run_model.html">Run Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="train_model_pipeline.html">Train Model Pipeline</a></li>
 </ul>
 
 <div class="relations">

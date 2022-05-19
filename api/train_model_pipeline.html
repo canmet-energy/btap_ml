@@ -1,0 +1,179 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Train Model Pipeline &#8212; BTAP: ML  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Run Model" href="run_model.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="module-train_model_pipeline">
+<span id="train-model-pipeline"></span><h1>Train Model Pipeline<a class="headerlink" href="#module-train_model_pipeline" title="Permalink to this headline">¶</a></h1>
+<p>Given all data files, preprocess the data and train a model with the preprocessed data</p>
+<p>CLI arguments match those defined by <code class="docutils literal notranslate"><span class="pre">main()</span></code>.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="train_model_pipeline.load_and_validate_config">
+<span class="sig-prename descclassname"><span class="pre">train_model_pipeline.</span></span><span class="sig-name descname"><span class="pre">load_and_validate_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_file</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#train_model_pipeline.load_and_validate_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>TODO: Decide on how this will work
+Loads the specified yaml config file for the program and validates that each component has been loaded</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="train_model_pipeline.main">
+<span class="sig-prename descclassname"><span class="pre">train_model_pipeline.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_file=&lt;typer.models.ArgumentInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weather_file=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_weather_generation=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hourly_energy_electric_file=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">building_params_electric_file=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_hourly_energy_file=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_building_params_file=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hourly_energy_gas_file=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">building_params_gas_file=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_file_preprocessing=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preprocessed_data_file=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">estimator_type=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_feature_selection=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selected_features_file=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perform_param_search=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_model_training=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#train_model_pipeline.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run through the entire training pipeline to train a surrogate Machine Learning model which predicts energy output.
+All outputs will be placed within a folder created in the specified output path which uniquely uses the datetime for naming the folder.
+First, the specified weather file will be retrieved and converted into a .parquet file.
+Second, the provided input building and energy files will be preprocessed and split into train/test/validation sets.
+Third, the best features from the input data will be selected to be used for training.
+Finally, a Machine Learning model will be instantiated and trained with the preprocessed data and selected features.
+Note that all inputs except for the config file are optional, however the arguements can be set from the command line
+if an empty string is passed as input for the config .yml file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location of the .yml config file (default name is input_config.yml).</p></li>
+<li><p><strong>random_seed</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – Random seed to be used when training.</p></li>
+<li><p><strong>weather_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location and name of a .parquet weather file to be used if weather generation is skipped.</p></li>
+<li><p><strong>skip_weather_generation</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – True if the .parquet weather file generation should be skipped,
+where the weather_file input is used, False if the weather file generation should be performed.</p></li>
+<li><p><strong>hourly_energy_electric_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location and name of a electricity energy file to be used if the config file is not used.</p></li>
+<li><p><strong>building_params_electric_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location and name of a electricity building parameters file to be used if the config file is not used.</p></li>
+<li><p><strong>val_hourly_energy_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location and name of a electricity energy validation file to be used if the config file is not used.</p></li>
+<li><p><strong>val_building_params_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location and name of a electricity building parameters validation file to be used if the config file is not used.</p></li>
+<li><p><strong>hourly_energy_gas_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location and name of a gas energy file to be used if the config file is not used.</p></li>
+<li><p><strong>building_params_gas_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location and name of a gas building parameters file to be used if the config file is not used.</p></li>
+<li><p><strong>skip_file_preprocessing</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – True if the .json preprocessing file generation should be skipped,
+where the preprocessed_data_file input is used, False if the preprocessing file generation should be performed.</p></li>
+<li><p><strong>preprocessed_data_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location and name of a .json preprocessing file to be used if the preprocessing is skipped.</p></li>
+<li><p><strong>estimator_type</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – The type of feature selection to be performed. The default is lasso, which will be used if nothing is passed.
+The other options are ‘linear’, ‘elasticnet’, and ‘xgb’.</p></li>
+<li><p><strong>skip_feature_selection</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – True if the .json feature selection file generation should be skipped,
+where the selected_features_file input is used, False if the feature selection file generation should be performed.</p></li>
+<li><p><strong>selected_features_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location and name of a .json feature selection file to be used if the feature selection is skipped.</p></li>
+<li><p><strong>perform_param_search</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – ‘yes’ if hyperparameter tuning should be performed (increases runtime), ‘no’ if the default hyperparameters should be used.</p></li>
+<li><p><strong>skip_model_training</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – True if the model training should be skipped. Useful if only the preprocessing steps should be performed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">BTAP: ML</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Setup</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../aaw_setup.html">Working on AAW</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../aaw_setup.html#project-source-code">Project source code</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../usage/quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/retrain.html">Train the model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/run_model.html">Running a model</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="config.html">Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="feature_selection.html">Feature selection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plot.html">Plot</a></li>
+<li class="toctree-l1"><a class="reference internal" href="predict.html">Predict</a></li>
+<li class="toctree-l1"><a class="reference internal" href="prepare_weather.html">Prepare weather</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preprocessing.html">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run_model.html">Run Model</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Train Model Pipeline</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="run_model.html" title="previous chapter">Run Model</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2021, Natural Resources Canada.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.5.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/api/train_model_pipeline.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

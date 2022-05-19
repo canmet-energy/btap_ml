@@ -16,7 +16,7 @@
     <script src="../_static/doctools.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Re-run Model" href="model_run.html" />
+    <link rel="next" title="Running a model" href="run_model.html" />
     <link rel="prev" title="Quickstart" href="quickstart.html" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
@@ -36,35 +36,59 @@
             
   <section id="train-the-model">
 <h1>Train the model<a class="headerlink" href="#train-the-model" title="Permalink to this headline">¶</a></h1>
-<p>If there are new data files that significantly change the types of information the model knows how to predict you need
-to retrain the model. This involves performing a series of steps to prepare the data and use it to retrain the model.
+<p>If there are new data files that significantly change the types of information the model knows how to predict you need to retrain the model.
 In the case that you want to retrain the model but are not dealing with significant changes in the data (for example,
-using the same weather data) you can skip the weather data preparation or cleaning and splitting steps, as appropriate.</p>
+using the same weather data) you can skip the weather data preparation or cleaning and splitting steps, as appropriate.
+The steps of doing so are compressed into one file <code class="docutils literal notranslate"><span class="pre">train_model_pipeline.py</span></code>, but each of the individual steps performed
+are also discussed below.</p>
 <div class="contents local topic" id="contents">
 <ul class="simple">
-<li><p><a class="reference internal" href="#preparation-of-weather-data" id="id2">Preparation of weather data</a></p></li>
-<li><p><a class="reference internal" href="#clean-and-split-the-data" id="id3">Clean and split the data</a></p></li>
-<li><p><a class="reference internal" href="#feature-selection" id="id4">Feature selection</a></p></li>
-<li><p><a class="reference internal" href="#build-the-surrogate-model-and-predict-energy-use" id="id5">Build the surrogate model and predict energy use</a></p></li>
-<li><p><a class="reference internal" href="#download-results" id="id6">Download results</a></p></li>
+<li><p><a class="reference internal" href="#training-a-model" id="id2">Training a model</a></p></li>
+<li><p><a class="reference internal" href="#preparation-of-weather-data" id="id3">Preparation of weather data</a></p></li>
+<li><p><a class="reference internal" href="#clean-and-split-the-data" id="id4">Clean and split the data</a></p></li>
+<li><p><a class="reference internal" href="#feature-selection" id="id5">Feature selection</a></p></li>
+<li><p><a class="reference internal" href="#build-the-surrogate-model-and-predict-energy-use" id="id6">Build the surrogate model and predict energy use</a></p></li>
 </ul>
 </div>
+<section id="training-a-model">
+<h2><a class="toc-backref" href="#id2">Training a model</a><a class="headerlink" href="#training-a-model" title="Permalink to this headline">¶</a></h2>
+<p>Training a model can be done by calling the <code class="docutils literal notranslate"><span class="pre">train_model_pipeline.py</span></code> file. This file combines each
+preprocessing step to allow the entire training process to be invoked from one call. The process
+begins by creating a unique output directory based on the date and time which the process begins.
+All outputs will be located within the new directory.</p>
+<p>Using the <code class="docutils literal notranslate"><span class="pre">input_config.yml</span></code> file or the passed command line arguements (which can be viewed by
+passing the –help arguement), each required input will be validated before being used within the
+program.</p>
+<p>The first step performed is the processing of weather data via the <code class="docutils literal notranslate"><span class="pre">prepare_weather.py</span></code> file.</p>
+<p>Next, the data will be passed to <code class="docutils literal notranslate"><span class="pre">preprocessing.py</span></code> to load the building data, the energy data,
+and merge the two with the weather data. Following additional data cleaning, the data is split into
+train/test/validation sets, where the validation set is either split from the regular input data or
+is loaded from an explicitly provided file to be used for validation.</p>
+<p>Before training the Machine Learning model, the optimal features will be selected by calling
+<code class="docutils literal notranslate"><span class="pre">feature_selection.py</span></code>. This process will use one of several avilable tools for feature selection
+to derive a list of features which will be used for training. This omits any feature which will not be
+useful in the training process.</p>
+<p>Using the selected features and preprocessing, <code class="docutils literal notranslate"><span class="pre">predict.py</span></code> will be called to train the model.
+Hyperparameter tuning can be performed at the cost of additional time complexity or the default
+model can be used. The trained model and test results will be output for future use.</p>
+</section>
 <section id="preparation-of-weather-data">
-<h2><a class="toc-backref" href="#id2">Preparation of weather data</a><a class="headerlink" href="#preparation-of-weather-data" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id3">Preparation of weather data</a><a class="headerlink" href="#preparation-of-weather-data" title="Permalink to this headline">¶</a></h2>
 <p>EnergyPlus uses weather data in the EPW file format, as defined in the <a class="reference external" href="https://energyplus.net/assets/nrel_custom/pdfs/pdfs_v9.6.0/AuxiliaryPrograms.pdf">Auxiliary
 Programs</a> documentation. In
 order to be consumed by the model, the data needs to undergo several steps before it can be used.</p>
-<p>Weather data can be automatically preprared from the information found in the BTAP CLI configuration YAML. The
-<code class="docutils literal notranslate"><span class="pre">prepare_weather.py</span></code> script can be used to process weather data and save it to blob storage.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python prepare_weather.py input_data/sample-lhs_2021-10-04.yml
+<p>The weather data is received from a <cite>GitHub repo &lt;https://raw.githubusercontent.com/NREL/openstudio-standards/nrcan/data/weather/&gt;</cite>.</p>
+<p>Weather data can be automatically preprared from the information found in the <code class="docutils literal notranslate"><span class="pre">input_config.yml</span></code> configuration YAML. The
+<code class="docutils literal notranslate"><span class="pre">prepare_weather.py</span></code> script can be used to process and save weather data.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">prepare_weather</span><span class="o">.</span><span class="n">py</span> <span class="n">input_config</span><span class="o">.</span><span class="n">yml</span>
 </pre></div>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>The input to <code class="docutils literal notranslate"><span class="pre">prepare_weather.py</span></code> is the same configuration file that is given to BTAP CLI. The script will
-look for the file on blob storage, relative to the project namespace (<code class="docutils literal notranslate"><span class="pre">nrcan-btap</span></code> on AAW).</p>
+<p>The input to <code class="docutils literal notranslate"><span class="pre">prepare_weather.py</span></code> is the same configuration file that is given to <code class="docutils literal notranslate"><span class="pre">train_model_pipeline.py</span></code>
+and to <code class="docutils literal notranslate"><span class="pre">run_model.py</span></code>. The CLI can also be used to invoke the process without a complete configuration file.</p>
 </div>
-<p>Outputs are placed in the <code class="docutils literal notranslate"><span class="pre">weather</span></code> bucket (by default) in storage as parquet files. The name of the weather files
+<p>Outputs are placed into a <code class="docutils literal notranslate"><span class="pre">/weather</span></code> folder (by default) in storage as parquet files. The name of the weather files
 will match the input name found in the YAML file, but with a <code class="docutils literal notranslate"><span class="pre">.parquet</span></code> file extension.</p>
 <section id="what-this-does">
 <h3>What this does<a class="headerlink" href="#what-this-does" title="Permalink to this headline">¶</a></h3>
@@ -91,7 +115,7 @@ for predicting building energy use. Columns marked as not used by EnergyPlus are
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">year</span></code> column is marked as not being used by EnergyPlus, but is kept for use in creating a datetime index
-of the data.</p>
+of the data. Only the month and day values are used when merging with building and energy data.</p>
 </div>
 </section>
 <section id="summarize-by-day">
@@ -104,39 +128,39 @@ daily intervals.</p>
 </section>
 </section>
 <section id="clean-and-split-the-data">
-<h2><a class="toc-backref" href="#id3">Clean and split the data</a><a class="headerlink" href="#clean-and-split-the-data" title="Permalink to this headline">¶</a></h2>
-<p>With data loaded to blob storage, run <code class="docutils literal notranslate"><span class="pre">proprocessing.py</span></code> to clean and split the data into test and train sets:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python3 preprocessing.py --in_build_params input_data/output_elec_2021-11-05.xlsx --in_hour input_data/total_hourly_res_elec_2021-11-05.csv --in_weather input_data/montreal_epw.csv --output_path output_data/preprocessing_out --in_build_params_gas input_data/output_gas_2021-11-05.xlsx --in_hour_gas input_data/total_hourly_res_gas_2021-11-05.csv
+<h2><a class="toc-backref" href="#id4">Clean and split the data</a><a class="headerlink" href="#clean-and-split-the-data" title="Permalink to this headline">¶</a></h2>
+<p>With the inputs specified through the command line or through <code class="docutils literal notranslate"><span class="pre">input_config.py</span></code>,
+run <code class="docutils literal notranslate"><span class="pre">proprocessing.py</span></code> to clean and split the data into test and train sets:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">preprocessing</span><span class="o">.</span><span class="n">py</span> <span class="n">input_config</span><span class="o">.</span><span class="n">py</span>
 </pre></div>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Update the input parameters to point to the appropriate input files and ouput_path in minio. Only the filenames
-would need to be changed. Check <a class="reference internal" href="../api/preprocessing.html#module-preprocessing" title="preprocessing"><code class="xref py py-mod docutils literal notranslate"><span class="pre">preprocessing</span></code></a> for full detail description of each parameter.</p>
+<p>Update the input parameters to point to the appropriate input files.
+Check <a class="reference internal" href="../api/preprocessing.html#module-preprocessing" title="preprocessing"><code class="xref py py-mod docutils literal notranslate"><span class="pre">preprocessing</span></code></a> for full detail description of each parameter.</p>
 </div>
 <p>Aside from supporting optional different files for electricity and gas, if you have mutliple input files they
-need to be manually combined before passing them as input. If you only have a single input file, provide it as
-the value to <code class="docutils literal notranslate"><span class="pre">--in_build_params</span></code>.</p>
+need to be manually combined before passing them as input.</p>
 <section id="id1">
 <h3>What this does<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
 <p>During preprocessing, the hourly energy consumption file is transposed such that each <code class="docutils literal notranslate"><span class="pre">datapoint_id</span></code> has 8760 rows
-(365 * 24). Hence, for a simulation run containing 5000 <code class="docutils literal notranslate"><span class="pre">datapoint_id</span></code>, there would be 5000 * 8760 rows which would
+(365 * 24). Hence, for a simulation run containing 5000 <code class="docutils literal notranslate"><span class="pre">datapoint_id</span></code> values, there would be 5000 * 8760 rows which would
 be 43.8 million rows. In order to avoid the preprocessing stage to become computationally expensive due to large
-datapoints created, the transposed hourly energy is is aggregated to daily energy for each datapoint_id. Similarly,
+datapoints created, the transposed hourly energy file is aggregated to daily energy for each <code class="docutils literal notranslate"><span class="pre">datapoint_id</span></code>. Similarly,
 the weather information is aggregated from hourly to daily, so that it can be merged with the hourly energy file.
-In essensece, the simulation I/O file(s), weather file and the hourly energy consumption file(s) are all merged to one
-dataframe which then splitted for training and testing purposes.</p>
+In essence, the simulation I/O file(s), weather file and the hourly energy consumption file(s) are all merged to one
+dataframe which is then split for training and testing purposes (training set, testing set, validation set).</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>The total daily energy computed for each <code class="docutils literal notranslate"><span class="pre">datapoint_id</span></code> is converted to Mega Joules per meter square (mj_per_m_sq),
-which is derived by converting the total energy used provided in the simulation I/O file to Mega Joules and then
-dividing the result by the building floor area.</p>
+<p>The total daily energy computed for each <code class="docutils literal notranslate"><span class="pre">datapoint_id</span></code> is converted to Megajoules per meter square (mj_per_m_sq),
+which is derived by converting the total energy used provided in the simulation I/O file to Megajoules and then
+dividing the result by the building floor area in meters.</p>
 </div>
-<p>In the case where the validation set is not provided, the dataset provided is splitted into 70% training set, 20% test
-set and 10% validation set. However, when validation set is provided, the dataset is splitted only into 80% training
+<p>In the case where the validation set is not provided, the dataset provided is split into a 70% training set, 20% test
+set and 10% validation set. However, when a validation set is provided, the dataset is split only into a 80% training
 set and 20% test set. It should be noted that the data splitting is performed using GroupShuffleSplit function which
-ensures that all data instances for a datapoint_id are included in the respective data set they are split into which
-implies a datapoint_id used for training would not have any instance in the test set.</p>
+ensures that all data instances for a <code class="docutils literal notranslate"><span class="pre">datapoint_id</span></code> are included in the respective data group they are split into which
+implies that a <code class="docutils literal notranslate"><span class="pre">datapoint_id</span></code> used for training would not have any instance in the test set.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The json file created at the end of preprocessing has the following keys:</p>
@@ -155,45 +179,48 @@ implies a datapoint_id used for training would not have any instance in the test
 </section>
 </section>
 <section id="feature-selection">
-<h2><a class="toc-backref" href="#id4">Feature selection</a><a class="headerlink" href="#feature-selection" title="Permalink to this headline">¶</a></h2>
-<p>After preprocessing the data, the features to be used in building the surrogate model can be selected:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python3 feature_selection.py --in_obj_name output_data/preprocessing_out --output_path output_data/feature_out --estimator_type lasso
+<h2><a class="toc-backref" href="#id5">Feature selection</a><a class="headerlink" href="#feature-selection" title="Permalink to this headline">¶</a></h2>
+<p>After preprocessing the data, the features to be used in building the surrogate model can be selected
+(with all inputs coming from the command line or from the <code class="docutils literal notranslate"><span class="pre">input_config.yml</span></code> file):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">feature_selection</span><span class="o">.</span><span class="n">py</span> <span class="n">input_config</span><span class="o">.</span><span class="n">yml</span>
 </pre></div>
 </div>
-<p>The parameters to the above script are documented in the <a class="reference internal" href="../api/feature_selection.html#module-feature_selection" title="feature_selection"><code class="xref py py-mod docutils literal notranslate"><span class="pre">feature_selection</span></code></a>.</p>
-<p>In order to ensure the most relevant features are used in building the surrogage model, feature_selection is performed
-to search for the most optimal features from preprocessed data.</p>
+<p>The parameters to the above script are documented at <a class="reference internal" href="../api/feature_selection.html#module-feature_selection" title="feature_selection"><code class="xref py py-mod docutils literal notranslate"><span class="pre">feature_selection</span></code></a>.</p>
+<p>To ensure that the most relevant features are used in building the surrogage model, feature selection is performed
+to search for the most optimal features from the preprocessed data.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Feature selection is performed using the X_train and the y_train set.</p>
 </div>
-<p>Feature selection could be perfomed using either of the following estimator type listed below:</p>
+<p>Feature selection can be perfomed using any of the following estimator types:</p>
 <ul class="simple">
 <li><p>Linear Regression</p></li>
 <li><p>XGBRegressor</p></li>
 <li><p>ElasticnetCV</p></li>
 <li><p>LassoCV</p></li>
 </ul>
-<p>For the purpose of this project, XGBRegressor was often slow in selecting the features. Often times, ElasticnetCV and
-LassoCV selected same features. Although, LassoCV is used as the default estimator for feature selection, any of the
-other estimator type can be used by specifying the respective esimator type to the estimator_type parameter when
-performing feature selection.</p>
+<p>Some details on the options are:</p>
+<ul class="simple">
+<li><p>XGBRegressor is often slow in selecting the features.</p></li>
+<li><p>ElasticnetCV and LassoCV frequently selected same features.</p></li>
+<li><p>Although, LassoCV is used as the default estimator for feature selection, any of the other estimator type can be</p></li>
+</ul>
+<p>used by specifying the respective esimator type to the estimator_type parameter when performing feature selection.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>The json file created has just key value “features” which represents the final features selected for modelling.</p>
+<p>The json file that is created contains the key value “features” which represents the final features selected for modelling.</p>
 </div>
 </section>
 <section id="build-the-surrogate-model-and-predict-energy-use">
-<h2><a class="toc-backref" href="#id5">Build the surrogate model and predict energy use</a><a class="headerlink" href="#build-the-surrogate-model-and-predict-energy-use" title="Permalink to this headline">¶</a></h2>
-<p>The output from the data preparation and feature selection steps are used as input into this stage by running:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python3 predict.py --param_search yes --in_obj_name output_data/preprocessing_out --features output_data/feature_out --output_path output_data/predict_out
+<h2><a class="toc-backref" href="#id6">Build the surrogate model and predict energy use</a><a class="headerlink" href="#build-the-surrogate-model-and-predict-energy-use" title="Permalink to this headline">¶</a></h2>
+<p>The output from the preprocessing and feature selection outputs are used as input to <code class="docutils literal notranslate"><span class="pre">predict.py</span></code>
+to derive a trained model:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">predict</span><span class="o">.</span><span class="n">py</span> <span class="n">input_config</span><span class="o">.</span><span class="n">yml</span>
 </pre></div>
 </div>
+<p>This script will output the trained model as a .h5 file alongisde information on the training and testing
+performed for analysis. The outputs from this step will be used when obtaining predictions with the model.</p>
 <p>The parameters to the above script are documented in the <a class="reference internal" href="../api/predict.html#module-predict" title="predict"><code class="xref py py-mod docutils literal notranslate"><span class="pre">predict</span></code></a>.</p>
-</section>
-<section id="download-results">
-<h2><a class="toc-backref" href="#id6">Download results</a><a class="headerlink" href="#download-results" title="Permalink to this headline">¶</a></h2>
-<p>The results from the prediction is available in minio in the <code class="docutils literal notranslate"><span class="pre">output_path</span></code> specified in prediction step.</p>
 </section>
 </section>
 
@@ -224,15 +251,14 @@ performing feature selection.</p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Train the model</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#training-a-model">Training a model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#preparation-of-weather-data">Preparation of weather data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#clean-and-split-the-data">Clean and split the data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#feature-selection">Feature selection</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#build-the-surrogate-model-and-predict-energy-use">Build the surrogate model and predict energy use</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#download-results">Download results</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="model_run.html">Re-run Model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="kubeflow_pipeline.html">Kubeflow pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run_model.html">Running a model</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API</span></p>
 <ul>
@@ -242,6 +268,8 @@ performing feature selection.</p>
 <li class="toctree-l1"><a class="reference internal" href="../api/predict.html">Predict</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/prepare_weather.html">Prepare weather</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/preprocessing.html">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/run_model.html">Run Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/train_model_pipeline.html">Train Model Pipeline</a></li>
 </ul>
 
 <div class="relations">
@@ -249,7 +277,7 @@ performing feature selection.</p>
 <ul>
   <li><a href="../index.html">Documentation overview</a><ul>
       <li>Previous: <a href="quickstart.html" title="previous chapter">Quickstart</a></li>
-      <li>Next: <a href="model_run.html" title="next chapter">Re-run Model</a></li>
+      <li>Next: <a href="run_model.html" title="next chapter">Running a model</a></li>
   </ul></li>
 </ul>
 </div>

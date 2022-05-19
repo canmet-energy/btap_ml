@@ -17,7 +17,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Feature selection" href="feature_selection.html" />
-    <link rel="prev" title="Kubeflow pipeline" href="../usage/kubeflow_pipeline.html" />
+    <link rel="prev" title="Running a model" href="../usage/run_model.html" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
@@ -41,8 +41,23 @@
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">config.</span></span><span class="sig-name descname"><span class="pre">AppConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#config.AppConfig" title="Permalink to this definition">¶</a></dt>
 <dd><p>Application configuration.</p>
 <dl class="py attribute">
+<dt class="sig sig-object py" id="config.AppConfig.BUILDING_BATCH_PATH">
+<span class="sig-name descname"><span class="pre">BUILDING_BATCH_PATH</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#config.AppConfig.BUILDING_BATCH_PATH" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="config.AppConfig.BUILDING_PARAM_FILES">
 <span class="sig-name descname"><span class="pre">BUILDING_PARAM_FILES</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#config.AppConfig.BUILDING_PARAM_FILES" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="config.AppConfig.DOCKER_INPUT_PATH">
+<span class="sig-name descname"><span class="pre">DOCKER_INPUT_PATH</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#config.AppConfig.DOCKER_INPUT_PATH" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="config.AppConfig.DOCKER_OUTPUT_PATH">
+<span class="sig-name descname"><span class="pre">DOCKER_OUTPUT_PATH</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#config.AppConfig.DOCKER_OUTPUT_PATH" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -71,8 +86,8 @@
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="config.AppConfig.OUTPUT_PATH">
-<span class="sig-name descname"><span class="pre">OUTPUT_PATH</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#config.AppConfig.OUTPUT_PATH" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="config.AppConfig.OHE_FILE">
+<span class="sig-name descname"><span class="pre">OHE_FILE</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#config.AppConfig.OHE_FILE" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -96,8 +111,48 @@
 <dd></dd></dl>
 
 <dl class="py attribute">
+<dt class="sig sig-object py" id="config.AppConfig.RUNNING_AGGREGATED_RESULTS_FILENAME">
+<span class="sig-name descname"><span class="pre">RUNNING_AGGREGATED_RESULTS_FILENAME</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#config.AppConfig.RUNNING_AGGREGATED_RESULTS_FILENAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="config.AppConfig.RUNNING_DAILY_RESULTS_FILENAME">
+<span class="sig-name descname"><span class="pre">RUNNING_DAILY_RESULTS_FILENAME</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#config.AppConfig.RUNNING_DAILY_RESULTS_FILENAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="config.AppConfig.RUN_BUCKET_NAME">
 <span class="sig-name descname"><span class="pre">RUN_BUCKET_NAME</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#config.AppConfig.RUN_BUCKET_NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="config.AppConfig.SCALERX_FILENAME">
+<span class="sig-name descname"><span class="pre">SCALERX_FILENAME</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#config.AppConfig.SCALERX_FILENAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="config.AppConfig.SCALERY_FILENAME">
+<span class="sig-name descname"><span class="pre">SCALERY_FILENAME</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#config.AppConfig.SCALERY_FILENAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="config.AppConfig.SCALER_X_FILE">
+<span class="sig-name descname"><span class="pre">SCALER_X_FILE</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#config.AppConfig.SCALER_X_FILE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="config.AppConfig.SCALER_Y_FILE">
+<span class="sig-name descname"><span class="pre">SCALER_Y_FILE</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#config.AppConfig.SCALER_Y_FILE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="config.AppConfig.SIMULATION_END_DATE">
+<span class="sig-name descname"><span class="pre">SIMULATION_END_DATE</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#config.AppConfig.SIMULATION_END_DATE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="config.AppConfig.SIMULATION_START_DATE">
+<span class="sig-name descname"><span class="pre">SIMULATION_START_DATE</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#config.AppConfig.SIMULATION_START_DATE" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -159,17 +214,7 @@
 <dl class="py attribute">
 <dt class="sig sig-object py" id="config.Settings.APP_CONFIG">
 <span class="sig-name descname"><span class="pre">APP_CONFIG</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#config.AppConfig" title="config.AppConfig"><span class="pre">config.AppConfig</span></a></em><a class="headerlink" href="#config.Settings.APP_CONFIG" title="Permalink to this definition">¶</a></dt>
-<dd><p>Remove if credentials are not needed in the program
-MINIO_URL: AnyHttpUrl = Field(…, env=’MINIO_URL’)
-MINIO_ACCESS_KEY: str = Field(…, env=’MINIO_ACCESS_KEY’)
-MINIO_SECRET_KEY: SecretStr = Field(…, env=’MINIO_SECRET_KEY’)</p>
-<p>NAMESPACE: Path = Path(‘nrcan-btap’)</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>TODO</p>
-</dd>
-</dl>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="config.Settings.Config">
@@ -182,18 +227,7 @@ MINIO_SECRET_KEY: SecretStr = Field(…, env=’MINIO_SECRET_KEY’)</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="config.Settings.Config.extra">
 <span class="sig-name descname"><span class="pre">extra</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'ignore'</span></em><a class="headerlink" href="#config.Settings.Config.extra" title="Permalink to this definition">¶</a></dt>
-<dd><p>Remove if credentials are not needed in the program
-&#64;classmethod
-def customise_sources(cls, init_settings, env_settings, file_secret_settings):</p>
-<blockquote>
-<div><p>return (init_settings, json_config_settings_source, env_settings, file_secret_settings)</p>
-</div></blockquote>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>TODO</p>
-</dd>
-</dl>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="config.Settings.Config.json_settings_path">
@@ -233,8 +267,11 @@ def customise_sources(cls, init_settings, env_settings, file_secret_settings):</
 <span class="sig-prename descclassname"><span class="pre">config.</span></span><span class="sig-name descname"><span class="pre">create_directory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#config.create_directory" title="Permalink to this definition">¶</a></dt>
 <dd><p>Given a path, create the directory if it exists</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>path</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – directory to be created</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -314,8 +351,7 @@ def customise_sources(cls, init_settings, env_settings, file_secret_settings):</
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../usage/quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../usage/retrain.html">Train the model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../usage/model_run.html">Re-run Model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../usage/kubeflow_pipeline.html">Kubeflow pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/run_model.html">Running a model</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API</span></p>
 <ul class="current">
@@ -325,13 +361,15 @@ def customise_sources(cls, init_settings, env_settings, file_secret_settings):</
 <li class="toctree-l1"><a class="reference internal" href="predict.html">Predict</a></li>
 <li class="toctree-l1"><a class="reference internal" href="prepare_weather.html">Prepare weather</a></li>
 <li class="toctree-l1"><a class="reference internal" href="preprocessing.html">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run_model.html">Run Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="train_model_pipeline.html">Train Model Pipeline</a></li>
 </ul>
 
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="../index.html">Documentation overview</a><ul>
-      <li>Previous: <a href="../usage/kubeflow_pipeline.html" title="previous chapter">Kubeflow pipeline</a></li>
+      <li>Previous: <a href="../usage/run_model.html" title="previous chapter">Running a model</a></li>
       <li>Next: <a href="feature_selection.html" title="next chapter">Feature selection</a></li>
   </ul></li>
 </ul>

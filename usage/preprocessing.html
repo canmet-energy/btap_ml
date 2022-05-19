@@ -32,38 +32,38 @@
 
           <div class="body" role="main">
             
-  <p>With data loaded to blob storage, run <code class="docutils literal notranslate"><span class="pre">proprocessing.py</span></code> to clean and split the data into test and train sets:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python3 preprocessing.py --in_build_params input_data/output_elec_2021-11-05.xlsx --in_hour input_data/total_hourly_res_elec_2021-11-05.csv --in_weather input_data/montreal_epw.csv --output_path output_data/preprocessing_out --in_build_params_gas input_data/output_gas_2021-11-05.xlsx --in_hour_gas input_data/total_hourly_res_gas_2021-11-05.csv
+  <p>With the inputs specified through the command line or through <code class="docutils literal notranslate"><span class="pre">input_config.py</span></code>,
+run <code class="docutils literal notranslate"><span class="pre">proprocessing.py</span></code> to clean and split the data into test and train sets:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">preprocessing</span><span class="o">.</span><span class="n">py</span> <span class="n">input_config</span><span class="o">.</span><span class="n">py</span>
 </pre></div>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Update the input parameters to point to the appropriate input files and ouput_path in minio. Only the filenames
-would need to be changed. Check <a class="reference internal" href="../api/preprocessing.html#module-preprocessing" title="preprocessing"><code class="xref py py-mod docutils literal notranslate"><span class="pre">preprocessing</span></code></a> for full detail description of each parameter.</p>
+<p>Update the input parameters to point to the appropriate input files.
+Check <a class="reference internal" href="../api/preprocessing.html#module-preprocessing" title="preprocessing"><code class="xref py py-mod docutils literal notranslate"><span class="pre">preprocessing</span></code></a> for full detail description of each parameter.</p>
 </div>
 <p>Aside from supporting optional different files for electricity and gas, if you have mutliple input files they
-need to be manually combined before passing them as input. If you only have a single input file, provide it as
-the value to <code class="docutils literal notranslate"><span class="pre">--in_build_params</span></code>.</p>
+need to be manually combined before passing them as input.</p>
 <section id="what-this-does">
 <h1>What this does<a class="headerlink" href="#what-this-does" title="Permalink to this headline">¶</a></h1>
 <p>During preprocessing, the hourly energy consumption file is transposed such that each <code class="docutils literal notranslate"><span class="pre">datapoint_id</span></code> has 8760 rows
-(365 * 24). Hence, for a simulation run containing 5000 <code class="docutils literal notranslate"><span class="pre">datapoint_id</span></code>, there would be 5000 * 8760 rows which would
+(365 * 24). Hence, for a simulation run containing 5000 <code class="docutils literal notranslate"><span class="pre">datapoint_id</span></code> values, there would be 5000 * 8760 rows which would
 be 43.8 million rows. In order to avoid the preprocessing stage to become computationally expensive due to large
-datapoints created, the transposed hourly energy is is aggregated to daily energy for each datapoint_id. Similarly,
+datapoints created, the transposed hourly energy file is aggregated to daily energy for each <code class="docutils literal notranslate"><span class="pre">datapoint_id</span></code>. Similarly,
 the weather information is aggregated from hourly to daily, so that it can be merged with the hourly energy file.
-In essensece, the simulation I/O file(s), weather file and the hourly energy consumption file(s) are all merged to one
-dataframe which then splitted for training and testing purposes.</p>
+In essence, the simulation I/O file(s), weather file and the hourly energy consumption file(s) are all merged to one
+dataframe which is then split for training and testing purposes (training set, testing set, validation set).</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>The total daily energy computed for each <code class="docutils literal notranslate"><span class="pre">datapoint_id</span></code> is converted to Mega Joules per meter square (mj_per_m_sq),
-which is derived by converting the total energy used provided in the simulation I/O file to Mega Joules and then
-dividing the result by the building floor area.</p>
+<p>The total daily energy computed for each <code class="docutils literal notranslate"><span class="pre">datapoint_id</span></code> is converted to Megajoules per meter square (mj_per_m_sq),
+which is derived by converting the total energy used provided in the simulation I/O file to Megajoules and then
+dividing the result by the building floor area in meters.</p>
 </div>
-<p>In the case where the validation set is not provided, the dataset provided is splitted into 70% training set, 20% test
-set and 10% validation set. However, when validation set is provided, the dataset is splitted only into 80% training
+<p>In the case where the validation set is not provided, the dataset provided is split into a 70% training set, 20% test
+set and 10% validation set. However, when a validation set is provided, the dataset is split only into a 80% training
 set and 20% test set. It should be noted that the data splitting is performed using GroupShuffleSplit function which
-ensures that all data instances for a datapoint_id are included in the respective data set they are split into which
-implies a datapoint_id used for training would not have any instance in the test set.</p>
+ensures that all data instances for a <code class="docutils literal notranslate"><span class="pre">datapoint_id</span></code> are included in the respective data group they are split into which
+implies that a <code class="docutils literal notranslate"><span class="pre">datapoint_id</span></code> used for training would not have any instance in the test set.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The json file created at the end of preprocessing has the following keys:</p>
@@ -108,8 +108,7 @@ implies a datapoint_id used for training would not have any instance in the test
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="retrain.html">Train the model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="model_run.html">Re-run Model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="kubeflow_pipeline.html">Kubeflow pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run_model.html">Running a model</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API</span></p>
 <ul>
@@ -119,6 +118,8 @@ implies a datapoint_id used for training would not have any instance in the test
 <li class="toctree-l1"><a class="reference internal" href="../api/predict.html">Predict</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/prepare_weather.html">Prepare weather</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/preprocessing.html">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/run_model.html">Run Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/train_model_pipeline.html">Train Model Pipeline</a></li>
 </ul>
 
 <div class="relations">

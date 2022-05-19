@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Re-run Model &#8212; BTAP: ML  documentation</title>
+    <title>&lt;no title&gt; &#8212; BTAP: ML  documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
     <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
@@ -32,36 +32,25 @@
 
           <div class="body" role="main">
             
-  <section id="re-run-model">
-<h1>Re-run Model<a class="headerlink" href="#re-run-model" title="Permalink to this headline">¶</a></h1>
-<p>TODO - REMOVE</p>
-<p>If the data is already preprocessed and the features are selected with output files from <a class="reference internal" href="../api/preprocessing.html#module-preprocessing" title="preprocessing"><code class="xref py py-mod docutils literal notranslate"><span class="pre">preprocessing</span></code></a> and
-<a class="reference internal" href="../api/feature_selection.html#module-feature_selection" title="feature_selection"><code class="xref py py-mod docutils literal notranslate"><span class="pre">feature_selection</span></code></a> already existing in minio you can simply build the surrogate model and generate predictions.</p>
-<p>The output from the preprocessing and feature selection outputs are used as input to <code class="docutils literal notranslate"><span class="pre">predict.py</span></code>
-to derive a trained model:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">predict</span><span class="o">.</span><span class="n">py</span> <span class="n">input_config</span><span class="o">.</span><span class="n">yml</span>
-</pre></div>
-</div>
-<p>This script will output the trained model as a .h5 file alongisde information on the training and testing
-performed for analysis. The outputs from this step will be used when obtaining predictions with the model.</p>
-<p>The parameters to the above script are documented in the <a class="reference internal" href="../api/predict.html#module-predict" title="predict"><code class="xref py py-mod docutils literal notranslate"><span class="pre">predict</span></code></a>.</p>
-<section id="download-results">
-<h2>Download results<a class="headerlink" href="#download-results" title="Permalink to this headline">¶</a></h2>
-<p>The results from the prediction is available in minio in the <code class="docutils literal notranslate"><span class="pre">output_path</span></code> specified in prediction step.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The json file created at the end of model run has the following keys:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">test_daily_metric</span></code>: This contains the DAILY evaluation result from using the TEST dataset</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">test_annual_metric</span></code>: This contains the ANNUAL evaluation result from using the TEST dataset</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">output_df</span></code>: This is a dataframe containining the datapoint_id, predicted energy value and the actual energy value from using the test dataset. Note the annual energy result is shown here.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">val_daily_metric</span></code>: This contains the DAILY evaluation result from using the VALIDATION dataset</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">val_annual_metric</span></code>: This contains the ANNUAL evaluation result from using the VALIDATION dataset</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">output_val_df</span></code>: This is a dataframe containining the datapoint_id, predicted energy value and the actual energy value from using the VALIDATION dataset. Note the annual energy result is shown here.</p></li>
-</ul>
-</div>
-</section>
-</section>
+  <p>Training a model can be done by calling the <code class="docutils literal notranslate"><span class="pre">train_model_pipeline.py</span></code> file. This file combines each
+preprocessing step to allow the entire training process to be invoked from one call. The process
+begins by creating a unique output directory based on the date and time which the process begins.
+All outputs will be located within the new directory.</p>
+<p>Using the <code class="docutils literal notranslate"><span class="pre">input_config.yml</span></code> file or the passed command line arguements (which can be viewed by
+passing the –help arguement), each required input will be validated before being used within the
+program.</p>
+<p>The first step performed is the processing of weather data via the <code class="docutils literal notranslate"><span class="pre">prepare_weather.py</span></code> file.</p>
+<p>Next, the data will be passed to <code class="docutils literal notranslate"><span class="pre">preprocessing.py</span></code> to load the building data, the energy data,
+and merge the two with the weather data. Following additional data cleaning, the data is split into
+train/test/validation sets, where the validation set is either split from the regular input data or
+is loaded from an explicitly provided file to be used for validation.</p>
+<p>Before training the Machine Learning model, the optimal features will be selected by calling
+<code class="docutils literal notranslate"><span class="pre">feature_selection.py</span></code>. This process will use one of several avilable tools for feature selection
+to derive a list of features which will be used for training. This omits any feature which will not be
+useful in the training process.</p>
+<p>Using the selected features and preprocessing, <code class="docutils literal notranslate"><span class="pre">predict.py</span></code> will be called to train the model.
+Hyperparameter tuning can be performed at the cost of additional time complexity or the default
+model can be used. The trained model and test results will be output for future use.</p>
 
 
           </div>
@@ -141,7 +130,7 @@ performed for analysis. The outputs from this step will be used when obtaining p
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
-      <a href="../_sources/usage/model_run.rst.txt"
+      <a href="../_sources/usage/train_model_pipeline.rst.txt"
           rel="nofollow">Page source</a>
     </div>
 

@@ -36,12 +36,45 @@
             
   <section id="quickstart">
 <h1>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">¶</a></h1>
-<p>If you just want to run all of the steps from start to finish, here are the steps to run. You may be able to skip some
+<p>If you just want to run all of the steps from training a model to using the model to obtain predictions, here are the steps to run. You may be able to skip some
 of these depending on if data has already been prepared.</p>
+<p>Each of the files can use an input configuration .yml file which contains all inputs to be used alongside descriptions of the inputs.
+If used, only the input file, which will be referenced as input_config.yml, will be passed when calling the training process.
+Each file can also use values passed to through command line arguements. All values except the config file are optional.
+Thus, the config file must still be passed, but the CLI arguements will be given priority. A mix of command line and
+config files can also be used in the case where certain parts of a process should be skipped.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>All of the scripts for the project are in the <code class="docutils literal notranslate"><span class="pre">src/</span></code> folder of the repository.</p>
+<p>All of the scripts for the project are in the <code class="docutils literal notranslate"><span class="pre">src/</span></code> folder of the repository. All CLI parameters can be viewed
+by calling the python file with <code class="docutils literal notranslate"><span class="pre">--help</span></code> arguement (Example: <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">train_model_pipeline.py</span> <span class="pre">--help</span></code>).</p>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Every file can be run independently, but the recommended steps are to run one of the two pipelines below.</p>
+</div>
+<section id="training-a-model">
+<h2>Training a model<a class="headerlink" href="#training-a-model" title="Permalink to this headline">¶</a></h2>
+<p>The first step to perform is to generate a trained Machine Learning model to later be used for obtaining predictions on energy values.
+Obtaining a trained model can be performed by calling the <code class="docutils literal notranslate"><span class="pre">train_model_pipeline.py</span></code> file and passing the appropriate arguements.
+Assuming that only the <code class="docutils literal notranslate"><span class="pre">input_config.yml</span></code> file is used and located inside of the current directory, the arguement to pass is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">train_model_pipeline</span><span class="o">.</span><span class="n">py</span> <span class="n">input_config</span><span class="o">.</span><span class="n">yml</span>
+</pre></div>
+</div>
+<p>This will process the specified weather file (outputting a .parquet file), preprocess all input files (outputting a .json file and .pkl file),
+perform feature selection (outputting a .json file), and train the model (outputting a .h5 trained model, two .pkl files, a .json file, and a .csv file).</p>
+</section>
+<section id="getting-model-predictions">
+<h2>Getting model predictions<a class="headerlink" href="#getting-model-predictions" title="Permalink to this headline">¶</a></h2>
+<p>With a trained Machine Learning model in the form of a .h5 file, the model will be used to obtain the predicted daily Megajoules per meter squared
+and the predicted annual Gigajoules per meter squared for a batch of specified building files within a specified directory.
+Obtaining a trained model can be performed by calling the <code class="docutils literal notranslate"><span class="pre">run_model.py</span></code> file and passing the appropriate arguements.
+Assuming that only the <code class="docutils literal notranslate"><span class="pre">input_config.yml</span></code> file is used and located inside of the current directory, the arguement to pass is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">train_model_pipeline</span><span class="o">.</span><span class="n">py</span> <span class="n">input_config</span><span class="o">.</span><span class="n">yml</span>
+</pre></div>
+</div>
+<p>This will process the specified weather file to be used, preprocess all input data, and obtain predictions for all input data (outputting two .csv files
+which contain the prediction outputs alongside identifiers for each building in the form building_file_name/building_index).</p>
+</section>
 <section id="prepare-weather-data">
 <h2>Prepare weather data<a class="headerlink" href="#prepare-weather-data" title="Permalink to this headline">¶</a></h2>
 <p>Gather required weather data and place it on blob storage:</p>
@@ -107,6 +140,8 @@ would need to be changed. Check <a class="reference internal" href="../api/prepr
 <p class="caption" role="heading"><span class="caption-text">Usage</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Quickstart</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#training-a-model">Training a model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#getting-model-predictions">Getting model predictions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#prepare-weather-data">Prepare weather data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#preprocessing">Preprocessing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#feature-selection">Feature Selection</a></li>
@@ -115,8 +150,7 @@ would need to be changed. Check <a class="reference internal" href="../api/prepr
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="retrain.html">Train the model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="model_run.html">Re-run Model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="kubeflow_pipeline.html">Kubeflow pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run_model.html">Running a model</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API</span></p>
 <ul>
@@ -126,6 +160,8 @@ would need to be changed. Check <a class="reference internal" href="../api/prepr
 <li class="toctree-l1"><a class="reference internal" href="../api/predict.html">Predict</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/prepare_weather.html">Prepare weather</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/preprocessing.html">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/run_model.html">Run Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/train_model_pipeline.html">Train Model Pipeline</a></li>
 </ul>
 
 <div class="relations">

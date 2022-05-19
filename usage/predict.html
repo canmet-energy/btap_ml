@@ -32,10 +32,13 @@
 
           <div class="body" role="main">
             
-  <p>The output from the data preparation and feature selection steps are used as input into this stage by running:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python3 predict.py --param_search yes --in_obj_name output_data/preprocessing_out --features output_data/feature_out --output_path output_data/predict_out
+  <p>The output from the preprocessing and feature selection outputs are used as input to <code class="docutils literal notranslate"><span class="pre">predict.py</span></code>
+to derive a trained model:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">predict</span><span class="o">.</span><span class="n">py</span> <span class="n">input_config</span><span class="o">.</span><span class="n">yml</span>
 </pre></div>
 </div>
+<p>This script will output the trained model as a .h5 file alongisde information on the training and testing
+performed for analysis. The outputs from this step will be used when obtaining predictions with the model.</p>
 <p>The parameters to the above script are documented in the <a class="reference internal" href="../api/predict.html#module-predict" title="predict"><code class="xref py py-mod docutils literal notranslate"><span class="pre">predict</span></code></a>.</p>
 
 
@@ -65,8 +68,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="retrain.html">Train the model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="model_run.html">Re-run Model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="kubeflow_pipeline.html">Kubeflow pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run_model.html">Running a model</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API</span></p>
 <ul>
@@ -76,6 +78,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../api/predict.html">Predict</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/prepare_weather.html">Prepare weather</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/preprocessing.html">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/run_model.html">Run Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/train_model_pipeline.html">Train Model Pipeline</a></li>
 </ul>
 
 <div class="relations">

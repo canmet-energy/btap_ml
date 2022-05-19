@@ -1,0 +1,30 @@
+Running a model
+===============
+
+A trained model and its related outputs from :py:mod:`train_model_pipeline` can be used to obtain
+energy predictions for input building and weather data over a specified period of time (typically
+from January 1 to December 31 with no added day for a leap year).
+
+Predictions can be obtained by running the following command, with al, needed inputs being
+added in the command line or through the provided ``input_config.yml`` file::
+
+    python preprocessing.py input_config.py
+
+The file begins by calling ``prepare_weather.py`` to generate a .parquet weather file
+if it is not included and specified to be skipped.
+
+The weather file and an input directory of .xlsx building output files are passed to
+``preprocessing.py`` to be preprocessed into a single dataset which will then be
+passed through the trained model to obtain the predictions.
+
+The dataset will be adjusted with the selected features .json file which is generated
+when training the specified .h5 trained model. The input data is also scaled with the
+same scaler used when training. This ensures that all input data is of the same format
+as what has been used for the training.
+
+The predictions are then made by the model, with the output values placed within two csv files,
+which link the predictions to the specific buildings within the specific building files.
+The ``daily_energy_predictions.csv`` file outputs the predicted daily energy for a building on
+each day in Megajoules per meter squared. The ``aggregated_energy_predictions.csv`` file
+contains the aggregated daily energy outputs in Gigajoules per meter squared for each building within
+the specified start and end dates. These typically are 365 days to represent a full year.

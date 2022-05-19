@@ -87,7 +87,7 @@ saved to blob storage for use in later processing stages.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>config_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Path to the configuration file used for EnergyPlus.</p></li>
 <li><p><strong>epw_files</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – The epw key to be used if the config file is not use.</p></li>
-<li><p><strong>output_path</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Where output data should be placed.</p></li>
+<li><p><strong>output_path</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Where output data should be placed. Note that this value should be empty unless this file is called from a pipeline.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
@@ -157,8 +157,7 @@ The filename of the original file is used, with the extension replaced with .par
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../usage/quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../usage/retrain.html">Train the model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../usage/model_run.html">Re-run Model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../usage/kubeflow_pipeline.html">Kubeflow pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/run_model.html">Running a model</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API</span></p>
 <ul class="current">
@@ -168,6 +167,8 @@ The filename of the original file is used, with the extension replaced with .par
 <li class="toctree-l1"><a class="reference internal" href="predict.html">Predict</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Prepare weather</a></li>
 <li class="toctree-l1"><a class="reference internal" href="preprocessing.html">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run_model.html">Run Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="train_model_pipeline.html">Train Model Pipeline</a></li>
 </ul>
 
 <div class="relations">

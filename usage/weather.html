@@ -35,17 +35,18 @@
   <p>EnergyPlus uses weather data in the EPW file format, as defined in the <a class="reference external" href="https://energyplus.net/assets/nrel_custom/pdfs/pdfs_v9.6.0/AuxiliaryPrograms.pdf">Auxiliary
 Programs</a> documentation. In
 order to be consumed by the model, the data needs to undergo several steps before it can be used.</p>
-<p>Weather data can be automatically preprared from the information found in the BTAP CLI configuration YAML. The
-<code class="docutils literal notranslate"><span class="pre">prepare_weather.py</span></code> script can be used to process weather data and save it to blob storage.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python prepare_weather.py input_data/sample-lhs_2021-10-04.yml
+<p>The weather data is received from a <cite>GitHub repo &lt;https://raw.githubusercontent.com/NREL/openstudio-standards/nrcan/data/weather/&gt;</cite>.</p>
+<p>Weather data can be automatically preprared from the information found in the <code class="docutils literal notranslate"><span class="pre">input_config.yml</span></code> configuration YAML. The
+<code class="docutils literal notranslate"><span class="pre">prepare_weather.py</span></code> script can be used to process and save weather data.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">prepare_weather</span><span class="o">.</span><span class="n">py</span> <span class="n">input_config</span><span class="o">.</span><span class="n">yml</span>
 </pre></div>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>The input to <code class="docutils literal notranslate"><span class="pre">prepare_weather.py</span></code> is the same configuration file that is given to BTAP CLI. The script will
-look for the file on blob storage, relative to the project namespace (<code class="docutils literal notranslate"><span class="pre">nrcan-btap</span></code> on AAW).</p>
+<p>The input to <code class="docutils literal notranslate"><span class="pre">prepare_weather.py</span></code> is the same configuration file that is given to <code class="docutils literal notranslate"><span class="pre">train_model_pipeline.py</span></code>
+and to <code class="docutils literal notranslate"><span class="pre">run_model.py</span></code>. The CLI can also be used to invoke the process without a complete configuration file.</p>
 </div>
-<p>Outputs are placed in the <code class="docutils literal notranslate"><span class="pre">weather</span></code> bucket (by default) in storage as parquet files. The name of the weather files
+<p>Outputs are placed into a <code class="docutils literal notranslate"><span class="pre">/weather</span></code> folder (by default) in storage as parquet files. The name of the weather files
 will match the input name found in the YAML file, but with a <code class="docutils literal notranslate"><span class="pre">.parquet</span></code> file extension.</p>
 <section id="what-this-does">
 <h1>What this does<a class="headerlink" href="#what-this-does" title="Permalink to this headline">¶</a></h1>
@@ -72,7 +73,7 @@ for predicting building energy use. Columns marked as not used by EnergyPlus are
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">year</span></code> column is marked as not being used by EnergyPlus, but is kept for use in creating a datetime index
-of the data.</p>
+of the data. Only the month and day values are used when merging with building and energy data.</p>
 </div>
 </section>
 <section id="summarize-by-day">
@@ -111,8 +112,7 @@ daily intervals.</p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="retrain.html">Train the model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="model_run.html">Re-run Model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="kubeflow_pipeline.html">Kubeflow pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run_model.html">Running a model</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API</span></p>
 <ul>
@@ -122,6 +122,8 @@ daily intervals.</p>
 <li class="toctree-l1"><a class="reference internal" href="../api/predict.html">Predict</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/prepare_weather.html">Prepare weather</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/preprocessing.html">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/run_model.html">Run Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/train_model_pipeline.html">Train Model Pipeline</a></li>
 </ul>
 
 <div class="relations">

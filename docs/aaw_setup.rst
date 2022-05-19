@@ -14,11 +14,6 @@ when creating the notebook:
   * Size: 16.0Gi
 * GPUs: None
 
-Optional:
-
-* Configurations: Mount MinIO storage
-  * We tend to use command line to access MinIO, rather than mount it.
-
 It takes a few minutes to create the notebook, but from that point on you can connect to it easily from the
 ``Notebook Servers`` menu (left side) in the Kubeflow dashboard.
 

@@ -123,7 +123,7 @@ def process_weather_file(filename: str):
 
 def main(config_file: str = typer.Argument(..., help="Path to configuration YAML file."),
          epw_files: str = typer.Option("", help="The epw key to be used if the config file is not used."),
-         output_path: str = typer.Option("", help="The output path to be used."),
+         output_path: str = typer.Option("", help="The output path to be used. Note that this value should be empty unless this file is called from a pipeline."),
          ) -> str:
     """Take raw EPW files as defined in BTAP YAML configuration and prepare it for use by the model.
     Uses the EnergyPlus configuration to identify and process weather data in EPW format. The weather data is then
@@ -132,18 +132,20 @@ def main(config_file: str = typer.Argument(..., help="Path to configuration YAML
     Args:
         config_file: Path to the configuration file used for EnergyPlus.
         epw_files: The epw key to be used if the config file is not use.
-        output_path: Where output data should be placed.
+        output_path: Where output data should be placed. Note that this value should be empty unless this file is called from a pipeline.
     """
     logger.info("Beginning the weather processing step.")
+    DOCKER_INPUT_PATH = config.Settings().APP_CONFIG.DOCKER_INPUT_PATH
+    print(output_path)
     # Load the information from the config file, if provided
     if len(config_file) > 0:
         # Load the specified config file
-        cfg = config.get_config(config_file)
-        weather_key = config.Settings().APP_CONFIG.WEATHER_KEY
-        output_key = config.Settings().APP_CONFIG.OUTPUT_PATH
-        epw_file = cfg.get(weather_key)
-        if len(output_path) < 1:
-            output_path = cfg.get(output_key)
+        cfg = config.get_config(DOCKER_INPUT_PATH + config_file)
+        epw_file = cfg.get(config.Settings().APP_CONFIG.WEATHER_KEY)
+
+    # If the output path is blank, map to the docker output path
+    if len(output_path) < 1:
+        output_path = config.Settings().APP_CONFIG.DOCKER_OUTPUT_PATH
 
     # Data could be a single file or a list of files
     # The application assumes that a list will have a maximum size of one

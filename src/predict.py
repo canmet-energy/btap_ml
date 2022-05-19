@@ -15,6 +15,7 @@ import time
 from math import sqrt
 from pathlib import Path
 
+import joblib
 import numpy as np
 import pandas as pd
 import s3fs
@@ -134,7 +135,7 @@ def model_builder(hp):
     return model
 
 
-def predicts_hp(X_train, y_train, X_test, y_test, selected_feature):
+def predicts_hp(X_train, y_train, X_test, y_test, selected_feature, output_path, random_seed):
     """
     Using the set of hyperparameter combined,the model built is used to make predictions
     Args:
@@ -143,16 +144,25 @@ def predicts_hp(X_train, y_train, X_test, y_test, selected_feature):
         X_test: X test set
         y_test: y test set
         selected_feature: selected features that would be used to build the model
+        output_path: Where the output files should be placed.
+        random_seed: The random seed to be used
     Returns:
        Model built from the set of hyperparameters combined.
     """
+    parameter_search_path = str(Path(output_path).joinpath("parameter_search"))
+    log_path = str(Path(parameter_search_path).joinpath("btap"))
+    # Create the output directories if they do not exist
+    config.create_directory(parameter_search_path)
+    config.create_directory(log_path)
+
     tuner = Hyperband(model_builder,
                          objective='val_loss',
                          max_epochs=50,
                          overwrite=True,
                          factor=3,
-                         directory='../output/parameter_search',
-                         project_name='btap')
+                         directory=parameter_search_path,
+                         project_name='btap',
+                         seed=random_seed)
 
     stop_early = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=5)
     tuner.search(X_train,
@@ -174,7 +184,7 @@ def predicts_hp(X_train, y_train, X_test, y_test, selected_feature):
     """)
     result = best_hps
 
-    logdir = os.path.join("../output/parameter_search/btap", datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
+    logdir = os.path.join(log_path, datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
     hist_callback = tf.keras.callbacks.TensorBoard(logdir,
                                                    histogram_freq=1,
                                                    embeddings_freq=1,
@@ -227,14 +237,11 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
     # evaluate the hypermodel on the test data.
     y_test['y_pred'] = model.predict(X_test)
     y_validate['y_pred'] = model.predict(X_validate)
-
     # Retrain the model
-    y_test['y_pred_transformed'] =scalery.inverse_transform(y_test['y_pred'].values.reshape(-1,1))
-    y_validate['y_pred_transformed'] =scalery.inverse_transform(y_validate['y_pred'].values.reshape(-1,1))
-
+    y_test['y_pred_transformed'] = scalery.inverse_transform(y_test['y_pred'].values.reshape(-1,1))
+    y_validate['y_pred_transformed'] = scalery.inverse_transform(y_validate['y_pred'].values.reshape(-1,1))
     test_score = score( y_test['energy'], y_test['y_pred_transformed'])
     val_score = score( y_validate['energy'], y_validate['y_pred_transformed'])
-
 
     print("[Score test loss, test mae, test mse]:", test_score)
     print("[Score val loss, val mae, val mse]:", val_score)
@@ -243,23 +250,23 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
     y_test_complete['Total Energy'] = y_test_complete['Total Energy'].apply(lambda r: float(r / 365))
     output_df = ''
     y_test = y_test.groupby(['datapoint_id']).sum()
-    y_test['energy'] =y_test['energy'].apply(lambda r : float((r*1.0)/1000))
-    y_test['y_pred_transformed'] =y_test['y_pred_transformed'].apply(lambda r : float((r*1.0)/1000))
-    output_df = pd.merge(y_test,y_test_complete,left_index=True, right_index=True,how='left')
-    annual_metric=score(output_df['Total Energy'],output_df['y_pred_transformed'])
+    y_test['energy'] = y_test['energy'].apply(lambda r : float((r*1.0)/1000))
+    y_test['y_pred_transformed'] = y_test['y_pred_transformed'].apply(lambda r : float((r*1.0)/1000))
+    output_df = pd.merge(y_test, y_test_complete, left_index=True, right_index=True, how='left')
+    annual_metric=score(output_df['Total Energy'], output_df['y_pred_transformed'])
 
     y_validate_complete = y_validate_complete.groupby(['datapoint_id']).sum()
     y_validate_complete['Total Energy'] = y_validate_complete['Total Energy'].apply(lambda r: float(r / 365))
     output_val_df = ''
     y_validate = y_validate.groupby(['datapoint_id']).sum()
-    y_validate['energy'] =y_validate['energy'].apply(lambda r : float((r*1.0)/1000))
-    y_validate['y_pred_transformed'] =y_validate['y_pred_transformed'].apply(lambda r : float((r*1.0)/1000))
+    y_validate['energy'] = y_validate['energy'].apply(lambda r : float((r*1.0)/1000))
+    y_validate['y_pred_transformed'] = y_validate['y_pred_transformed'].apply(lambda r : float((r*1.0)/1000))
 
 
-    output_val_df = pd.merge(y_validate,y_validate_complete,left_index=True, right_index=True,how='left')
-    annual_metric_val=score(output_val_df['Total Energy'],output_val_df['y_pred_transformed'])
+    output_val_df = pd.merge(y_validate, y_validate_complete, left_index=True, right_index=True, how='left')
+    annual_metric_val = score(output_val_df['Total Energy'], output_val_df['y_pred_transformed'])
 
-    output_df = output_df.drop(['y_pred','energy_y','energy_x'],axis=1)
+    output_df = output_df.drop(['y_pred', 'energy_y', 'energy_x'],axis=1)
     output_val_df = output_val_df.drop(['y_pred','energy_y','energy_x'],axis=1)
 
 #     pl.daily_plot(y_test,'test_set')
@@ -290,7 +297,7 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
 
 
 def create_model(dense_layers, activation, optimizer, dropout_rate, length, learning_rate, epochs, batch_size, X_train, y_train, X_test, y_test, y_test_complete, scalery,
-                 X_validate, y_validate, y_validate_complete):
+                 X_validate, y_validate, y_validate_complete, output_path):
     """
     Creates a model with defaulted values without need to perform an hyperparameter search at all times.
     Its initutive to have run the hyperparameter search beforehand to know the hyperparameter value to set.
@@ -311,6 +318,7 @@ def create_model(dense_layers, activation, optimizer, dropout_rate, length, lear
         X_validate: X validation set
         y_validate: y validation set
         y_validate_complete: dataframe containing the target variable with corresponding datapointid for the validation set
+        output_path: Where the outputs will be placed/
     Returns:
         metric: evaluation results containing the loss value from the testset prediction,
         annual_metric: predicted value for each datapooint_id is summed to calculate the annual energy consumed and the loss value from the testset prediction,
@@ -319,6 +327,12 @@ def create_model(dense_layers, activation, optimizer, dropout_rate, length, lear
         val_annual_metric:predicted value for each datapooint_id is summed to calculate the annual energy consumed and the loss value from the validationset prediction,,
         output_val_df: merge of y_pred, y_validate, datapoint_id, the final dataframe showing the model output using the validation set
     """
+    parameter_search_path = str(Path(output_path).joinpath("parameter_search"))
+    btap_log_path = str(Path(parameter_search_path).joinpath("btap"))
+    # Create the output directories if they do not exist
+    config.create_directory(parameter_search_path)
+    config.create_directory(btap_log_path)
+
     model = Sequential()
     model.add(Flatten())
     # model.add(Dropout(dropout_rate, input_shape=(length,)))
@@ -346,9 +360,9 @@ def create_model(dense_layers, activation, optimizer, dropout_rate, length, lear
                   metrics=['mae', 'mse', 'mape'])
     # Define callback
     early_stopping = EarlyStopping(monitor='loss', patience=5)
-    logdir = os.path.join("../output/parameter_search/btap", datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
+    logdir = os.path.join(btap_log_path, datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
     hist_callback = tf.keras.callbacks.TensorBoard(logdir, histogram_freq=1)
-    logger = keras.callbacks.CSVLogger('../output/metric.csv', append=True)
+    logger = keras.callbacks.CSVLogger(output_path + '/metric.csv', append=True)
     output_df = ''
 
     # prepare the model with target scaling
@@ -391,6 +405,7 @@ def fit_evaluate(config_file, preprocessed_data_file, selected_features_file, pa
     # Set the random seeds
     np.random.seed(random_seed)
     tf.random.set_seed(random_seed)
+    os.environ['PYTHONHASHSEED'] = str(random_seed)
 
     with open(preprocessed_data_file, 'r', encoding='UTF-8') as preprocessing_file:
         preprocessing_json = json.load(preprocessing_file)
@@ -398,13 +413,14 @@ def fit_evaluate(config_file, preprocessed_data_file, selected_features_file, pa
     with open(selected_features_file, 'r', encoding='UTF-8') as feature_selection_file:
         features_json = json.load(feature_selection_file)
 
+    # TODO: Remove after validation
     # removing log directory
-    shutil.rmtree('../output/parameter_search/btap', ignore_errors=True)
+    #shutil.rmtree('../output/parameter_search/btap', ignore_errors=True)
 
-    try:
-        os.remove('../output/metric.csv')
-    except OSError:
-        pass
+    #try:
+    #    os.remove('../output/metric.csv')
+    #except OSError:
+    #    pass
 
     features = preprocessing_json["features"]
     selected_features = features_json["features"]
@@ -420,21 +436,23 @@ def fit_evaluate(config_file, preprocessed_data_file, selected_features_file, pa
     col_length = X_train.shape[1]
 
     # extracting the test data for the target variable
-    y_test_complete = pd.DataFrame(preprocessing_json["y_test_complete"], columns=['energy','datapoint_id','Total Energy'])
-    y_test = pd.DataFrame(preprocessing_json["y_test"], columns=['energy','datapoint_id'])
-    y_validate_complete = pd.DataFrame(preprocessing_json["y_validate_complete"], columns=['energy','datapoint_id','Total Energy'])
-    y_validate= pd.DataFrame(preprocessing_json["y_validate"], columns=['energy','datapoint_id'])
-
-    scalerx= RobustScaler()
-    scalery= RobustScaler()
+    y_test_complete = pd.DataFrame(preprocessing_json["y_test_complete"], columns=['energy', 'datapoint_id', 'Total Energy'])
+    y_test = pd.DataFrame(preprocessing_json["y_test"], columns=['energy', 'datapoint_id'])
+    y_validate_complete = pd.DataFrame(preprocessing_json["y_validate_complete"], columns=['energy', 'datapoint_id', 'Total Energy'])
+    y_validate= pd.DataFrame(preprocessing_json["y_validate"], columns=['energy', 'datapoint_id'])
+    print(X_test.iloc[0])
+    print(X_test.columns.values)
+    scalerx = RobustScaler()
+    scalery = RobustScaler()
     X_train = scalerx.fit_transform(X_train)
     X_test = scalerx.transform(X_test)
     X_validate = scalerx.transform(X_validate)
     y_train = scalery.fit_transform(y_train.reshape(-1, 1))
+    print(X_test[0])
 
     # search for best hyperparameters
     if param_search.lower() == "yes":
-        hypermodel = predicts_hp(X_train, y_train, X_test, y_test, features)
+        hypermodel = predicts_hp(X_train, y_train, X_test, y_test, features, output_path, random_seed)
         results_pred = evaluate(hypermodel, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete)
     else:
         results_pred, hypermodel = create_model(
@@ -456,6 +474,7 @@ def fit_evaluate(config_file, preprocessed_data_file, selected_features_file, pa
                                     X_validate = X_validate,
                                     y_validate=y_validate,
                                     y_validate_complete= y_validate_complete,
+                                    output_path=output_path
                                    )
     time_taken = ((time.time() - start_time)/60)
     print("********* Total time spent is ***********" + str(time_taken)+ " minutes" )
@@ -480,9 +499,11 @@ def fit_evaluate(config_file, preprocessed_data_file, selected_features_file, pa
         json.dump(results_pred, json_output)
 
     # Output the trained model architecture
-
-    model_output_path = str(model_path) + '/' + config.Settings().APP_CONFIG.TRAINED_MODEL_FILENAME + '.h5'
+    model_output_path = str(model_path.joinpath(config.Settings().APP_CONFIG.TRAINED_MODEL_FILENAME))
     hypermodel.save(model_output_path)
+    # Output the scalers used to scale the X and y data
+    joblib.dump(scalerx, str(model_path.joinpath(config.Settings().APP_CONFIG.SCALERX_FILENAME)))
+    joblib.dump(scalery, str(model_path.joinpath(config.Settings().APP_CONFIG.SCALERY_FILENAME)))
 
     return model_output_path, output_filename_csv # Model output, Results output
 
@@ -490,7 +511,7 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
          preprocessed_data_file: str = typer.Argument(..., help="Location and name of a .json preprocessing file to be used."),
          selected_features_file: str = typer.Argument(..., help="Location and name of a .json feature selection file to be used."),
          perform_param_search: str = typer.Option("", help="'yes' if hyperparameter tuning should be performed (increases runtime), 'no' if the default hyperparameters should be used."),
-         output_path: str = typer.Option("", help="Folder location where output files should be placed."),
+         output_path: str = typer.Option("", help="The output path to be used. Note that this value should be empty unless this file is called from a pipeline."),
          random_seed: int = typer.Option(7, help="Random seed to be used when training."),
          ):
     """
@@ -502,18 +523,21 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
         preprocessed_data_file: Location and name of a .json preprocessing file to be used.
         selected_features_file: Location and name of a .json feature selection file to be used.
         perform_param_search: 'yes' if hyperparameter tuning should be performed (increases runtime), 'no' if the default hyperparameters should be used.
-        output_path: Folder location where output files should be placed.
+        output_path: Where output data should be placed. Note that this value should be empty unless this file is called from a pipeline.
         random_seed: Random seed to be used when training.
     """
+    DOCKER_INPUT_PATH = config.Settings().APP_CONFIG.DOCKER_INPUT_PATH
     # Load all content stored from the config file, if provided
     if len(config_file) > 0:
         # Load the specified config file
-        cfg = config.get_config(config_file)
-        # Load the stored output path
-        if len(output_path) < 1:
-            output_path = cfg.get(config.Settings().APP_CONFIG.OUTPUT_PATH)
+        cfg = config.get_config(DOCKER_INPUT_PATH + config_file)
         random_seed = cfg.get(config.Settings().APP_CONFIG.RANDOM_SEED)
         perform_param_search = cfg.get(config.Settings().APP_CONFIG.PARAM_SEARCH)
+    preprocessed_data_file = DOCKER_INPUT_PATH + preprocessed_data_file
+    selected_features_file = DOCKER_INPUT_PATH + selected_features_file
+    # If the output path is blank, map to the docker output path
+    if len(output_path) < 1:
+        output_path = config.Settings().APP_CONFIG.DOCKER_OUTPUT_PATH
     return fit_evaluate(config_file, preprocessed_data_file, selected_features_file, perform_param_search, output_path, random_seed)
 
 if __name__ == '__main__':
@@ -521,23 +545,3 @@ if __name__ == '__main__':
     settings = config.Settings()
     # Run the CLI interface
     typer.run(main)
-
-"""
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-
-    # Paths must be passed in, not hardcoded
-    parser.add_argument('--in_obj_name', type=str, help='minio locationa and name of data file to be read, ideally the output file generated from preprocessing i.e. preprocessing_out')
-    parser.add_argument('--features', type=str, help='minio locationa and name of data file to be read, ideally the output file generated from feature selection i.e. feature_out')
-    parser.add_argument('--param_search', type=str, help='This parameter is used to determine if hyperparameter search can be performed or not, accepted value is yes or no')
-    parser.add_argument('--output_path', type=str, help='The minio location and filename where the output file should be written.')
-    args = parser.parse_args()
-
-    fit_evaluate(args)
-
-    # python3 predict.py --param_search no --in_obj_name output_data/preprocessing_out --features output_data/feature_out --output_path output_data/predict_out.json
-
-    # launch tensorboard
-    # python -m tensorboard.main --logdir="./parameter_search/btap/"
-    # https://kubeflow.aaw.cloud.statcan.ca/notebook/nrcan-btap/reg-cpu-notebook/proxy/6007/
-"""

@@ -109,7 +109,7 @@ def select_features(config_file, preprocessed_data_file, estimator_type, output_
 def main(config_file: str = typer.Argument(..., help="Location of the .yml config file (default name is input_config.yml)."),
          preprocessed_data_file: str = typer.Argument(..., help="Location and name of a .json preprocessing file to be used."),
          estimator_type: str = typer.Option("", help="The type of feature selection to be performed. The default is lasso, which will be used if nothing is passed. The other options are 'linear', 'elasticnet', and 'xgb'."),
-         output_path: str = typer.Option("", help="Folder location where output files should be placed.")
+         output_path: str = typer.Option("", help="The output path to be used. Note that this value should be empty unless this file is called from a pipeline."),
          ) -> str:
     """
     Select the feature which contribute most to the prediction for the total energy consumed.
@@ -120,16 +120,19 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
         preprocessed_data_file: Location and name of a .json preprocessing file to be used.
         estimator_type: The type of feature selection to be performed. The default is lasso, which will be used if nothing is passed.
                         The other options are 'linear', 'elasticnet', and 'xgb'.
-        output_path: Folder location where output files should be placed.
+        output_path: Where output data should be placed. Note that this value should be empty unless this file is called from a pipeline.
     """
+    DOCKER_INPUT_PATH = config.Settings().APP_CONFIG.DOCKER_INPUT_PATH
     # Load all content stored from the config file, if provided
     if len(config_file) > 0:
         # Load the specified config file
-        cfg = config.get_config(config_file)
-        # Load the stored output path
-        if len(output_path) < 1:
-            output_path = cfg.get(config.Settings().APP_CONFIG.OUTPUT_PATH)
+        cfg = config.get_config(DOCKER_INPUT_PATH + config_file)
         estimator_type = cfg.get(config.Settings().APP_CONFIG.ESTIMATOR_TYPE)
+    # If the output path is blank, map to the docker output path
+    if len(output_path) < 1:
+        output_path = config.Settings().APP_CONFIG.DOCKER_OUTPUT_PATH
+    # Add the docker input path as a prefix to the preprocessing file
+    preprocessed_data_file = DOCKER_INPUT_PATH + preprocessed_data_file
     # Perform the feature selection
     features_filepath = select_features(config_file, preprocessed_data_file, estimator_type, output_path)
     return features_filepath

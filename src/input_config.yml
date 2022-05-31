@@ -37,7 +37,7 @@
 # 'CAN_YT_Whitehorse.Intl.AP.719640_CWEC2016.epw'
 ]
 
-###################################/
+###################################
 ##
 ## FOR INPUT PREPROCESSING (ONLY USED FOR TRAINING)
 ##
@@ -88,7 +88,7 @@
 
 ###################################
 ##
-## FOR MODEL TRAINING AFTER PREPROCESSING (ONLY FOR TRAINING)
+## FOR MODEL TRAINING AFTER PREPROCESSING (ONLY USED FOR TRAINING)
 ##
 ###################################
 # Determine whether the training should perform a hyperparameter search
@@ -106,12 +106,9 @@
 # Filepath and filename of the trained ML model to be used (output from the training step)
 :trained_model_file: ''
 # Filepath and filename of the ohe.pkl file generated from the preprocessing step when training a model
-# ***NOTE: If a trained model only used electricity training data without gas data, using the saved ohe.pkl
-#          file will cause the predictions to fail. To obtain predictions on gas building data with
-#          a model trained on only electric data, leave the :ohe_file value below as an empty string to have
-#          it be generated to work with the gas data, then the data will be converted to the proper
-#          electricity format. If the trained model included a gas file, the ohe.pkl file can be used as normal.
 :ohe_file: ''
+# Filepath and filename of the cleaned_columns.json file generated from the preprocessing step when training a model
+:cleaned_columns_file: ''
 # Filepath and filename of the scaler_X.pkl and scaler_y.pkl files to be used (located within the trained model output)
 :scaler_X_file: ''
 :scaler_y_file: ''
@@ -119,6 +116,7 @@
 :features_file: ''
 # Folder path containing one or more .xlsx building paramter files
 # All .xlsx files within the specified folder must be valid building files
+# No final '/' is needed in the provided directory
 :batch_building_inputs: ''
 # Start and end dates to be used when preprocessing data to receive predictions for
 # Typically will remain as 1-1 to 12-31

@@ -28,6 +28,7 @@ logger = logging.getLogger(__name__)
 def main(config_file: str = typer.Argument(..., help="Location of the .yml config file (default name is input_config.yml)."),
          model_file: str = typer.Option("", help="Location and name of a .h5 trained keras model to be used for training."),
          ohe_file: str = typer.Option("", help="Location and name of a ohe.pkl OneHotEncoder file which was generated in the root of a training output folder."),
+         cleaned_columns_file: str = typer.Option("", help="Location and name of a cleaned_columns.json file which was generated in the root of a training output folder."),
          scaler_X_file: str = typer.Option("", help="Location and name of a scaler_X.pkl fit scaler file which was generated with the trained model_file."),
          scaler_y_file: str = typer.Option("", help="Location and name of a scaler_y.pkl fit scaler file which was generated with the trained model_file."),
          weather_file: str = typer.Option("", help="Location and name of a .parquet weather file to be used if weather generation is skipped."),
@@ -51,14 +52,15 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
         config_file: Location of the .yml config file (default name is input_config.yml).
         model_file: Location and name of a .h5 trained keras model to be used for training.
         ohe_file: Location and name of a ohe.pkl OneHotEncoder file which was generated in the root of a training output folder.
+        cleaned_columns_file: Location and name of a cleaned_columns.json file which was generated in the root of a training output folder.
         scaler_X_file: Location and name of a scaler_X.pkl fit scaler file which was generated with the trained model_file.
         scaler_y_file: Location and name of a scaler_y.pkl fit scaler file which was generated with the trained model_file.
         weather_file: Location and name of a .parquet weather file to be used if weather generation is skipped.
         skip_weather_generation: True if the .parquet weather file generation should be skipped, where the weather_file input is used, False if the weather file generation should be performed.
         building_params_folder: The folder location containing all building parameter files which will have predictions made on by the provided model.
-        selected_features_file: Location and name of a .json feature selection file to be used if the feature selection is skipped.
         start_date: The start date to specify the start of which weather data is attached to the building data. Expects the input to be in the form Month_number-Day_number.
         end_date: The end date to specify the end of which weather data is attached to the building data. Expects the input to be in the form Month_number-Day_number.
+        selected_features_file: Location and name of a .json feature selection file to be used if the feature selection is skipped.
     """
     settings = config.Settings()
     DOCKER_INPUT_PATH = config.Settings().APP_CONFIG.DOCKER_INPUT_PATH
@@ -72,6 +74,7 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
         scaler_y_file = cfg.get(settings.APP_CONFIG.SCALER_Y_FILE)
         # If the OHE file is empty, the preprocessing will fit a new OneHotEncoder to be used
         ohe_file = cfg.get(settings.APP_CONFIG.OHE_FILE)
+        cleaned_columns_file = cfg.get(settings.APP_CONFIG.CLEANED_COLUMNS_FILE)
         start_date = cfg.get(config.Settings().APP_CONFIG.SIMULATION_START_DATE)
         end_date = cfg.get(config.Settings().APP_CONFIG.SIMULATION_END_DATE)
     # Create directory to hold all data for the run (datetime/...)
@@ -95,7 +98,7 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
     X, X_ids, all_features = preprocessing.main(config_file=config_file, hourly_energy_electric_file=None, building_params_electric_file=building_params_folder,
                                                 weather_file=weather_file, val_hourly_energy_file=None, val_building_params_file=None,
                                                 hourly_energy_gas_file=None, building_params_gas_file=None, output_path=output_path,
-                                                preprocess_only_for_predictions=True, ohe_file=ohe_file)
+                                                preprocess_only_for_predictions=True, ohe_file=ohe_file, cleaned_columns_file=cleaned_columns_file)
     logger.info("Updating dataset to only use selected features.")
     # Load the selected_features file
     with open(DOCKER_INPUT_PATH + selected_features_file, 'r', encoding='UTF-8') as feature_selection_file:
@@ -127,11 +130,13 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
     X_ids = X_ids.drop('date_int', axis=1)
     logger.info("Preparing aggregated output in Gigajoules per square meter over the specified date range.")
     # From the daily total, generate a total for the entire start-end date in gigajoules
-    X_aggregated = X_ids.drop("Date", axis=1).groupby(['Prediction Identifier']).sum()
+    X_aggregated = X_ids.drop("Date", axis=1).groupby(['Prediction Identifier'], sort=False).sum()
     total_days = len(pd.date_range(TEMP_YEAR + start_date, TEMP_YEAR + end_date))
     #X_aggregated['Predicted Energy Total (Gigajoules per square meter)'] = X_aggregated['Predicted Daily Energy Total (Megajoules per square meter)'].apply(lambda r: float(r / total_days))
     X_aggregated["Predicted Energy Total (Gigajoules per square meter)"] = X_aggregated["Predicted Daily Energy Total (Megajoules per square meter)"].apply(lambda r : float((r*1.0)/1000))
     X_aggregated = X_aggregated.drop("Predicted Daily Energy Total (Megajoules per square meter)", axis=1)
+    # Merge the processed building data used for training with the output of the aggregated values
+    X_aggregated = pd.concat([X_aggregated.reset_index(drop=True), X_df.reset_index(drop=True)], axis=1)
     # Output the predictions alongside any relevant information
     logger.info("Outputting predictions to %s.", str(output_path))
     X_ids.to_csv(output_path + '/' + settings.APP_CONFIG.RUNNING_DAILY_RESULTS_FILENAME)

@@ -122,7 +122,7 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
                                                     val_building_params_file=val_building_params_file, hourly_energy_gas_file=hourly_energy_gas_file,
                                                     building_params_gas_file=building_params_gas_file, output_path=output_path,
                                                     preprocess_only_for_predictions=False, random_seed=random_seed,
-                                                    building_params_folder='', start_date='', end_date='', ohe_file='')
+                                                    building_params_folder='', start_date='', end_date='', ohe_file='', cleaned_columns_file='')
     # Perform feature selection (retrieve the features to be used)
     if not skip_feature_selection:
        selected_features_file = feature_selection.main(config_file, preprocessed_data_file, estimator_type, output_path)

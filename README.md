@@ -9,6 +9,10 @@ The goal is to develop surrogate models that generate data to inform in the desi
 
 Refer to the [documentation](docs/) to see how to install and run the model.
 
+# Docker Image
+
+The Docker image is named juliantemp/btap_ml:latest and is available at [Docker Hub](https://hub.docker.com/r/juliantemp/btap_ml). The image documentation on Docker Hub highlights how the image can be instantiated and how to use the image. 
+
 ## Structure
 - Block Storage Guide.ipynb: sample notebook of how to access minio using s3f3. Note that direct minio use has been decommissioned starting May 6, 2022 and now requires a drive to be mounted before running.
 - tensorboard.ipynb: use this notebook to start the tensorboard dashboard for metrics visualization and scrutinization of the surrogate model.

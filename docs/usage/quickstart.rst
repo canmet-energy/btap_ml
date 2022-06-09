@@ -5,7 +5,7 @@ If you just want to run all of the steps from training a model to using the mode
 of these depending on if data has already been prepared.
 
 Each of the files can use an input configuration .yml file which contains all inputs to be used alongside descriptions of the inputs.
-If used, only the input file, which will be referenced as input_config.yml, will be passed when calling the training process.
+If used, only the input file, which will be referenced as input_config.yml, will be passed when calling the training process (this file will be discussed below).
 Each file can also use values passed to through command line arguements. All values except the config file are optional.
 Thus, the config file must still be passed, but the CLI arguements will be given priority. A mix of command line and
 config files can also be used in the case where certain parts of a process should be skipped.
@@ -17,7 +17,7 @@ config files can also be used in the case where certain parts of a process shoul
 
 .. note::
 
-   Every file can be run independently, but the recommended steps are to run one of the two pipelines below.
+   Every file can be run independently, but the recommended steps are to run one of the two pipelines presented below.
 
 Training a model
 ----------------
@@ -44,42 +44,21 @@ Assuming that only the ``input_config.yml`` file is used and located inside of t
 This will process the specified weather file to be used, preprocess all input data, and obtain predictions for all input data (outputting two .csv files
 which contain the prediction outputs alongside identifiers for each building in the form building_file_name/building_index).
 
-Prepare weather data
---------------------
+Input configuration file (input_config.yml)
+-------------------------------------------
 
-Gather required weather data and place it on blob storage::
+When providing an input to one of the pipelines above, the command line arguements can be used or the input configuration can be used (or a combination of the two).
+The template for the ``input_config.yml`` file can be found [here](https://github.com/canmet-energy/btap_ml/blob/main/src/input_config.yml).
+Within this configuration file are different fields which are required for training and/or running. Each section is clearly labelled with
+comments describing what the input is used for and which are mandatory. If unused within this file, the appropriate input must be provided through
+the CLI.
 
-   $ python prepare_weather.py input_data/sample-lhs_2021-10-04.yml
+It is important to note that any input locations specified within this file or which are provided through the CLI are modified within the code.
+Specifically, any input filename or directory provided as an input will have the Docker file's input path appended to the beginning of the value.
+For example, if a file named electricity_building_params.xlsx is within the root folder which has been linked to the Docker's input path
+(/home/btap_ml/input), then when input to the input_config.yml file, only the value electricity_building_params.xlsx should be used in the
+configuration file.
 
-Preprocessing
--------------
-
-Clean the input data and split the it into test and train sets::
-
-    python3 preprocessing.py --in_build_params input_data/output_elec_2021-11-05.xlsx --in_hour input_data/total_hourly_res_elec_2021-11-05.csv --in_weather weather/CAN_QC_Montreal-Trudeau.Intl.AP.716270_CWEC2016.epw.parquet --output_path output_data/preprocessing_out --in_build_params_gas input_data/output_gas_2021-11-05.xlsx --in_hour_gas input_data/total_hourly_res_gas_2021-11-05.csv
-
-.. note::
-
-   Update the input parameters to point to the appropriate input files and ouput_path in minio. Only the filenames
-   would need to be changed. Check :py:mod:`preprocessing` for full detail description of each parameter.
-
-Feature Selection
-------------------
-
-After preprocessing the data, the features to be used in building the surrogate model can be selected::
-
-     python3 feature_selection.py --in_obj_name output_data/preprocessing_out --output_path output_data/feature_out --estimator_type lasso
-
-
-Build Surrogate Model and Predict
-----------------------------------
-
-The output from proprocessing and feature selection are used as input into this stage by running::
-
-    python3 predict.py --param_search no --in_obj_name output_data/preprocessing_out --features output_data/feature_out --output_path output_data/predict_out
-
-
-Download Results
-----------------
-
-The results from the prediction is available in minio in the output_path specified in the build step.
+Similarly, when passing the ``input_config.yml`` file to the pipelines through the CLI, if the configuration file is at the root of the linked
+input file from the Docker container, only ``input_config.yml`` will need to be passed as an arguement to the CLI. More information on
+the Docker image is available [here](https://hub.docker.com/r/juliantemp/btap_ml).

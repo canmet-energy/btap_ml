@@ -3,14 +3,11 @@ Uses the output from preprocessing and feature selection from mino, builds the m
 
 CLI arguments match those defined by ``main()``.
 """
-import argparse
 import csv
 import datetime
-import glob
 import json
 import logging
 import os
-import shutil
 import time
 from math import sqrt
 from pathlib import Path
@@ -18,41 +15,26 @@ from pathlib import Path
 import joblib
 import numpy as np
 import pandas as pd
-import s3fs
 import tensorflow as tf
 import tensorflow.keras as keras
 import typer
 from keras import backend as K
 from keras import regularizers  # for l2 regularization
 from keras.callbacks import EarlyStopping
-from keras.layers import BatchNormalization
 from keras.layers.core import Dense, Dropout, Flatten
 from keras.models import Sequential
-from keras.utils import np_utils
-from keras.wrappers.scikit_learn import KerasRegressor
 from keras_tuner import Hyperband
 from matplotlib import pyplot as plt
 from sklearn import metrics
-from sklearn.metrics import mean_absolute_error, mean_squared_error
-from sklearn.model_selection import (GridSearchCV, KFold, cross_val_predict,
-                                     cross_val_score)
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import (MinMaxScaler, Normalizer, RobustScaler,
-                                   StandardScaler)
+from sklearn.preprocessing import RobustScaler
 from tensorboard.plugins.hparams import api as hp
 from tensorflow.keras import layers
-from tensorflow.keras.optimizers import Adam
 
 import config
 import plot as pl
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-#######################################################
-# Predict energy consumed
-############################################################
-
 
 def score(y_test, y_pred):
     """
@@ -103,7 +85,6 @@ def model_builder(hp):
     model.add(keras.layers.Flatten())
 
     hp_activation= hp.Choice('activation', values=['relu','tanh','sigmoid'])
-#     hp_regularizers= hp.Choice('regularizers', values=[1e-4, 1e-5])
     for i in range(hp.Int("num_layers", 1,1)):
         model.add(layers.Dense(
             units=hp.Int("units_" + str(i), min_value=8, max_value=96, step=8),
@@ -156,13 +137,13 @@ def predicts_hp(X_train, y_train, X_test, y_test, selected_feature, output_path,
     config.create_directory(log_path)
 
     tuner = Hyperband(model_builder,
-                         objective='val_loss',
-                         max_epochs=50,
-                         overwrite=True,
-                         factor=3,
-                         directory=parameter_search_path,
-                         project_name='btap',
-                         seed=random_seed)
+                      objective='val_loss',
+                      max_epochs=50,
+                      overwrite=True,
+                      factor=3,
+                      directory=parameter_search_path,
+                      project_name='btap',
+                      seed=random_seed)
 
     stop_early = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=5)
     tuner.search(X_train,
@@ -367,7 +348,6 @@ def create_model(dense_layers, activation, optimizer, dropout_rate, length, lear
 
     # prepare the model with target scaling
     scores_metric = ''
-    #np.random.seed(7)
     history = model.fit(X_train,
                         y_train,
                         callbacks=[logger,
@@ -375,9 +355,9 @@ def create_model(dense_layers, activation, optimizer, dropout_rate, length, lear
                                    hist_callback,
                                    ],
                         epochs=epochs,
-                        #batch_size =batch_size,
+                        #batch_size=batch_size,
                         verbose=1,
-                        # shuffle=False,
+                        #shuffle=False,
                         validation_split=0.2)
 #     pl.save_plot(history)
 
@@ -413,15 +393,6 @@ def fit_evaluate(config_file, preprocessed_data_file, selected_features_file, pa
     with open(selected_features_file, 'r', encoding='UTF-8') as feature_selection_file:
         features_json = json.load(feature_selection_file)
 
-    # TODO: Remove after validation
-    # removing log directory
-    #shutil.rmtree('../output/parameter_search/btap', ignore_errors=True)
-
-    #try:
-    #    os.remove('../output/metric.csv')
-    #except OSError:
-    #    pass
-
     features = preprocessing_json["features"]
     selected_features = features_json["features"]
     X_train = pd.DataFrame(preprocessing_json["X_train"], columns=features)
@@ -440,15 +411,13 @@ def fit_evaluate(config_file, preprocessed_data_file, selected_features_file, pa
     y_test = pd.DataFrame(preprocessing_json["y_test"], columns=['energy', 'datapoint_id'])
     y_validate_complete = pd.DataFrame(preprocessing_json["y_validate_complete"], columns=['energy', 'datapoint_id', 'Total Energy'])
     y_validate= pd.DataFrame(preprocessing_json["y_validate"], columns=['energy', 'datapoint_id'])
-    print(X_test.iloc[0])
-    print(X_test.columns.values)
+
     scalerx = RobustScaler()
     scalery = RobustScaler()
     X_train = scalerx.fit_transform(X_train)
     X_test = scalerx.transform(X_test)
     X_validate = scalerx.transform(X_validate)
     y_train = scalery.fit_transform(y_train.reshape(-1, 1))
-    print(X_test[0])
 
     # search for best hyperparameters
     if param_search.lower() == "yes":
@@ -457,7 +426,6 @@ def fit_evaluate(config_file, preprocessed_data_file, selected_features_file, pa
     else:
         results_pred, hypermodel = create_model(
                                     dense_layers=[56],
-                                    #dense_layers=[88],
                                     activation='relu',
                                     optimizer='adam',
                                     dropout_rate=0.1,
@@ -476,8 +444,8 @@ def fit_evaluate(config_file, preprocessed_data_file, selected_features_file, pa
                                     y_validate_complete= y_validate_complete,
                                     output_path=output_path
                                    )
-    time_taken = ((time.time() - start_time)/60)
-    print("********* Total time spent is ***********" + str(time_taken)+ " minutes" )
+    time_taken = ((time.time() - start_time) / 60)
+    print("********* Total time spent is " + str(time_taken) + " minutes ***********" )
 
     model_path = Path(output_path).joinpath(config.Settings().APP_CONFIG.TRAINING_BUCKET_NAME)
 

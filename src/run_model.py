@@ -5,7 +5,6 @@ CLI arguments match those defined by ``main()``.
 """
 import json
 import logging
-import os
 import shutil
 from datetime import datetime
 from pathlib import Path
@@ -13,8 +12,6 @@ from pathlib import Path
 import joblib
 import pandas as pd
 import typer
-import yaml
-from sklearn.preprocessing import RobustScaler
 from tensorflow import keras
 
 import config
@@ -64,7 +61,12 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
     """
     settings = config.Settings()
     DOCKER_INPUT_PATH = config.Settings().APP_CONFIG.DOCKER_INPUT_PATH
+    # Define the year to be used for any date operations (a non leap year)
     TEMP_YEAR = "2022-"
+    # Define the output column names to be used
+    COL_NAME_DAILY_MEGAJOULES = "Predicted Daily Energy Total (Megajoules per square meter)"
+    COL_NAME_AGGREGATED_GIGAJOULES = "Predicted Energy Total (Gigajoules per square meter)"
+
     if len(config_file) > 0:
         #load_and_validate_config(config_file)
         cfg = config.get_config(DOCKER_INPUT_PATH + config_file)
@@ -77,6 +79,7 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
         cleaned_columns_file = cfg.get(settings.APP_CONFIG.CLEANED_COLUMNS_FILE)
         start_date = cfg.get(config.Settings().APP_CONFIG.SIMULATION_START_DATE)
         end_date = cfg.get(config.Settings().APP_CONFIG.SIMULATION_END_DATE)
+        building_params_folder = cfg.get(config.Settings().APP_CONFIG.BUILDING_BATCH_PATH)
     # Create directory to hold all data for the run (datetime/...)
     # If used, copy the config file within the directory to log the input values
     output_path = config.Settings().APP_CONFIG.DOCKER_OUTPUT_PATH
@@ -117,10 +120,10 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
     model = keras.models.load_model(DOCKER_INPUT_PATH + model_file, compile=False)
     logger.info("Getting the predictions for the input data.")
     # Get the megajoule predictions (or call the predict.evaluate function!)
-    X_ids["Predicted Daily Energy Total (Megajoules per square meter)"] = model.predict(X)
+    X_ids[COL_NAME_DAILY_MEGAJOULES] = model.predict(X)
     logger.info("Scaling the predictions to their appropriate form.")
     # Transform the outputs back into their expected megajoule form
-    X_ids["Predicted Daily Energy Total (Megajoules per square meter)"] = scaler_y.inverse_transform(X_ids["Predicted Daily Energy Total (Megajoules per square meter)"].values.reshape(-1,1))
+    X_ids[COL_NAME_DAILY_MEGAJOULES] = scaler_y.inverse_transform(X_ids[COL_NAME_DAILY_MEGAJOULES].values.reshape(-1,1))
     logger.info("Preparing output file format for daily Megajoules per square meter.")
     # Convert the int date values into a standard representation, without the year
     X_ids["Date"] = X_ids["date_int"].apply(lambda r: '0' + str(r) if len(str(r)) == 3 else str(r))
@@ -130,13 +133,15 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
     X_ids = X_ids.drop('date_int', axis=1)
     logger.info("Preparing aggregated output in Gigajoules per square meter over the specified date range.")
     # From the daily total, generate a total for the entire start-end date in gigajoules
-    X_aggregated = X_ids.drop("Date", axis=1).groupby(['Prediction Identifier'], sort=False).sum()
+    X_aggregated = X_ids.drop("Date", axis=1).groupby(['Prediction Identifier'], sort=False, as_index=False).sum()
     total_days = len(pd.date_range(TEMP_YEAR + start_date, TEMP_YEAR + end_date))
-    #X_aggregated['Predicted Energy Total (Gigajoules per square meter)'] = X_aggregated['Predicted Daily Energy Total (Megajoules per square meter)'].apply(lambda r: float(r / total_days))
-    X_aggregated["Predicted Energy Total (Gigajoules per square meter)"] = X_aggregated["Predicted Daily Energy Total (Megajoules per square meter)"].apply(lambda r : float((r*1.0)/1000))
-    X_aggregated = X_aggregated.drop("Predicted Daily Energy Total (Megajoules per square meter)", axis=1)
-    # Merge the processed building data used for training with the output of the aggregated values
-    X_aggregated = pd.concat([X_aggregated.reset_index(drop=True), X_df.reset_index(drop=True)], axis=1)
+    # If the averaged energy use is needed, the line below can be used
+    # ... = X_aggregated[COL_NAME_DAILY_MEGAJOULES].apply(lambda r: float(r / total_days))
+    X_aggregated[COL_NAME_AGGREGATED_GIGAJOULES] = X_aggregated[COL_NAME_DAILY_MEGAJOULES].apply(lambda r : float((r*1.0)/1000))
+    X_aggregated = X_aggregated.drop(COL_NAME_DAILY_MEGAJOULES, axis=1)
+    # Merge the processed building data used for training with the preprocessed building data
+    buildings_df = preprocessing.process_building_files_batch(building_params_folder, "", "", False)
+    X_aggregated = pd.merge(X_aggregated, buildings_df, on='Prediction Identifier', how='left')
     # Output the predictions alongside any relevant information
     logger.info("Outputting predictions to %s.", str(output_path))
     X_ids.to_csv(output_path + '/' + settings.APP_CONFIG.RUNNING_DAILY_RESULTS_FILENAME)

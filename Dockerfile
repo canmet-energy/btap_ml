@@ -1,17 +1,13 @@
-FROM ubuntu:20.04
-
-RUN apt-get update && apt-get install -y \
-    python3 \
-    python3-pip \
-    && rm -rf /var/lib/apt/lists/*
-
-WORKDIR /pipelines
-COPY requirements.txt /pipelines
-RUN pip install -r requirements.txt
-COPY src /pipelines
-
-RUN groupadd -g 1000 app && useradd -u 1000 app -g app
-
-RUN chown -R app:app /pipelines
-
-USER 1000:1000
+FROM python:3.8-slim
+# Create the working directory
+WORKDIR /home/btap_ml
+# Copy the reuirements and Python files
+COPY requirements.txt ./
+COPY src ./src
+# Install the requirements
+RUN pip install --no-cache-dir -r requirements.txt
+# Create the input and output directories
+RUN mkdir output
+RUN mkdir input
+# Start the process
+CMD ["/bin/bash"]

@@ -3,15 +3,12 @@ Select features that are used to build the surrogate mode.
 
 CLI arguments match those defined by ``main()``.
 """
-import argparse
 import json
 import logging
 import os
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
-import s3fs
 import typer
 import xgboost as xgb
 from sklearn import linear_model
@@ -34,6 +31,7 @@ def select_features(config_file, preprocessed_data_file, estimator_type, output_
     """
     Select the feature which contribute most to the prediction for the total energy consumed.
     Default estimator_type used for feature selection is 'LassoCV'
+    Note that elasticnet and
 
     Args:
         config_file: Location of the .yml config file (default name is input_config.yml).
@@ -51,28 +49,27 @@ def select_features(config_file, preprocessed_data_file, estimator_type, output_
 
     print(X_train.head(10))
 
-    #standardize
-    scalerx= RobustScaler()
-    scalery= RobustScaler()
+    # Scale the inputs before selecting the featueres
+    scalerx = RobustScaler()
     X_train = scalerx.fit_transform(preprocessed_dataset["X_train"])
     y_train = pd.read_json(preprocessed_dataset["y_train"], orient='values').values.ravel()
 
     logger.info("Run estimator: %s", estimator_type)
-    if estimator_type == "linear":
+    if estimator_type.lower() == "linear":
         estimator = LinearRegression()
         rfecv = RFECV(estimator=estimator, step=1, cv=KFold(10), scoring='neg_mean_squared_error')
         fit = rfecv.fit(X_train, y_train)
         rank_features_nun = pd.DataFrame(rfecv.ranking_, columns=["rank"], index=preprocessed_dataset["features"])
         selected_features = rank_features_nun.loc[rank_features_nun["rank"] == 1].index.tolist()
-    elif estimator_type == "elasticnet":
-        reg = ElasticNetCV(n_jobs=-1, cv=10)
-        fit = reg.fit(X_train, y_train)
+    elif estimator_type.lower() == "elasticnet":
+        # Takes significant processing time
+        reg = ElasticNetCV(n_jobs=-1)
+        rfecv = RFECV(estimator=reg, step=1, cv=KFold(10), scoring='neg_mean_squared_error')
+        fit = rfecv.fit(X_train, y_train)
         rank_features_nun = pd.DataFrame(rfecv.ranking_, columns=["rank"], index=preprocessed_dataset["features"])
         selected_features = rank_features_nun.loc[rank_features_nun["rank"] == 1].index.tolist()
-        score = rfecv.score(X_train, y_train)
-        rank_features_nun = pd.DataFrame(reg.coef_, columns=["rank"], index=preprocessed_dataset["features"])
-        selected_features = rank_features_nun.loc[abs(rank_features_nun["rank"]) > 0].index.tolist()
-    elif estimator_type == "xgb":
+    elif estimator_type.lower() == "xgb":
+        # Takes significant processing time
         estimator = xgb.XGBRegressor(n_jobs=-1)
         rfecv = RFECV(estimator=estimator, step=1, cv=KFold(10), scoring='neg_mean_squared_error')
         fit = rfecv.fit(X_train, y_train)
@@ -80,7 +77,7 @@ def select_features(config_file, preprocessed_data_file, estimator_type, output_
         selected_features = rank_features_nun.loc[rank_features_nun["rank"] == 1].index.tolist()
     else:
         # Use LassoCV
-        reg = linear_model.LassoCV(cv=10,n_jobs=-1,n_alphas=100,tol=600)
+        reg = linear_model.LassoCV(cv=10, n_jobs=-1, n_alphas=100, tol=600)
         fit = reg.fit(X_train,y_train)
         score = reg.score(X_train,y_train)
         rank_features_nun = pd.DataFrame(reg.coef_, columns=["rank"], index = preprocessed_dataset["features"])

@@ -49,14 +49,6 @@
   # Gas file (optional, leave as an empty string if unused)
   ''
 ]
-# Specify the inputs for the building file(s) to be used for train validation (optional)
-# For now, only the first entry is used
-:val_building_param_files: [
-  # Validation building file path and name
-  '',
-  # UNUSED FOR VALIDATION SET, TO BE REMOVED
-  ''
-]
 # Specify the inputs for the energy file(s) to be used for training
 :energy_param_files: [
   # Electricity file (mandatory)
@@ -64,14 +56,10 @@
   # Gas file (optional, leave as an empty string if unused)
   ''
 ]
-# Specify the inputs for the energy file(s) to be used for train validation
-# For now, only the first entry is used
-:val_energy_param_files: [
-  # Validation energy file path and name
-  '',
-  # UNUSED FOR VALIDATION SET, TO BE REMOVED
-  ''
-]
+# Specify the input for the building file to be used for train validation (optional)
+:val_building_param_files: ''
+# Specify the input for the energy file to be used for train validation (optional)
+:val_energy_param_files: ''
 
 ###################################
 ##
@@ -81,8 +69,8 @@
 # Specify the estmator type to be used (lasso is the default if blank or unspecified)
 # As of 04-27-2022, the options are:
 #     linear
-#     elasticnet
-#     xgb
+#     elasticnet (can take a very long time to complete)
+#     xgb (can take a very long time to complete)
 #     lasso (DEFAULT if empty)
 :estimator_type: ''
 

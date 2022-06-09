@@ -21,10 +21,9 @@ Feature selection can be perfomed using any of the following estimator types:
 
 Some details on the options are:
 
-* XGBRegressor is often slow in selecting the features.
+* XGBRegressor and ElasticnetCV are often slow in selecting the features.
 * ElasticnetCV and LassoCV frequently selected same features.
-* Although, LassoCV is used as the default estimator for feature selection, any of the other estimator type can be
-used by specifying the respective esimator type to the estimator_type parameter when performing feature selection.
+* Although, LassoCV is used as the default estimator for feature selection, any of the other estimator type can be used by specifying the respective esimator type to the estimator_type parameter when performing feature selection.
 
 .. note::
 

@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
     <title>Train Model Pipeline &#8212; BTAP: ML  documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
@@ -13,6 +13,7 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -34,7 +35,7 @@
           <div class="body" role="main">
             
   <section id="module-train_model_pipeline">
-<span id="train-model-pipeline"></span><h1>Train Model Pipeline<a class="headerlink" href="#module-train_model_pipeline" title="Permalink to this headline">¶</a></h1>
+<span id="train-model-pipeline"></span><h1>Train Model Pipeline<a class="headerlink" href="#module-train_model_pipeline" title="Permalink to this heading">¶</a></h1>
 <p>Given all data files, preprocess the data and train a model with the preprocessed data</p>
 <p>CLI arguments match those defined by <code class="docutils literal notranslate"><span class="pre">main()</span></code>.</p>
 <dl class="py function">
@@ -56,7 +57,7 @@ Finally, a Machine Learning model will be instantiated and trained with the prep
 Note that all inputs except for the config file are optional, however the arguements can be set from the command line
 if an empty string is passed as input for the config .yml file.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>config_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location of the .yml config file (default name is input_config.yml).</p></li>
 <li><p><strong>random_seed</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – Random seed to be used when training.</p></li>
@@ -81,7 +82,7 @@ where the selected_features_file input is used, False if the feature selection f
 <li><p><strong>skip_model_training</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – True if the model training should be skipped. Useful if only the preprocessing steps should be performed.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
@@ -147,7 +148,7 @@ where the selected_features_file input is used, False if the feature selection f
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
 
 
 
@@ -164,7 +165,7 @@ where the selected_features_file input is used, False if the feature selection f
       &copy;2021, Natural Resources Canada.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.5.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

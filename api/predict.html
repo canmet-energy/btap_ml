@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
     <title>Predict &#8212; BTAP: ML  documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
@@ -13,6 +13,7 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -35,7 +36,7 @@
           <div class="body" role="main">
             
   <section id="module-predict">
-<span id="predict"></span><h1>Predict<a class="headerlink" href="#module-predict" title="Permalink to this headline">¶</a></h1>
+<span id="predict"></span><h1>Predict<a class="headerlink" href="#module-predict" title="Permalink to this heading">¶</a></h1>
 <p>Uses the output from preprocessing and feature selection from mino, builds the model and then evaluate the model.</p>
 <p>CLI arguments match those defined by <code class="docutils literal notranslate"><span class="pre">main()</span></code>.</p>
 <dl class="py function">
@@ -61,7 +62,7 @@ Its initutive to have run the hyperparameter search beforehand to know the hyper
 :param y_validate_complete: dataframe containing the target variable with corresponding datapointid for the validation set
 :param output_path: Where the outputs will be placed/</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>evaluation results containing the loss value from the testset prediction,
 annual_metric: predicted value for each datapooint_id is summed to calculate the annual energy consumed and the loss value from the testset prediction,
 output_df: merge of y_pred, y_test, datapoint_id, the final dataframe showing the model output using the testset
@@ -69,7 +70,7 @@ val_metric:evaluation results containing the loss value from the validationset p
 val_annual_metric:predicted value for each datapooint_id is summed to calculate the annual energy consumed and the loss value from the validationset prediction,,
 output_val_df: merge of y_pred, y_validate, datapoint_id, the final dataframe showing the model output using the validation set</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>metric</p>
 </dd>
 </dl>
@@ -87,7 +88,7 @@ output_val_df: merge of y_pred, y_validate, datapoint_id, the final dataframe sh
 :param y_validate: y validationset
 :param validate: validation dataset</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>evaluation results containing the loss value from the testset prediction,
 annual_metric: predicted value for each datapooint_id is summed to calculate the annual energy consumed and the loss value from the testset prediction,
 output_df: merge of y_pred, y_test, datapoint_id, the final dataframe showing the model output using the testset
@@ -95,7 +96,7 @@ val_metric:evaluation results containing the loss value from the validationset p
 val_annual_metric:predicted value for each datapooint_id is summed to calculate the annual energy consumed and the loss value from the validationset prediction,,
 output_val_df: merge of y_pred, y_validate, datapoint_id, the final dataframe showing the model output using the validation set</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>metric</p>
 </dd>
 </dl>
@@ -107,7 +108,7 @@ output_val_df: merge of y_pred, y_validate, datapoint_id, the final dataframe sh
 <dd><p>Downloads the output from preprocessing and feature selection from mino, builds the model and then evaluate the model.
 :param args: arguements provided from the main</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>the results from the model prediction is uploaded to minio</p>
 </dd>
 </dl>
@@ -119,7 +120,7 @@ output_val_df: merge of y_pred, y_validate, datapoint_id, the final dataframe sh
 <dd><p>Select the feature which contribute most to the prediction for the total energy consumed.
 Default estimator_type used for feature selection is ‘LassoCV’</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>config_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location of the .yml config file (default name is input_config.yml).</p></li>
 <li><p><strong>preprocessed_data_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location and name of a .json preprocessing file to be used.</p></li>
@@ -139,7 +140,7 @@ Default estimator_type used for feature selection is ‘LassoCV’</p>
 The hyperparameters search inclues activation, regularizers, dropout_rate, learning_rate, and optimizer
 :param hp: hyperband object with different hyperparameters to be checked.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>model will be built based on the different hyperparameter combinations.</p>
 </dd>
 </dl>
@@ -157,7 +158,7 @@ The hyperparameters search inclues activation, regularizers, dropout_rate, learn
 :param output_path: Where the output files should be placed.
 :param random_seed: The random seed to be used</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Model built from the set of hyperparameters combined.</p>
 </dd>
 </dl>
@@ -170,7 +171,7 @@ The hyperparameters search inclues activation, regularizers, dropout_rate, learn
 :param y_test: y testset
 :param y_pred: y predicted value from the model</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>rmse loss from comparing the y_test and y_pred values</p>
 </dd>
 </dl>
@@ -183,7 +184,7 @@ The hyperparameters search inclues activation, regularizers, dropout_rate, learn
 :param y_test: y testset
 :param y_pred: y predicted value from the model</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>mse, rmse, mae and mape scores from comparing the y_test and y_pred values</p>
 </dd>
 </dl>
@@ -250,7 +251,7 @@ The hyperparameters search inclues activation, regularizers, dropout_rate, learn
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
 
 
 
@@ -267,7 +268,7 @@ The hyperparameters search inclues activation, regularizers, dropout_rate, learn
       &copy;2021, Natural Resources Canada.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.5.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

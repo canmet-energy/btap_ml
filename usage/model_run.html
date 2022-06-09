@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
     <title>Re-run Model &#8212; BTAP: ML  documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
@@ -13,6 +13,7 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -33,7 +34,7 @@
           <div class="body" role="main">
             
   <section id="re-run-model">
-<h1>Re-run Model<a class="headerlink" href="#re-run-model" title="Permalink to this headline">¶</a></h1>
+<h1>Re-run Model<a class="headerlink" href="#re-run-model" title="Permalink to this heading">¶</a></h1>
 <p>TODO - REMOVE</p>
 <p>If the data is already preprocessed and the features are selected with output files from <a class="reference internal" href="../api/preprocessing.html#module-preprocessing" title="preprocessing"><code class="xref py py-mod docutils literal notranslate"><span class="pre">preprocessing</span></code></a> and
 <a class="reference internal" href="../api/feature_selection.html#module-feature_selection" title="feature_selection"><code class="xref py py-mod docutils literal notranslate"><span class="pre">feature_selection</span></code></a> already existing in minio you can simply build the surrogate model and generate predictions.</p>
@@ -44,9 +45,15 @@ to derive a trained model:</p>
 </div>
 <p>This script will output the trained model as a .h5 file alongisde information on the training and testing
 performed for analysis. The outputs from this step will be used when obtaining predictions with the model.</p>
-<p>The parameters to the above script are documented in the <a class="reference internal" href="../api/predict.html#module-predict" title="predict"><code class="xref py py-mod docutils literal notranslate"><span class="pre">predict</span></code></a>.</p>
+<p>The parameters to the above script are documented at: <a class="reference internal" href="../api/predict.html#module-predict" title="predict"><code class="xref py py-mod docutils literal notranslate"><span class="pre">predict</span></code></a>.</p>
+<p>The Machine Learning model which is used for training will vary depending on whether parameter tuning is or is not
+performed. When used, the [Keras Hyperband Tuner](<a class="reference external" href="https://keras.io/api/keras_tuner/tuners/hyperband/">https://keras.io/api/keras_tuner/tuners/hyperband/</a>) is configured
+to optimize the parameters based on the loss. The tuner also uses early stopping by monitoring the loss with a
+patience of 5. Once the tuner finishes, the optimized model is built and used for training.</p>
+<p>If hyperparameter tuning is not performed, the default model which has been evaluated as a baseline for performance is used. This model uses a dense layer of 56 nodes with the ReLU activation function and a dropout layer of 10% applied afterwards. The adam optimizer is used with a learning rate of 0.001.</p>
+<p>A customized RMSE loss function is defined and used for training which takes a sum of the labels and predictions before computing the RMSE loss.</p>
 <section id="download-results">
-<h2>Download results<a class="headerlink" href="#download-results" title="Permalink to this headline">¶</a></h2>
+<h2>Download results<a class="headerlink" href="#download-results" title="Permalink to this heading">¶</a></h2>
 <p>The results from the prediction is available in minio in the <code class="docutils literal notranslate"><span class="pre">output_path</span></code> specified in prediction step.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -120,7 +127,7 @@ performed for analysis. The outputs from this step will be used when obtaining p
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
 
 
 
@@ -137,7 +144,7 @@ performed for analysis. The outputs from this step will be used when obtaining p
       &copy;2021, Natural Resources Canada.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.5.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

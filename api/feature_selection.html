@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
     <title>Feature selection &#8212; BTAP: ML  documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
@@ -13,6 +13,7 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -35,7 +36,7 @@
           <div class="body" role="main">
             
   <section id="module-feature_selection">
-<span id="feature-selection"></span><h1>Feature selection<a class="headerlink" href="#module-feature_selection" title="Permalink to this headline">¶</a></h1>
+<span id="feature-selection"></span><h1>Feature selection<a class="headerlink" href="#module-feature_selection" title="Permalink to this heading">¶</a></h1>
 <p>Select features that are used to build the surrogate mode.</p>
 <p>CLI arguments match those defined by <code class="docutils literal notranslate"><span class="pre">main()</span></code>.</p>
 <dl class="py function">
@@ -44,7 +45,7 @@
 <dd><p>Select the feature which contribute most to the prediction for the total energy consumed.
 Default estimator_type used for feature selection is ‘LassoCV’</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>config_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location of the .yml config file (default name is input_config.yml).</p></li>
 <li><p><strong>preprocessed_data_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location and name of a .json preprocessing file to be used.</p></li>
@@ -53,7 +54,7 @@ The other options are ‘linear’, ‘elasticnet’, and ‘xgb’.</p></li>
 <li><p><strong>output_path</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Where output data should be placed. Note that this value should be empty unless this file is called from a pipeline.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
 </dd>
 </dl>
@@ -63,9 +64,10 @@ The other options are ‘linear’, ‘elasticnet’, and ‘xgb’.</p></li>
 <dt class="sig sig-object py" id="feature_selection.select_features">
 <span class="sig-prename descclassname"><span class="pre">feature_selection.</span></span><span class="sig-name descname"><span class="pre">select_features</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preprocessed_data_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">estimator_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#feature_selection.select_features" title="Permalink to this definition">¶</a></dt>
 <dd><p>Select the feature which contribute most to the prediction for the total energy consumed.
-Default estimator_type used for feature selection is ‘LassoCV’</p>
+Default estimator_type used for feature selection is ‘LassoCV’
+Note that elasticnet and</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>config_file</strong> – Location of the .yml config file (default name is input_config.yml).</p></li>
 <li><p><strong>preprocessed_data_file</strong> – Location and name of a .json preprocessing file to be used if the preprocessing is skipped.</p></li>
@@ -138,7 +140,7 @@ The other options are ‘linear’, ‘elasticnet’, and ‘xgb’.</p></li>
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
 
 
 
@@ -155,7 +157,7 @@ The other options are ‘linear’, ‘elasticnet’, and ‘xgb’.</p></li>
       &copy;2021, Natural Resources Canada.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.5.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

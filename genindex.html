@@ -1,7 +1,7 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -12,6 +12,7 @@
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="#" />
     <link rel="search" title="Search" href="search.html" />
@@ -58,14 +59,12 @@
 <h2 id="A">A</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/config.html#config.access_minio">access_minio() (in module config)</a>
-</li>
       <li><a href="api/prepare_weather.html#prepare_weather.adjust_hour">adjust_hour() (in module prepare_weather)</a>
+</li>
+      <li><a href="api/plot.html#plot.annual_plot">annual_plot() (in module plot)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/plot.html#plot.annual_plot">annual_plot() (in module plot)</a>
-</li>
       <li><a href="api/config.html#config.Settings.APP_CONFIG">APP_CONFIG (config.Settings attribute)</a>
 </li>
       <li><a href="api/config.html#config.AppConfig">AppConfig (class in config)</a>
@@ -137,8 +136,6 @@
 </li>
       <li><a href="api/config.html#config.Settings.Config.env_prefix">env_prefix (config.Settings.Config attribute)</a>
 </li>
-      <li><a href="api/config.html#config.establish_s3_connection">establish_s3_connection() (in module config)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/config.html#config.AppConfig.ESTIMATOR_TYPE">ESTIMATOR_TYPE (config.AppConfig attribute)</a>
@@ -176,8 +173,6 @@
 <h2 id="G">G</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/preprocessing.html#preprocessing.generate_only_samples">generate_only_samples() (in module preprocessing)</a>
-</li>
       <li><a href="api/config.html#config.get_config">get_config() (in module config)</a>
 </li>
   </ul></td>
@@ -193,10 +188,6 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/config.html#config.json_config_settings_source">json_config_settings_source() (in module config)</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/config.html#config.Settings.Config.json_settings_path">json_settings_path (config.Settings.Config attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -226,12 +217,8 @@
         <li><a href="api/train_model_pipeline.html#train_model_pipeline.main">(in module train_model_pipeline)</a>
 </li>
       </ul></li>
-      <li><a href="api/config.html#config.Settings.Config.minio_tenant">minio_tenant (config.Settings.Config attribute)</a>
-</li>
       <li><a href="api/predict.html#predict.model_builder">model_builder() (in module predict)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     module
 
@@ -506,7 +493,7 @@
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
 
 
 
@@ -523,7 +510,7 @@
       &copy;2021, Natural Resources Canada.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.5.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
     <title>What this does &#8212; BTAP: ML  documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
@@ -13,6 +13,7 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -45,7 +46,7 @@ Check <a class="reference internal" href="../api/preprocessing.html#module-prepr
 <p>Aside from supporting optional different files for electricity and gas, if you have mutliple input files they
 need to be manually combined before passing them as input.</p>
 <section id="what-this-does">
-<h1>What this does<a class="headerlink" href="#what-this-does" title="Permalink to this headline">¶</a></h1>
+<h1>What this does<a class="headerlink" href="#what-this-does" title="Permalink to this heading">¶</a></h1>
 <p>During preprocessing, the hourly energy consumption file is transposed such that each <code class="docutils literal notranslate"><span class="pre">datapoint_id</span></code> has 8760 rows
 (365 * 24). Hence, for a simulation run containing 5000 <code class="docutils literal notranslate"><span class="pre">datapoint_id</span></code> values, there would be 5000 * 8760 rows which would
 be 43.8 million rows. In order to avoid the preprocessing stage to become computationally expensive due to large
@@ -138,7 +139,7 @@ implies that a <code class="docutils literal notranslate"><span class="pre">data
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
 
 
 
@@ -155,7 +156,7 @@ implies that a <code class="docutils literal notranslate"><span class="pre">data
       &copy;2021, Natural Resources Canada.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.5.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

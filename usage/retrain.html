@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
     <title>Train the model &#8212; BTAP: ML  documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
@@ -13,6 +13,7 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -35,13 +36,13 @@
           <div class="body" role="main">
             
   <section id="train-the-model">
-<h1>Train the model<a class="headerlink" href="#train-the-model" title="Permalink to this headline">¶</a></h1>
+<h1>Train the model<a class="headerlink" href="#train-the-model" title="Permalink to this heading">¶</a></h1>
 <p>If there are new data files that significantly change the types of information the model knows how to predict you need to retrain the model.
 In the case that you want to retrain the model but are not dealing with significant changes in the data (for example,
 using the same weather data) you can skip the weather data preparation or cleaning and splitting steps, as appropriate.
 The steps of doing so are compressed into one file <code class="docutils literal notranslate"><span class="pre">train_model_pipeline.py</span></code>, but each of the individual steps performed
 are also discussed below.</p>
-<div class="contents local topic" id="contents">
+<nav class="contents local" id="contents">
 <ul class="simple">
 <li><p><a class="reference internal" href="#training-a-model" id="id2">Training a model</a></p></li>
 <li><p><a class="reference internal" href="#preparation-of-weather-data" id="id3">Preparation of weather data</a></p></li>
@@ -49,9 +50,9 @@ are also discussed below.</p>
 <li><p><a class="reference internal" href="#feature-selection" id="id5">Feature selection</a></p></li>
 <li><p><a class="reference internal" href="#build-the-surrogate-model-and-predict-energy-use" id="id6">Build the surrogate model and predict energy use</a></p></li>
 </ul>
-</div>
+</nav>
 <section id="training-a-model">
-<h2><a class="toc-backref" href="#id2">Training a model</a><a class="headerlink" href="#training-a-model" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Training a model</a><a class="headerlink" href="#training-a-model" title="Permalink to this heading">¶</a></h2>
 <p>Training a model can be done by calling the <code class="docutils literal notranslate"><span class="pre">train_model_pipeline.py</span></code> file. This file combines each
 preprocessing step to allow the entire training process to be invoked from one call. The process
 begins by creating a unique output directory based on the date and time which the process begins.
@@ -73,7 +74,7 @@ Hyperparameter tuning can be performed at the cost of additional time complexity
 model can be used. The trained model and test results will be output for future use.</p>
 </section>
 <section id="preparation-of-weather-data">
-<h2><a class="toc-backref" href="#id3">Preparation of weather data</a><a class="headerlink" href="#preparation-of-weather-data" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Preparation of weather data</a><a class="headerlink" href="#preparation-of-weather-data" title="Permalink to this heading">¶</a></h2>
 <p>EnergyPlus uses weather data in the EPW file format, as defined in the <a class="reference external" href="https://energyplus.net/assets/nrel_custom/pdfs/pdfs_v9.6.0/AuxiliaryPrograms.pdf">Auxiliary
 Programs</a> documentation. In
 order to be consumed by the model, the data needs to undergo several steps before it can be used.</p>
@@ -91,7 +92,7 @@ and to <code class="docutils literal notranslate"><span class="pre">run_model.py
 <p>Outputs are placed into a <code class="docutils literal notranslate"><span class="pre">/weather</span></code> folder (by default) in storage as parquet files. The name of the weather files
 will match the input name found in the YAML file, but with a <code class="docutils literal notranslate"><span class="pre">.parquet</span></code> file extension.</p>
 <section id="what-this-does">
-<h3>What this does<a class="headerlink" href="#what-this-does" title="Permalink to this headline">¶</a></h3>
+<h3>What this does<a class="headerlink" href="#what-this-does" title="Permalink to this heading">¶</a></h3>
 <p>EPW files contain several lines of data that is irrelevant to the model. This data is all in the first several lines
 of the file. For example, everything before the line starting with <code class="docutils literal notranslate"><span class="pre">1966</span></code> can be ignored:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">LOCATION</span><span class="p">,</span><span class="n">Montreal</span> <span class="n">Int</span><span class="s1">&#39;l,PQ,CAN,WYEC2-B-94792,716270,45.47,-73.75,-5.0,36.0</span>
@@ -109,7 +110,7 @@ of the file. For example, everything before the line starting with <code class="
 </div>
 <p>Column names for the tabular data can be found in the Auxiliary Programs documentation.</p>
 <section id="remove-unused-columns">
-<h4>Remove unused columns<a class="headerlink" href="#remove-unused-columns" title="Permalink to this headline">¶</a></h4>
+<h4>Remove unused columns<a class="headerlink" href="#remove-unused-columns" title="Permalink to this heading">¶</a></h4>
 <p>In the Auxiliary Programs documentation for the EPW file format it lists which columns in the file are actually used
 for predicting building energy use. Columns marked as not used by EnergyPlus are removed from the dataset.</p>
 <div class="admonition note">
@@ -119,7 +120,7 @@ of the data. Only the month and day values are used when merging with building a
 </div>
 </section>
 <section id="summarize-by-day">
-<h4>Summarize by day<a class="headerlink" href="#summarize-by-day" title="Permalink to this headline">¶</a></h4>
+<h4>Summarize by day<a class="headerlink" href="#summarize-by-day" title="Permalink to this heading">¶</a></h4>
 <p>Weather data in the file is provided for every hour for all 365 days of the year. Due to the way the data is combined
 in later steps, this becomes millions of records that need to be processed despite the fact that there is no intent to
 predict energy use to the hourly level. To make working with the data more manageable, weather values are summarized to
@@ -128,7 +129,7 @@ daily intervals.</p>
 </section>
 </section>
 <section id="clean-and-split-the-data">
-<h2><a class="toc-backref" href="#id4">Clean and split the data</a><a class="headerlink" href="#clean-and-split-the-data" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Clean and split the data</a><a class="headerlink" href="#clean-and-split-the-data" title="Permalink to this heading">¶</a></h2>
 <p>With the inputs specified through the command line or through <code class="docutils literal notranslate"><span class="pre">input_config.py</span></code>,
 run <code class="docutils literal notranslate"><span class="pre">proprocessing.py</span></code> to clean and split the data into test and train sets:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">preprocessing</span><span class="o">.</span><span class="n">py</span> <span class="n">input_config</span><span class="o">.</span><span class="n">py</span>
@@ -142,7 +143,7 @@ Check <a class="reference internal" href="../api/preprocessing.html#module-prepr
 <p>Aside from supporting optional different files for electricity and gas, if you have mutliple input files they
 need to be manually combined before passing them as input.</p>
 <section id="id1">
-<h3>What this does<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<h3>What this does<a class="headerlink" href="#id1" title="Permalink to this heading">¶</a></h3>
 <p>During preprocessing, the hourly energy consumption file is transposed such that each <code class="docutils literal notranslate"><span class="pre">datapoint_id</span></code> has 8760 rows
 (365 * 24). Hence, for a simulation run containing 5000 <code class="docutils literal notranslate"><span class="pre">datapoint_id</span></code> values, there would be 5000 * 8760 rows which would
 be 43.8 million rows. In order to avoid the preprocessing stage to become computationally expensive due to large
@@ -179,7 +180,7 @@ implies that a <code class="docutils literal notranslate"><span class="pre">data
 </section>
 </section>
 <section id="feature-selection">
-<h2><a class="toc-backref" href="#id5">Feature selection</a><a class="headerlink" href="#feature-selection" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Feature selection</a><a class="headerlink" href="#feature-selection" title="Permalink to this heading">¶</a></h2>
 <p>After preprocessing the data, the features to be used in building the surrogate model can be selected
 (with all inputs coming from the command line or from the <code class="docutils literal notranslate"><span class="pre">input_config.yml</span></code> file):</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">feature_selection</span><span class="o">.</span><span class="n">py</span> <span class="n">input_config</span><span class="o">.</span><span class="n">yml</span>
@@ -201,18 +202,17 @@ to search for the most optimal features from the preprocessed data.</p>
 </ul>
 <p>Some details on the options are:</p>
 <ul class="simple">
-<li><p>XGBRegressor is often slow in selecting the features.</p></li>
+<li><p>XGBRegressor and ElasticnetCV are often slow in selecting the features.</p></li>
 <li><p>ElasticnetCV and LassoCV frequently selected same features.</p></li>
-<li><p>Although, LassoCV is used as the default estimator for feature selection, any of the other estimator type can be</p></li>
+<li><p>Although, LassoCV is used as the default estimator for feature selection, any of the other estimator type can be used by specifying the respective esimator type to the estimator_type parameter when performing feature selection.</p></li>
 </ul>
-<p>used by specifying the respective esimator type to the estimator_type parameter when performing feature selection.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The json file that is created contains the key value “features” which represents the final features selected for modelling.</p>
 </div>
 </section>
 <section id="build-the-surrogate-model-and-predict-energy-use">
-<h2><a class="toc-backref" href="#id6">Build the surrogate model and predict energy use</a><a class="headerlink" href="#build-the-surrogate-model-and-predict-energy-use" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id6" role="doc-backlink">Build the surrogate model and predict energy use</a><a class="headerlink" href="#build-the-surrogate-model-and-predict-energy-use" title="Permalink to this heading">¶</a></h2>
 <p>The output from the preprocessing and feature selection outputs are used as input to <code class="docutils literal notranslate"><span class="pre">predict.py</span></code>
 to derive a trained model:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">predict</span><span class="o">.</span><span class="n">py</span> <span class="n">input_config</span><span class="o">.</span><span class="n">yml</span>
@@ -220,7 +220,13 @@ to derive a trained model:</p>
 </div>
 <p>This script will output the trained model as a .h5 file alongisde information on the training and testing
 performed for analysis. The outputs from this step will be used when obtaining predictions with the model.</p>
-<p>The parameters to the above script are documented in the <a class="reference internal" href="../api/predict.html#module-predict" title="predict"><code class="xref py py-mod docutils literal notranslate"><span class="pre">predict</span></code></a>.</p>
+<p>The parameters to the above script are documented at: <a class="reference internal" href="../api/predict.html#module-predict" title="predict"><code class="xref py py-mod docutils literal notranslate"><span class="pre">predict</span></code></a>.</p>
+<p>The Machine Learning model which is used for training will vary depending on whether parameter tuning is or is not
+performed. When used, the [Keras Hyperband Tuner](<a class="reference external" href="https://keras.io/api/keras_tuner/tuners/hyperband/">https://keras.io/api/keras_tuner/tuners/hyperband/</a>) is configured
+to optimize the parameters based on the loss. The tuner also uses early stopping by monitoring the loss with a
+patience of 5. Once the tuner finishes, the optimized model is built and used for training.</p>
+<p>If hyperparameter tuning is not performed, the default model which has been evaluated as a baseline for performance is used. This model uses a dense layer of 56 nodes with the ReLU activation function and a dropout layer of 10% applied afterwards. The adam optimizer is used with a learning rate of 0.001.</p>
+<p>A customized RMSE loss function is defined and used for training which takes a sum of the labels and predictions before computing the RMSE loss.</p>
 </section>
 </section>
 
@@ -290,7 +296,7 @@ performed for analysis. The outputs from this step will be used when obtaining p
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
 
 
 
@@ -307,7 +313,7 @@ performed for analysis. The outputs from this step will be used when obtaining p
       &copy;2021, Natural Resources Canada.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.5.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

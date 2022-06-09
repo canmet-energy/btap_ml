@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
     <title>Installation &#8212; BTAP: ML  documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
@@ -13,6 +13,7 @@
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -35,17 +36,17 @@
           <div class="body" role="main">
             
   <section id="installation">
-<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this heading">¶</a></h1>
 <p>This project implements a pipeline designed to run on *nix based systems, and as such may have requirements not
 documented here to be able to run on Windows. Some elements of this documentation may be specific to running on the
 <a class="reference external" href="https://statcan.github.io/daaas/">DAaaS</a> environment. If you will be working on AAW, you may want to refer to
 <a class="reference internal" href="aaw_setup.html"><span class="doc">Working on AAW</span></a> to configure the environment first.</p>
 <section id="python">
-<h2>Python<a class="headerlink" href="#python" title="Permalink to this headline">¶</a></h2>
+<h2>Python<a class="headerlink" href="#python" title="Permalink to this heading">¶</a></h2>
 <p>A minimum of Python 3.8+ is required to reliably run this project.</p>
 </section>
 <section id="dependencies">
-<span id="dependency-install"></span><h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h2>
+<span id="dependency-install"></span><h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this heading">¶</a></h2>
 <p>Basic dependencies required to run the simulations are listed in <cite>requirements.txt</cite>. Open a terminal window and
 run <code class="docutils literal notranslate"><span class="pre">pip</span></code> to install the requirements:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">r</span> <span class="n">requirements</span><span class="o">.</span><span class="n">txt</span>
@@ -56,7 +57,7 @@ run <code class="docutils literal notranslate"><span class="pre">pip</span></cod
 </pre></div>
 </div>
 <section id="pre-commit-hooks">
-<h3>Pre-commit hooks<a class="headerlink" href="#pre-commit-hooks" title="Permalink to this headline">¶</a></h3>
+<h3>Pre-commit hooks<a class="headerlink" href="#pre-commit-hooks" title="Permalink to this heading">¶</a></h3>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>This step is only necessary if you are interested in participating in the development of the model.</p>
@@ -141,7 +142,7 @@ for example).</p>
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
 
 
 
@@ -158,7 +159,7 @@ for example).</p>
       &copy;2021, Natural Resources Canada.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.5.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

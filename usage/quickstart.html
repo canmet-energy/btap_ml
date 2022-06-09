@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
     <title>Quickstart &#8212; BTAP: ML  documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
@@ -13,6 +13,7 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -35,11 +36,11 @@
           <div class="body" role="main">
             
   <section id="quickstart">
-<h1>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">¶</a></h1>
+<h1>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this heading">¶</a></h1>
 <p>If you just want to run all of the steps from training a model to using the model to obtain predictions, here are the steps to run. You may be able to skip some
 of these depending on if data has already been prepared.</p>
 <p>Each of the files can use an input configuration .yml file which contains all inputs to be used alongside descriptions of the inputs.
-If used, only the input file, which will be referenced as input_config.yml, will be passed when calling the training process.
+If used, only the input file, which will be referenced as input_config.yml, will be passed when calling the training process (this file will be discussed below).
 Each file can also use values passed to through command line arguements. All values except the config file are optional.
 Thus, the config file must still be passed, but the CLI arguements will be given priority. A mix of command line and
 config files can also be used in the case where certain parts of a process should be skipped.</p>
@@ -50,10 +51,10 @@ by calling the python file with <code class="docutils literal notranslate"><span
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Every file can be run independently, but the recommended steps are to run one of the two pipelines below.</p>
+<p>Every file can be run independently, but the recommended steps are to run one of the two pipelines presented below.</p>
 </div>
 <section id="training-a-model">
-<h2>Training a model<a class="headerlink" href="#training-a-model" title="Permalink to this headline">¶</a></h2>
+<h2>Training a model<a class="headerlink" href="#training-a-model" title="Permalink to this heading">¶</a></h2>
 <p>The first step to perform is to generate a trained Machine Learning model to later be used for obtaining predictions on energy values.
 Obtaining a trained model can be performed by calling the <code class="docutils literal notranslate"><span class="pre">train_model_pipeline.py</span></code> file and passing the appropriate arguements.
 Assuming that only the <code class="docutils literal notranslate"><span class="pre">input_config.yml</span></code> file is used and located inside of the current directory, the arguement to pass is:</p>
@@ -64,7 +65,7 @@ Assuming that only the <code class="docutils literal notranslate"><span class="p
 perform feature selection (outputting a .json file), and train the model (outputting a .h5 trained model, two .pkl files, a .json file, and a .csv file).</p>
 </section>
 <section id="getting-model-predictions">
-<h2>Getting model predictions<a class="headerlink" href="#getting-model-predictions" title="Permalink to this headline">¶</a></h2>
+<h2>Getting model predictions<a class="headerlink" href="#getting-model-predictions" title="Permalink to this heading">¶</a></h2>
 <p>With a trained Machine Learning model in the form of a .h5 file, the model will be used to obtain the predicted daily Megajoules per meter squared
 and the predicted annual Gigajoules per meter squared for a batch of specified building files within a specified directory.
 Obtaining a trained model can be performed by calling the <code class="docutils literal notranslate"><span class="pre">run_model.py</span></code> file and passing the appropriate arguements.
@@ -75,42 +76,21 @@ Assuming that only the <code class="docutils literal notranslate"><span class="p
 <p>This will process the specified weather file to be used, preprocess all input data, and obtain predictions for all input data (outputting two .csv files
 which contain the prediction outputs alongside identifiers for each building in the form building_file_name/building_index).</p>
 </section>
-<section id="prepare-weather-data">
-<h2>Prepare weather data<a class="headerlink" href="#prepare-weather-data" title="Permalink to this headline">¶</a></h2>
-<p>Gather required weather data and place it on blob storage:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python prepare_weather.py input_data/sample-lhs_2021-10-04.yml
-</pre></div>
-</div>
-</section>
-<section id="preprocessing">
-<h2>Preprocessing<a class="headerlink" href="#preprocessing" title="Permalink to this headline">¶</a></h2>
-<p>Clean the input data and split the it into test and train sets:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python3</span> <span class="n">preprocessing</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">in_build_params</span> <span class="n">input_data</span><span class="o">/</span><span class="n">output_elec_2021</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mf">05.</span><span class="n">xlsx</span> <span class="o">--</span><span class="n">in_hour</span> <span class="n">input_data</span><span class="o">/</span><span class="n">total_hourly_res_elec_2021</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mf">05.</span><span class="n">csv</span> <span class="o">--</span><span class="n">in_weather</span> <span class="n">weather</span><span class="o">/</span><span class="n">CAN_QC_Montreal</span><span class="o">-</span><span class="n">Trudeau</span><span class="o">.</span><span class="n">Intl</span><span class="o">.</span><span class="n">AP</span><span class="o">.</span><span class="mi">716270</span><span class="n">_CWEC2016</span><span class="o">.</span><span class="n">epw</span><span class="o">.</span><span class="n">parquet</span> <span class="o">--</span><span class="n">output_path</span> <span class="n">output_data</span><span class="o">/</span><span class="n">preprocessing_out</span> <span class="o">--</span><span class="n">in_build_params_gas</span> <span class="n">input_data</span><span class="o">/</span><span class="n">output_gas_2021</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mf">05.</span><span class="n">xlsx</span> <span class="o">--</span><span class="n">in_hour_gas</span> <span class="n">input_data</span><span class="o">/</span><span class="n">total_hourly_res_gas_2021</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mf">05.</span><span class="n">csv</span>
-</pre></div>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Update the input parameters to point to the appropriate input files and ouput_path in minio. Only the filenames
-would need to be changed. Check <a class="reference internal" href="../api/preprocessing.html#module-preprocessing" title="preprocessing"><code class="xref py py-mod docutils literal notranslate"><span class="pre">preprocessing</span></code></a> for full detail description of each parameter.</p>
-</div>
-</section>
-<section id="feature-selection">
-<h2>Feature Selection<a class="headerlink" href="#feature-selection" title="Permalink to this headline">¶</a></h2>
-<p>After preprocessing the data, the features to be used in building the surrogate model can be selected:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python3</span> <span class="n">feature_selection</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">in_obj_name</span> <span class="n">output_data</span><span class="o">/</span><span class="n">preprocessing_out</span> <span class="o">--</span><span class="n">output_path</span> <span class="n">output_data</span><span class="o">/</span><span class="n">feature_out</span> <span class="o">--</span><span class="n">estimator_type</span> <span class="n">lasso</span>
-</pre></div>
-</div>
-</section>
-<section id="build-surrogate-model-and-predict">
-<h2>Build Surrogate Model and Predict<a class="headerlink" href="#build-surrogate-model-and-predict" title="Permalink to this headline">¶</a></h2>
-<p>The output from proprocessing and feature selection are used as input into this stage by running:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python3</span> <span class="n">predict</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">param_search</span> <span class="n">no</span> <span class="o">--</span><span class="n">in_obj_name</span> <span class="n">output_data</span><span class="o">/</span><span class="n">preprocessing_out</span> <span class="o">--</span><span class="n">features</span> <span class="n">output_data</span><span class="o">/</span><span class="n">feature_out</span> <span class="o">--</span><span class="n">output_path</span> <span class="n">output_data</span><span class="o">/</span><span class="n">predict_out</span>
-</pre></div>
-</div>
-</section>
-<section id="download-results">
-<h2>Download Results<a class="headerlink" href="#download-results" title="Permalink to this headline">¶</a></h2>
-<p>The results from the prediction is available in minio in the output_path specified in the build step.</p>
+<section id="input-configuration-file-input-config-yml">
+<h2>Input configuration file (input_config.yml)<a class="headerlink" href="#input-configuration-file-input-config-yml" title="Permalink to this heading">¶</a></h2>
+<p>When providing an input to one of the pipelines above, the command line arguements can be used or the input configuration can be used (or a combination of the two).
+The template for the <code class="docutils literal notranslate"><span class="pre">input_config.yml</span></code> file can be found [here](<a class="reference external" href="https://github.com/canmet-energy/btap_ml/blob/main/src/input_config.yml">https://github.com/canmet-energy/btap_ml/blob/main/src/input_config.yml</a>).
+Within this configuration file are different fields which are required for training and/or running. Each section is clearly labelled with
+comments describing what the input is used for and which are mandatory. If unused within this file, the appropriate input must be provided through
+the CLI.</p>
+<p>It is important to note that any input locations specified within this file or which are provided through the CLI are modified within the code.
+Specifically, any input filename or directory provided as an input will have the Docker file’s input path appended to the beginning of the value.
+For example, if a file named electricity_building_params.xlsx is within the root folder which has been linked to the Docker’s input path
+(/home/btap_ml/input), then when input to the input_config.yml file, only the value electricity_building_params.xlsx should be used in the
+configuration file.</p>
+<p>Similarly, when passing the <code class="docutils literal notranslate"><span class="pre">input_config.yml</span></code> file to the pipelines through the CLI, if the configuration file is at the root of the linked
+input file from the Docker container, only <code class="docutils literal notranslate"><span class="pre">input_config.yml</span></code> will need to be passed as an arguement to the CLI. More information on
+the Docker image is available [here](<a class="reference external" href="https://hub.docker.com/r/juliantemp/btap_ml">https://hub.docker.com/r/juliantemp/btap_ml</a>).</p>
 </section>
 </section>
 
@@ -142,11 +122,7 @@ would need to be changed. Check <a class="reference internal" href="../api/prepr
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Quickstart</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#training-a-model">Training a model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#getting-model-predictions">Getting model predictions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#prepare-weather-data">Prepare weather data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#preprocessing">Preprocessing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#feature-selection">Feature Selection</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#build-surrogate-model-and-predict">Build Surrogate Model and Predict</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#download-results">Download Results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#input-configuration-file-input-config-yml">Input configuration file (input_config.yml)</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="retrain.html">Train the model</a></li>
@@ -182,7 +158,7 @@ would need to be changed. Check <a class="reference internal" href="../api/prepr
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
 
 
 
@@ -199,7 +175,7 @@ would need to be changed. Check <a class="reference internal" href="../api/prepr
       &copy;2021, Natural Resources Canada.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.5.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

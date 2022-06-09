@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
     <title>&lt;no title&gt; &#8212; BTAP: ML  documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
@@ -13,6 +13,7 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -53,11 +54,10 @@ to search for the most optimal features from the preprocessed data.</p>
 </ul>
 <p>Some details on the options are:</p>
 <ul class="simple">
-<li><p>XGBRegressor is often slow in selecting the features.</p></li>
+<li><p>XGBRegressor and ElasticnetCV are often slow in selecting the features.</p></li>
 <li><p>ElasticnetCV and LassoCV frequently selected same features.</p></li>
-<li><p>Although, LassoCV is used as the default estimator for feature selection, any of the other estimator type can be</p></li>
+<li><p>Although, LassoCV is used as the default estimator for feature selection, any of the other estimator type can be used by specifying the respective esimator type to the estimator_type parameter when performing feature selection.</p></li>
 </ul>
-<p>used by specifying the respective esimator type to the estimator_type parameter when performing feature selection.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The json file that is created contains the key value “features” which represents the final features selected for modelling.</p>
@@ -120,7 +120,7 @@ to search for the most optimal features from the preprocessed data.</p>
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
 
 
 
@@ -137,7 +137,7 @@ to search for the most optimal features from the preprocessed data.</p>
       &copy;2021, Natural Resources Canada.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.5.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

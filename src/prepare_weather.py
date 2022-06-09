@@ -88,7 +88,6 @@ def adjust_hour(df: pd.DataFrame, colname: str = 'hour'):
         df: A pd.DataFrame object where the hour column has been adjusted to 0 - 23 hours.
 
     """
-    # TODO: Why do we copy here?
     df = df.copy()
     logger.info("Adjusting %s column by -1", colname)
     df[colname] = df[colname] - 1

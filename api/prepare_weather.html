@@ -79,7 +79,7 @@ Loads weather files from the NREL/openstudio-standards GitHub repository where t
 
 <dl class="py function">
 <dt class="sig sig-object py" id="prepare_weather.main">
-<span class="sig-prename descclassname"><span class="pre">prepare_weather.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_file=&lt;typer.models.ArgumentInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epw_files=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prepare_weather.main" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">prepare_weather.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_file=&lt;typer.models.ArgumentInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epw_file=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prepare_weather.main" title="Permalink to this definition">¶</a></dt>
 <dd><p>Take raw EPW files as defined in BTAP YAML configuration and prepare it for use by the model.
 Uses the EnergyPlus configuration to identify and process weather data in EPW format. The weather data is then
 saved to blob storage for use in later processing stages.</p>
@@ -87,7 +87,7 @@ saved to blob storage for use in later processing stages.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>config_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Path to the configuration file used for EnergyPlus.</p></li>
-<li><p><strong>epw_files</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – The epw key to be used if the config file is not use.</p></li>
+<li><p><strong>epw_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – The epw key to be used if the config file is not use.</p></li>
 <li><p><strong>output_path</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Where output data should be placed. Note that this value should be empty unless this file is called from a pipeline.</p></li>
 </ul>
 </dd>
@@ -207,7 +207,7 @@ The filename of the original file is used, with the extension replaced with .par
       &copy;2021, Natural Resources Canada.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

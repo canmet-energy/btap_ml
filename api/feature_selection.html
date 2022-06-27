@@ -62,14 +62,13 @@ The other options are ‘linear’, ‘elasticnet’, and ‘xgb’.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="feature_selection.select_features">
-<span class="sig-prename descclassname"><span class="pre">feature_selection.</span></span><span class="sig-name descname"><span class="pre">select_features</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preprocessed_data_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">estimator_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#feature_selection.select_features" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">feature_selection.</span></span><span class="sig-name descname"><span class="pre">select_features</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">preprocessed_data_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">estimator_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#feature_selection.select_features" title="Permalink to this definition">¶</a></dt>
 <dd><p>Select the feature which contribute most to the prediction for the total energy consumed.
 Default estimator_type used for feature selection is ‘LassoCV’
 Note that elasticnet and</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>config_file</strong> – Location of the .yml config file (default name is input_config.yml).</p></li>
 <li><p><strong>preprocessed_data_file</strong> – Location and name of a .json preprocessing file to be used if the preprocessing is skipped.</p></li>
 <li><p><strong>estimator_type</strong> – The type of feature selection to be performed. The default is lasso, which will be used if nothing is passed.
 The other options are ‘linear’, ‘elasticnet’, and ‘xgb’.</p></li>
@@ -157,7 +156,7 @@ The other options are ‘linear’, ‘elasticnet’, and ‘xgb’.</p></li>
       &copy;2021, Natural Resources Canada.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

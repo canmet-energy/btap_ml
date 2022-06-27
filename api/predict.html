@@ -104,7 +104,7 @@ output_val_df: merge of y_pred, y_validate, datapoint_id, the final dataframe sh
 
 <dl class="py function">
 <dt class="sig sig-object py" id="predict.fit_evaluate">
-<span class="sig-prename descclassname"><span class="pre">predict.</span></span><span class="sig-name descname"><span class="pre">fit_evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preprocessed_data_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selected_features_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">param_search</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#predict.fit_evaluate" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">predict.</span></span><span class="sig-name descname"><span class="pre">fit_evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">preprocessed_data_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selected_features_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">param_search</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#predict.fit_evaluate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Downloads the output from preprocessing and feature selection from mino, builds the model and then evaluate the model.
 :param args: arguements provided from the main</p>
 <dl class="field-list simple">
@@ -127,7 +127,7 @@ Default estimator_type used for feature selection is ‘LassoCV’</p>
 <li><p><strong>selected_features_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location and name of a .json feature selection file to be used.</p></li>
 <li><p><strong>perform_param_search</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – ‘yes’ if hyperparameter tuning should be performed (increases runtime), ‘no’ if the default hyperparameters should be used.</p></li>
 <li><p><strong>output_path</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Where output data should be placed. Note that this value should be empty unless this file is called from a pipeline.</p></li>
-<li><p><strong>random_seed</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – Random seed to be used when training.</p></li>
+<li><p><strong>random_seed</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – Random seed to be used when training. Should not be -1 when used through the CLI.</p></li>
 </ul>
 </dd>
 </dl>
@@ -268,7 +268,7 @@ The hyperparameters search inclues activation, regularizers, dropout_rate, learn
       &copy;2021, Natural Resources Canada.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

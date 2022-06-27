@@ -121,7 +121,7 @@ def process_weather_file(filename: str):
 
 
 def main(config_file: str = typer.Argument(..., help="Path to configuration YAML file."),
-         epw_files: str = typer.Option("", help="The epw key to be used if the config file is not used."),
+         epw_file: str = typer.Option("", help="The epw key to be used if the config file is not used."),
          output_path: str = typer.Option("", help="The output path to be used. Note that this value should be empty unless this file is called from a pipeline."),
          ) -> str:
     """Take raw EPW files as defined in BTAP YAML configuration and prepare it for use by the model.
@@ -130,17 +130,17 @@ def main(config_file: str = typer.Argument(..., help="Path to configuration YAML
 
     Args:
         config_file: Path to the configuration file used for EnergyPlus.
-        epw_files: The epw key to be used if the config file is not use.
+        epw_file: The epw key to be used if the config file is not use.
         output_path: Where output data should be placed. Note that this value should be empty unless this file is called from a pipeline.
     """
     logger.info("Beginning the weather processing step.")
     DOCKER_INPUT_PATH = config.Settings().APP_CONFIG.DOCKER_INPUT_PATH
-    print(output_path)
     # Load the information from the config file, if provided
     if len(config_file) > 0:
         # Load the specified config file
         cfg = config.get_config(DOCKER_INPUT_PATH + config_file)
-        epw_file = cfg.get(config.Settings().APP_CONFIG.WEATHER_KEY)
+        # No validation is needed beyond loading the specified epw key
+        if isinstance(epw_file, str) and epw_file == "": epw_file = cfg.get(config.Settings().APP_CONFIG.WEATHER_KEY)
 
     # If the output path is blank, map to the docker output path
     if len(output_path) < 1:

@@ -19,7 +19,8 @@
 ###################################
 
 # Random seed
-:random_seed: 7
+# Default value=7
+random_seed: 7
 
 ###################################
 ##
@@ -27,7 +28,9 @@
 ##
 ###################################
 # Specify the epw key to be used
-:epw_file: [
+# Only one key should be selected within the list
+# Default value='CAN_QC_Montreal-Trudeau.Intl.AP.716270_CWEC2016.epw'
+epw_file: [
   'CAN_QC_Montreal-Trudeau.Intl.AP.716270_CWEC2016.epw',
 # 'CAN_NS_Halifax.Dockyard.713280_CWEC2016.epw',
 # 'CAN_AB_Edmonton.Intl.AP.711230_CWEC2016.epw',
@@ -43,23 +46,25 @@
 ##
 ###################################
 # Specify the inputs for the building file(s) to be used for training
-:building_param_files: [
+building_param_files: [
   # Electricity file (mandatory)
   '',
   # Gas file (optional, leave as an empty string if unused)
   ''
 ]
 # Specify the inputs for the energy file(s) to be used for training
-:energy_param_files: [
+energy_param_files: [
   # Electricity file (mandatory)
   '',
   # Gas file (optional, leave as an empty string if unused)
   ''
 ]
 # Specify the input for the building file to be used for train validation (optional)
-:val_building_param_files: ''
+# Default value=''
+val_building_param_file: ''
 # Specify the input for the energy file to be used for train validation (optional)
-:val_energy_param_files: ''
+# Default value=''
+val_energy_param_file: ''
 
 ###################################
 ##
@@ -72,7 +77,8 @@
 #     elasticnet (can take a very long time to complete)
 #     xgb (can take a very long time to complete)
 #     lasso (DEFAULT if empty)
-:estimator_type: ''
+# Default value=''
+estimator_type: ''
 
 ###################################
 ##
@@ -82,7 +88,8 @@
 # Determine whether the training should perform a hyperparameter search
 # Selecting yes will increase the training time
 # Either 'yes' or 'no'
-:param_search: 'no'
+# Default value='no'
+param_search: 'no'
 
 ###################################
 ##
@@ -92,22 +99,22 @@
 ##
 ###################################
 # Filepath and filename of the trained ML model to be used (output from the training step)
-:trained_model_file: ''
+trained_model_file: ''
 # Filepath and filename of the ohe.pkl file generated from the preprocessing step when training a model
-:ohe_file: ''
+ohe_file: ''
 # Filepath and filename of the cleaned_columns.json file generated from the preprocessing step when training a model
-:cleaned_columns_file: ''
+cleaned_columns_file: ''
 # Filepath and filename of the scaler_X.pkl and scaler_y.pkl files to be used (located within the trained model output)
-:scaler_X_file: ''
-:scaler_y_file: ''
+scaler_X_file: ''
+scaler_y_file: ''
 # Filepath and filename of the feature selection file to be used for training (located in training output)
-:features_file: ''
+features_file: ''
 # Folder path containing one or more .xlsx building paramter files
 # All .xlsx files within the specified folder must be valid building files
 # No final '/' is needed in the provided directory
-:batch_building_inputs: ''
+batch_building_inputs: ''
 # Start and end dates to be used when preprocessing data to receive predictions for
 # Typically will remain as 1-1 to 12-31
 # Expected format: Month_number-Day_number
-:simulation_start_date: '1-1'
-:simulation_end_date: '12-31'
+simulation_start_date: '1-1'
+simulation_end_date: '12-31'

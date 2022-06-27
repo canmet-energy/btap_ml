@@ -32,6 +32,7 @@ from tensorflow.keras import layers
 
 import config
 import plot as pl
+from models.predict_model import PredictModel
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -361,7 +362,6 @@ def create_model(dense_layers, activation, optimizer, dropout_rate, length, lear
                         validation_split=0.2)
 #     pl.save_plot(history)
 
-
     print(model.summary())
     plt.ylabel('loss')
 
@@ -370,7 +370,7 @@ def create_model(dense_layers, activation, optimizer, dropout_rate, length, lear
     return result, model
 
 
-def fit_evaluate(config_file, preprocessed_data_file, selected_features_file, param_search, output_path, random_seed):
+def fit_evaluate(preprocessed_data_file, selected_features_file, param_search, output_path, random_seed):
     """
     Downloads the output from preprocessing and feature selection from mino, builds the model and then evaluate the model.
     Args:
@@ -386,13 +386,13 @@ def fit_evaluate(config_file, preprocessed_data_file, selected_features_file, pa
     np.random.seed(random_seed)
     tf.random.set_seed(random_seed)
     os.environ['PYTHONHASHSEED'] = str(random_seed)
-
+    # Load the training, testing, and validation sets
     with open(preprocessed_data_file, 'r', encoding='UTF-8') as preprocessing_file:
         preprocessing_json = json.load(preprocessing_file)
-
+    # Load the set of features to be used for training
     with open(selected_features_file, 'r', encoding='UTF-8') as feature_selection_file:
         features_json = json.load(feature_selection_file)
-
+    # Configure the dataframes using the features specified from the preprocessing
     features = preprocessing_json["features"]
     selected_features = features_json["features"]
     X_train = pd.DataFrame(preprocessing_json["X_train"], columns=features)
@@ -400,18 +400,19 @@ def fit_evaluate(config_file, preprocessed_data_file, selected_features_file, pa
     X_validate = pd.DataFrame(preprocessing_json["X_validate"], columns=features)
     y_train = pd.read_json(preprocessing_json["y_train"], orient='values').values.ravel()
 
-    # extracting the selected features from feature engineering
+    # Extract the selected features from feature engineering
     X_train = X_train[selected_features]
     X_test = X_test[selected_features]
     X_validate = X_validate[selected_features]
     col_length = X_train.shape[1]
 
-    # extracting the test data for the target variable
+    # Extract the test data for the target variable
     y_test_complete = pd.DataFrame(preprocessing_json["y_test_complete"], columns=['energy', 'datapoint_id', 'Total Energy'])
     y_test = pd.DataFrame(preprocessing_json["y_test"], columns=['energy', 'datapoint_id'])
     y_validate_complete = pd.DataFrame(preprocessing_json["y_validate_complete"], columns=['energy', 'datapoint_id', 'Total Energy'])
     y_validate= pd.DataFrame(preprocessing_json["y_validate"], columns=['energy', 'datapoint_id'])
 
+    # Scale the data to be used for training and testing
     scalerx = RobustScaler()
     scalery = RobustScaler()
     X_train = scalerx.fit_transform(X_train)
@@ -419,10 +420,11 @@ def fit_evaluate(config_file, preprocessed_data_file, selected_features_file, pa
     X_validate = scalerx.transform(X_validate)
     y_train = scalery.fit_transform(y_train.reshape(-1, 1))
 
-    # search for best hyperparameters
+    # If set to "yes", search for best hyperparameters before training
     if param_search.lower() == "yes":
         hypermodel = predicts_hp(X_train, y_train, X_test, y_test, features, output_path, random_seed)
         results_pred = evaluate(hypermodel, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete)
+    # Otherwise use a default model design and train with that model
     else:
         results_pred, hypermodel = create_model(
                                     dense_layers=[56],
@@ -444,17 +446,17 @@ def fit_evaluate(config_file, preprocessed_data_file, selected_features_file, pa
                                     y_validate_complete= y_validate_complete,
                                     output_path=output_path
                                    )
+    # Calculate the time spent training in minutes
     time_taken = ((time.time() - start_time) / 60)
     print("********* Total time spent is " + str(time_taken) + " minutes ***********" )
 
+    # Define the path where the output files should be placed
     model_path = Path(output_path).joinpath(config.Settings().APP_CONFIG.TRAINING_BUCKET_NAME)
-
     config.create_directory(str(model_path))
-
-    # copy data
+    # Define the output files
     output_filename_json = str(model_path) + "/" + config.Settings().APP_CONFIG.TRAINING_RESULTS_FILENAME + ".json"
     output_filename_csv = str(model_path) + "/" + config.Settings().APP_CONFIG.TRAINING_RESULTS_FILENAME + ".csv"
-
+    # Output the results within a csv for each prediction
     with open(output_filename_csv, 'a', encoding='utf-8') as csv_output:
         writer = csv.writer(csv_output)
         writer.writerow(['ID', 'Predicted energy', 'Actual energy'])
@@ -462,7 +464,7 @@ def fit_evaluate(config_file, preprocessed_data_file, selected_features_file, pa
             writer.writerow(['Test_' + str(i), pair[0], pair[1]])
         for i, pair in enumerate(results_pred['output_val_df']):
             writer.writerow(['Validation_' + str(i), pair[0], pair[1]])
-
+    # Also output all training information within one json file
     with open(output_filename_json, 'w', encoding='utf8') as json_output:
         json.dump(results_pred, json_output)
 
@@ -472,15 +474,15 @@ def fit_evaluate(config_file, preprocessed_data_file, selected_features_file, pa
     # Output the scalers used to scale the X and y data
     joblib.dump(scalerx, str(model_path.joinpath(config.Settings().APP_CONFIG.SCALERX_FILENAME)))
     joblib.dump(scalery, str(model_path.joinpath(config.Settings().APP_CONFIG.SCALERY_FILENAME)))
-
-    return model_output_path, output_filename_csv # Model output, Results output
+    # Returns the model output filepath and the results output filepath
+    return model_output_path, output_filename_csv
 
 def main(config_file: str = typer.Argument(..., help="Location of the .yml config file (default name is input_config.yml)."),
          preprocessed_data_file: str = typer.Argument(..., help="Location and name of a .json preprocessing file to be used."),
          selected_features_file: str = typer.Argument(..., help="Location and name of a .json feature selection file to be used."),
-         perform_param_search: str = typer.Option("", help="'yes' if hyperparameter tuning should be performed (increases runtime), 'no' if the default hyperparameters should be used."),
+         perform_param_search: str = typer.Option("no", help="'yes' if hyperparameter tuning should be performed (increases runtime), 'no' if the default hyperparameters should be used."),
          output_path: str = typer.Option("", help="The output path to be used. Note that this value should be empty unless this file is called from a pipeline."),
-         random_seed: int = typer.Option(7, help="Random seed to be used when training."),
+         random_seed: int = typer.Option(-1, help="Random seed to be used when training. Should not be -1 when used through the CLI."),
          ):
     """
     Select the feature which contribute most to the prediction for the total energy consumed.
@@ -492,22 +494,26 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
         selected_features_file: Location and name of a .json feature selection file to be used.
         perform_param_search: 'yes' if hyperparameter tuning should be performed (increases runtime), 'no' if the default hyperparameters should be used.
         output_path: Where output data should be placed. Note that this value should be empty unless this file is called from a pipeline.
-        random_seed: Random seed to be used when training.
+        random_seed: Random seed to be used when training. Should not be -1 when used through the CLI.
     """
     DOCKER_INPUT_PATH = config.Settings().APP_CONFIG.DOCKER_INPUT_PATH
     # Load all content stored from the config file, if provided
     if len(config_file) > 0:
         # Load the specified config file
         cfg = config.get_config(DOCKER_INPUT_PATH + config_file)
-        random_seed = cfg.get(config.Settings().APP_CONFIG.RANDOM_SEED)
-        perform_param_search = cfg.get(config.Settings().APP_CONFIG.PARAM_SEARCH)
-    # Since the data and features files may already be a full path from a pipeline, check if the input path is needed
-    if os.path.exists(DOCKER_INPUT_PATH + preprocessed_data_file): preprocessed_data_file = DOCKER_INPUT_PATH + preprocessed_data_file
-    if os.path.exists(DOCKER_INPUT_PATH + selected_features_file): selected_features_file = DOCKER_INPUT_PATH + selected_features_file
+        if random_seed < 0: random_seed = cfg.get(config.Settings().APP_CONFIG.RANDOM_SEED)
+        if perform_param_search == "": perform_param_search = cfg.get(config.Settings().APP_CONFIG.PARAM_SEARCH)
+    # Validate all input files
+    # Validate all inputs
+    input_model = PredictModel(input_prefix=DOCKER_INPUT_PATH,
+                               preprocessed_data_file=preprocessed_data_file,
+                               selected_features_file=selected_features_file,
+                               perform_param_search=perform_param_search,
+                               random_seed=random_seed)
     # If the output path is blank, map to the docker output path
     if len(output_path) < 1:
         output_path = config.Settings().APP_CONFIG.DOCKER_OUTPUT_PATH
-    return fit_evaluate(config_file, preprocessed_data_file, selected_features_file, perform_param_search, output_path, random_seed)
+    return fit_evaluate(input_model.preprocessed_data_file, input_model.selected_features_file, input_model.perform_param_search, output_path, input_model.random_seed)
 
 if __name__ == '__main__':
     # Load settings from the environment

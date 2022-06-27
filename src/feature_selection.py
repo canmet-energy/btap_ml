@@ -19,6 +19,7 @@ from sklearn.model_selection import KFold
 from sklearn.preprocessing import MinMaxScaler, RobustScaler, StandardScaler
 
 import config
+from models.feature_selection_model import FeatureSelectionModel
 
 ############################################################
 # feature selection
@@ -27,14 +28,13 @@ import config
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def select_features(config_file, preprocessed_data_file, estimator_type, output_path):
+def select_features(preprocessed_data_file, estimator_type, output_path):
     """
     Select the feature which contribute most to the prediction for the total energy consumed.
     Default estimator_type used for feature selection is 'LassoCV'
     Note that elasticnet and
 
     Args:
-        config_file: Location of the .yml config file (default name is input_config.yml).
         preprocessed_data_file: Location and name of a .json preprocessing file to be used if the preprocessing is skipped.
         estimator_type: The type of feature selection to be performed. The default is lasso, which will be used if nothing is passed.
                         The other options are 'linear', 'elasticnet', and 'xgb'.
@@ -124,14 +124,17 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
     if len(config_file) > 0:
         # Load the specified config file
         cfg = config.get_config(DOCKER_INPUT_PATH + config_file)
-        estimator_type = cfg.get(config.Settings().APP_CONFIG.ESTIMATOR_TYPE)
+        if estimator_type == "":
+            estimator_type = cfg.get(config.Settings().APP_CONFIG.ESTIMATOR_TYPE)
     # If the output path is blank, map to the docker output path
     if len(output_path) < 1:
         output_path = config.Settings().APP_CONFIG.DOCKER_OUTPUT_PATH
-    # Since the preprocessing file may already be a full path from a pipeline, check if the input path is needed
-    if os.path.exists(DOCKER_INPUT_PATH + preprocessed_data_file): preprocessed_data_file = DOCKER_INPUT_PATH + preprocessed_data_file
+    # Validate all inputs
+    input_model = FeatureSelectionModel(input_prefix=DOCKER_INPUT_PATH,
+                                        preprocessed_data_file=preprocessed_data_file,
+                                        estimator_type=estimator_type)
     # Perform the feature selection
-    features_filepath = select_features(config_file, preprocessed_data_file, estimator_type, output_path)
+    features_filepath = select_features(input_model.preprocessed_data_file, input_model.estimator_type, output_path)
     return features_filepath
 
 if __name__ == '__main__':

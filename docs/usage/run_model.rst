@@ -5,10 +5,10 @@ A trained model and its related outputs from :py:mod:`train_model_pipeline` can 
 energy predictions for input building and weather data over a specified period of time (typically
 from January 1 to December 31 with no added day for a leap year).
 
-Predictions can be obtained by running the following command, with al, needed inputs being
-added in the command line or through the provided ``input_config.yml`` file::
+Predictions can be obtained by running the following command, with all needed inputs being
+input through the command line or through the provided ``input_config.yml`` file::
 
-    python preprocessing.py input_config.py
+    python run_model.py input_config.py
 
 The file begins by calling ``prepare_weather.py`` to generate a .parquet weather file
 if it is not included and specified to be skipped.
@@ -19,7 +19,7 @@ passed through the trained model to obtain the predictions.
 
 The dataset will be adjusted with the selected features .json file which is generated
 when training the specified .h5 trained model. The input data is also scaled with the
-same scaler used when training. This ensures that all input data is of the same format
+same scalers used when training. This ensures that all input data is of the same format
 as what has been used for the training.
 
 The predictions are then made by the model, with the output values placed within two csv files,

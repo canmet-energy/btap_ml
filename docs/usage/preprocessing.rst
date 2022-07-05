@@ -1,5 +1,5 @@
 With the inputs specified through the command line or through ``input_config.py``,
-run ``proprocessing.py`` to clean and split the data into test and train sets::
+run ``proprocessing.py`` to clean and split the data into train, test, and validation sets::
 
     python preprocessing.py input_config.py
 
@@ -8,7 +8,7 @@ run ``proprocessing.py`` to clean and split the data into test and train sets::
    Update the input parameters to point to the appropriate input files.
    Check :py:mod:`preprocessing` for full detail description of each parameter.
 
-Aside from supporting optional different files for electricity and gas, if you have mutliple input files they
+Aside from supporting optional files for electricity and gas, if you have mutliple input files to combine, they
 need to be manually combined before passing them as input.
 
 What this does

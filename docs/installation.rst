@@ -6,6 +6,10 @@ documented here to be able to run on Windows. Some elements of this documentatio
 `DAaaS <https://statcan.github.io/daaas/>`_ environment. If you will be working on AAW, you may want to refer to
 :doc:`aaw_setup` to configure the environment first.
 
+To download and utilize the Docker image of the project, consult the documentation on the
+`Docker image's page <https://hub.docker.com/r/juliantemp/btap_ml>`_. The content below is only when the project
+is being worked on without Docker.
+
 Python
 ------
 
@@ -38,11 +42,11 @@ Pre-commit hooks
 
 The project makes use of ``pre-commit``, which is a package that helps to keep source code clean and consistent
 through hooks run against every commit. When these hooks detect something to fix they can cause your commit to fail,
-but often the file just needs to be readded to the commit as a result of changes being applied (fixing whitespace,
+but often the file just needs to be re-added to the commit as a result of changes being applied (fixing whitespace,
 for example).
 
-The only thing that needs to happen to set up the hooks is to run::
+The command that needs to be executed to set up the hooks is::
 
     pre-commit install
 
-From that point on things will run automatically when performing commits as normal.
+After executing the above command, the pre-commit hooks will run automatically when performing commits.

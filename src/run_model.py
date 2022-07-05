@@ -157,7 +157,7 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
     X = scaler_X.transform(X_df)
     logger.info("Loading the specified keras model.")
     # Load the keras model
-    model = keras.models.load_model(DOCKER_INPUT_PATH + model_file, compile=False)
+    model = keras.models.load_model(input_model.model_file, compile=False)
     logger.info("Getting the predictions for the input data.")
     # Get the megajoule predictions (or call the predict.evaluate function!)
     X_ids[COL_NAME_DAILY_MEGAJOULES] = model.predict(X)
@@ -177,10 +177,10 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
     total_days = len(pd.date_range(TEMP_YEAR + start_date, TEMP_YEAR + end_date))
     # If the averaged energy use is needed, the line below can be used
     # ... = X_aggregated[COL_NAME_DAILY_MEGAJOULES].apply(lambda r: float(r / total_days))
-    X_aggregated[COL_NAME_AGGREGATED_GIGAJOULES] = X_aggregated[COL_NAME_DAILY_MEGAJOULES].apply(lambda r : float((r*1.0)/1000))
+    X_aggregated[COL_NAME_AGGREGATED_GIGAJOULES] = X_aggregated[COL_NAME_DAILY_MEGAJOULES].apply(lambda r: float((r*1.0)/1000))
     X_aggregated = X_aggregated.drop(COL_NAME_DAILY_MEGAJOULES, axis=1)
     # Merge the processed building data used for training with the preprocessed building data
-    buildings_df = preprocessing.process_building_files_batch(building_params_folder, "", "", False)
+    buildings_df = preprocessing.process_building_files_batch(input_model.building_params_folder, "", "", False)
     X_aggregated = pd.merge(X_aggregated, buildings_df, on='Prediction Identifier', how='left')
     # Output the predictions alongside any relevant information
     logger.info("Outputting predictions to %s.", str(output_path))

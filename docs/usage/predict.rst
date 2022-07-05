@@ -9,7 +9,7 @@ performed for analysis. The outputs from this step will be used when obtaining p
 The parameters to the above script are documented at: :py:mod:`predict`.
 
 The Machine Learning model which is used for training will vary depending on whether parameter tuning is or is not
-performed. When used, the [Keras Hyperband Tuner](https://keras.io/api/keras_tuner/tuners/hyperband/) is configured
+performed. When used, the `Keras Hyperband Tuner <https://keras.io/api/keras_tuner/tuners/hyperband/>`_ is configured
 to optimize the parameters based on the loss. The tuner also uses early stopping by monitoring the loss with a
 patience of 5. Once the tuner finishes, the optimized model is built and used for training.
 

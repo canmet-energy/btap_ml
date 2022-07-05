@@ -2,9 +2,9 @@ EnergyPlus uses weather data in the EPW file format, as defined in the `Auxiliar
 Programs <https://energyplus.net/assets/nrel_custom/pdfs/pdfs_v9.6.0/AuxiliaryPrograms.pdf>`_ documentation. In
 order to be consumed by the model, the data needs to undergo several steps before it can be used.
 
-The weather data is received from a `GitHub repo <https://raw.githubusercontent.com/NREL/openstudio-standards/nrcan/data/weather/>`.
+The weather data is received from a `GitHub repo <https://raw.githubusercontent.com/NREL/openstudio-standards/nrcan/data/weather/>`_.
 
-Weather data can be automatically preprared from the information found in the ``input_config.yml`` configuration YAML. The
+Weather data can be automatically preprared from the information found in the ``input_config.yml`` configuration file. The
 ``prepare_weather.py`` script can be used to process and save weather data.
 
 .. code::

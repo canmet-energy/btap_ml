@@ -21,7 +21,7 @@ Logging in
 ----------
 
 When the notebook is ready, you can log in to see the `Jupyter Launcher <https://statcan.github.io/daaas/en/1-Experiments/Jupyter/>`_
-screen. From there you can either use open or create notebooks, or launch VS Code to have an IDE environment.
+screen. From there you can use, open, or create notebooks, or you can launch Visual Studio Code to have an IDE environment.
 
 Project source code
 ===================

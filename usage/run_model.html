@@ -40,9 +40,9 @@
 <p>A trained model and its related outputs from <a class="reference internal" href="../api/train_model_pipeline.html#module-train_model_pipeline" title="train_model_pipeline"><code class="xref py py-mod docutils literal notranslate"><span class="pre">train_model_pipeline</span></code></a> can be used to obtain
 energy predictions for input building and weather data over a specified period of time (typically
 from January 1 to December 31 with no added day for a leap year).</p>
-<p>Predictions can be obtained by running the following command, with al, needed inputs being
-added in the command line or through the provided <code class="docutils literal notranslate"><span class="pre">input_config.yml</span></code> file:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">preprocessing</span><span class="o">.</span><span class="n">py</span> <span class="n">input_config</span><span class="o">.</span><span class="n">py</span>
+<p>Predictions can be obtained by running the following command, with all needed inputs being
+input through the command line or through the provided <code class="docutils literal notranslate"><span class="pre">input_config.yml</span></code> file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">run_model</span><span class="o">.</span><span class="n">py</span> <span class="n">input_config</span><span class="o">.</span><span class="n">py</span>
 </pre></div>
 </div>
 <p>The file begins by calling <code class="docutils literal notranslate"><span class="pre">prepare_weather.py</span></code> to generate a .parquet weather file
@@ -52,7 +52,7 @@ if it is not included and specified to be skipped.</p>
 passed through the trained model to obtain the predictions.</p>
 <p>The dataset will be adjusted with the selected features .json file which is generated
 when training the specified .h5 trained model. The input data is also scaled with the
-same scaler used when training. This ensures that all input data is of the same format
+same scalers used when training. This ensures that all input data is of the same format
 as what has been used for the training.</p>
 <p>The predictions are then made by the model, with the output values placed within two csv files,
 which link the predictions to the specific buildings within the specific building files.

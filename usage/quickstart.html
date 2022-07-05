@@ -38,20 +38,25 @@
   <section id="quickstart">
 <h1>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this heading">¶</a></h1>
 <p>If you just want to run all of the steps from training a model to using the model to obtain predictions, here are the steps to run. You may be able to skip some
-of these depending on if data has already been prepared.</p>
-<p>Each of the files can use an input configuration .yml file which contains all inputs to be used alongside descriptions of the inputs.
-If used, only the input file, which will be referenced as input_config.yml, will be passed when calling the training process (this file will be discussed below).
-Each file can also use values passed to through command line arguements. All values except the config file are optional.
+of these depending on if the data has already been processed.</p>
+<p>Each of the Python files can use an input configuration .yml file which contains all inputs to be used alongside descriptions of the inputs.
+If used, the input file, which will be referenced as <code class="docutils literal notranslate"><span class="pre">input_config.yml</span></code>, will be passed when calling the training process (this file will be discussed below).
+Each Python file can also use values passed to through command line arguements. All values except the config file are optional.
 Thus, the config file must still be passed, but the CLI arguements will be given priority. A mix of command line and
-config files can also be used in the case where certain parts of a process should be skipped.</p>
+config files can also be used.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>All of the scripts for the project are in the <code class="docutils literal notranslate"><span class="pre">src/</span></code> folder of the repository. All CLI parameters can be viewed
+<p>The scripts for the project are in the <code class="docutils literal notranslate"><span class="pre">src/</span></code> folder of the repository. All CLI parameters can be viewed
 by calling the python file with <code class="docutils literal notranslate"><span class="pre">--help</span></code> arguement (Example: <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">train_model_pipeline.py</span> <span class="pre">--help</span></code>).</p>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Every file can be run independently, but the recommended steps are to run one of the two pipelines presented below.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Depending on the size of the input files, the amount of RAM needed can be exceedingly high. Thus, the inputs should be split
+as needed if the RAM usage is too high.</p>
 </div>
 <section id="training-a-model">
 <h2>Training a model<a class="headerlink" href="#training-a-model" title="Permalink to this heading">¶</a></h2>
@@ -61,16 +66,16 @@ Assuming that only the <code class="docutils literal notranslate"><span class="p
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">train_model_pipeline</span><span class="o">.</span><span class="n">py</span> <span class="n">input_config</span><span class="o">.</span><span class="n">yml</span>
 </pre></div>
 </div>
-<p>This will process the specified weather file (outputting a .parquet file), preprocess all input files (outputting a .json file and .pkl file),
+<p>This will process the specified weather file (outputting a .parquet file), preprocess all input files (outputting various preprocessed files),
 perform feature selection (outputting a .json file), and train the model (outputting a .h5 trained model, two .pkl files, a .json file, and a .csv file).</p>
 </section>
 <section id="getting-model-predictions">
 <h2>Getting model predictions<a class="headerlink" href="#getting-model-predictions" title="Permalink to this heading">¶</a></h2>
 <p>With a trained Machine Learning model in the form of a .h5 file, the model will be used to obtain the predicted daily Megajoules per meter squared
-and the predicted annual Gigajoules per meter squared for a batch of specified building files within a specified directory.
-Obtaining a trained model can be performed by calling the <code class="docutils literal notranslate"><span class="pre">run_model.py</span></code> file and passing the appropriate arguements.
+and the predicted aggregated Gigajoules per meter squared (for a specified timeframe) for a batch of specified building files within a specified directory.
+Obtaining the predictions from a model can be performed by calling the <code class="docutils literal notranslate"><span class="pre">run_model.py</span></code> file and passing the appropriate arguements.
 Assuming that only the <code class="docutils literal notranslate"><span class="pre">input_config.yml</span></code> file is used and located inside of the current directory, the arguement to pass is:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">train_model_pipeline</span><span class="o">.</span><span class="n">py</span> <span class="n">input_config</span><span class="o">.</span><span class="n">yml</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">run_model</span><span class="o">.</span><span class="n">py</span> <span class="n">input_config</span><span class="o">.</span><span class="n">yml</span>
 </pre></div>
 </div>
 <p>This will process the specified weather file to be used, preprocess all input data, and obtain predictions for all input data (outputting two .csv files
@@ -79,18 +84,18 @@ which contain the prediction outputs alongside identifiers for each building in 
 <section id="input-configuration-file-input-config-yml">
 <h2>Input configuration file (input_config.yml)<a class="headerlink" href="#input-configuration-file-input-config-yml" title="Permalink to this heading">¶</a></h2>
 <p>When providing an input to one of the pipelines above, the command line arguements can be used or the input configuration can be used (or a combination of the two).
-The template for the <code class="docutils literal notranslate"><span class="pre">input_config.yml</span></code> file can be found [here](<a class="reference external" href="https://github.com/canmet-energy/btap_ml/blob/main/src/input_config.yml">https://github.com/canmet-energy/btap_ml/blob/main/src/input_config.yml</a>).
+The template for the <code class="docutils literal notranslate"><span class="pre">input_config.yml</span></code> file can be found <a class="reference external" href="https://github.com/canmet-energy/btap_ml/blob/main/src/input_config.yml">here</a>.
 Within this configuration file are different fields which are required for training and/or running. Each section is clearly labelled with
-comments describing what the input is used for and which are mandatory. If unused within this file, the appropriate input must be provided through
+comments describing what the input is used for and which are mandatory. If not provided within this file, the appropriate input must be provided through
 the CLI.</p>
 <p>It is important to note that any input locations specified within this file or which are provided through the CLI are modified within the code.
-Specifically, any input filename or directory provided as an input will have the Docker file’s input path appended to the beginning of the value.
+Specifically, any input filename or directory provided as an input will have the Docker file’s input path appended to the beginning of the value if needed.
 For example, if a file named electricity_building_params.xlsx is within the root folder which has been linked to the Docker’s input path
 (/home/btap_ml/input), then when input to the input_config.yml file, only the value electricity_building_params.xlsx should be used in the
-configuration file.</p>
+configuration file. When running outside of Docker, the input and output paths can be adjusted within the <code class="docutils literal notranslate"><span class="pre">config.py</span></code> file.</p>
 <p>Similarly, when passing the <code class="docutils literal notranslate"><span class="pre">input_config.yml</span></code> file to the pipelines through the CLI, if the configuration file is at the root of the linked
 input file from the Docker container, only <code class="docutils literal notranslate"><span class="pre">input_config.yml</span></code> will need to be passed as an arguement to the CLI. More information on
-the Docker image is available [here](<a class="reference external" href="https://hub.docker.com/r/juliantemp/btap_ml">https://hub.docker.com/r/juliantemp/btap_ml</a>).</p>
+the Docker image is available <a class="reference external" href="https://hub.docker.com/r/juliantemp/btap_ml">on DockerHub</a>.</p>
 </section>
 </section>
 

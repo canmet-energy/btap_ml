@@ -41,6 +41,9 @@
 documented here to be able to run on Windows. Some elements of this documentation may be specific to running on the
 <a class="reference external" href="https://statcan.github.io/daaas/">DAaaS</a> environment. If you will be working on AAW, you may want to refer to
 <a class="reference internal" href="aaw_setup.html"><span class="doc">Working on AAW</span></a> to configure the environment first.</p>
+<p>To download and utilize the Docker image of the project, consult the documentation on the
+<a class="reference external" href="https://hub.docker.com/r/juliantemp/btap_ml">Docker image’s page</a>. The content below is only when the project
+is being worked on without Docker.</p>
 <section id="python">
 <h2>Python<a class="headerlink" href="#python" title="Permalink to this heading">¶</a></h2>
 <p>A minimum of Python 3.8+ is required to reliably run this project.</p>
@@ -68,13 +71,13 @@ run <code class="docutils literal notranslate"><span class="pre">pip</span></cod
 </div>
 <p>The project makes use of <code class="docutils literal notranslate"><span class="pre">pre-commit</span></code>, which is a package that helps to keep source code clean and consistent
 through hooks run against every commit. When these hooks detect something to fix they can cause your commit to fail,
-but often the file just needs to be readded to the commit as a result of changes being applied (fixing whitespace,
+but often the file just needs to be re-added to the commit as a result of changes being applied (fixing whitespace,
 for example).</p>
-<p>The only thing that needs to happen to set up the hooks is to run:</p>
+<p>The command that needs to be executed to set up the hooks is:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pre</span><span class="o">-</span><span class="n">commit</span> <span class="n">install</span>
 </pre></div>
 </div>
-<p>From that point on things will run automatically when performing commits as normal.</p>
+<p>After executing the above command, the pre-commit hooks will run automatically when performing commits.</p>
 </section>
 </section>
 </section>

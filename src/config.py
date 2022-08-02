@@ -32,7 +32,6 @@ class AppConfig(BaseModel):
     WEATHER_DATA_STORE: AnyHttpUrl = 'https://raw.githubusercontent.com/NREL/openstudio-standards/nrcan/data/weather/'
     # Parent level key within input_config.yml
     RANDOM_SEED: str = 'random_seed'
-    WEATHER_KEY: str = 'epw_file'
     BUILDING_PARAM_FILES: str = 'building_param_files'
     VAL_BUILDING_PARAM_FILE: str = 'val_building_param_file'
     ENERGY_PARAM_FILES: str = 'energy_param_files'

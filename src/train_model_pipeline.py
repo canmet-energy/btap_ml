@@ -25,10 +25,6 @@ logger = logging.getLogger(__name__)
 
 def main(config_file: str = typer.Argument(..., help="Location of the .yml config file (default name is input_config.yml)."),
          random_seed: int = typer.Option(-1, help="The random seed to be used when training. Should not be -1 when used through the CLI."),
-        # Weather
-         weather_key: str = typer.Option("", help="The epw file key to be used (only the key, not the full GitHub repository link)."),
-         weather_file: str = typer.Option("", help="Location and name of a .parquet weather file to be used if weather generation is skipped."),
-         skip_weather_generation: bool = typer.Option(False, help="True if the .parquet weather file generation should be skipped, where the weather_file input is used, False if the weather file generation should be performed."),
         # Preprocessing
          hourly_energy_electric_file: str = typer.Option("", help="Location and name of a electricity energy file to be used if the config file is not used."),
          building_params_electric_file: str = typer.Option("", help="Location and name of a electricity building parameters file to be used if the config file is not used."),
@@ -59,10 +55,6 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
     Args:
         config_file: Location of the .yml config file (default name is input_config.yml).
         random_seed: Random seed to be used when training.
-        weather_key: The epw file key to be used (only the key, not the full GitHub repository link).
-        weather_file: Location and name of a .parquet weather file to be used if weather generation is skipped.
-        skip_weather_generation: True if the .parquet weather file generation should be skipped,
-                                 where the weather_file input is used, False if the weather file generation should be performed.
         hourly_energy_electric_file: Location and name of a electricity energy file to be used if the config file is not used.
         building_params_electric_file: Location and name of a electricity building parameters file to be used if the config file is not used.
         val_hourly_energy_file: Location and name of a electricity energy validation file to be used if the config file is not used.
@@ -90,7 +82,6 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
     if len(config_file) > 0:
         cfg = config.get_config(DOCKER_INPUT_PATH + config_file)
         if random_seed < 0: random_seed = cfg.get(config.Settings().APP_CONFIG.RANDOM_SEED)
-        if weather_key == "": weather_key = cfg.get(config.Settings().APP_CONFIG.WEATHER_KEY)
         # If the energy or building electricity files are not provided, load the files
         if hourly_energy_electric_file == "":
             hourly_energy_electric_file = cfg.get(config.Settings().APP_CONFIG.ENERGY_PARAM_FILES)[0]
@@ -102,18 +93,11 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
         if val_building_params_file == "": val_building_params_file = cfg.get(config.Settings().APP_CONFIG.VAL_BUILDING_PARAM_FILE)
         if estimator_type == "": estimator_type = cfg.get(config.Settings().APP_CONFIG.ESTIMATOR_TYPE)
         if perform_param_search == "": perform_param_search = cfg.get(config.Settings().APP_CONFIG.PARAM_SEARCH)
-    # Since the weather key should be a list, set to be a list
-    # if it is only a string
-    if isinstance(weather_key, str):
-        weather_key = [weather_key]
     # Validate all input arguments before continuing
     # Program will output an error if validation fails
     input_model = TrainingModel(input_prefix=DOCKER_INPUT_PATH,
                                 config_file=config_file,
                                 random_seed=random_seed,
-                                epw_file=weather_key,
-                                weather_file=weather_file,
-                                skip_weather_generation=skip_weather_generation,
                                 building_param_files=[building_params_electric_file,
                                                       building_params_gas_file],
                                 energy_param_files=[hourly_energy_electric_file,
@@ -140,17 +124,11 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
     if len(config_file) > 0:
         shutil.copy(DOCKER_INPUT_PATH + config_file, str(output_path.joinpath(INPUT_CONFIG_FILENAME)))
     output_path = str(output_path)
-    # Prepare weather (perhaps can allow a .csv to require processing while .parquet skips processing)
-    if not skip_weather_generation:
-        input_model.weather_file = prepare_weather.main(config_file=input_model.config_file,
-                                                        epw_file=input_model.epw_file,
-                                                        output_path=output_path)
     # Preprocess the data (generates json with train, test, validate)
     if not skip_file_preprocessing:
         input_model.preprocessed_data_file = preprocessing.main(config_file=input_model.config_file,
                                                                 hourly_energy_electric_file=input_model.energy_param_files[0],
                                                                 building_params_electric_file=input_model.building_param_files[0],
-                                                                weather_file=input_model.weather_file,
                                                                 val_hourly_energy_file=input_model.val_hourly_energy_file,
                                                                 val_building_params_file=input_model.val_building_params_file,
                                                                 hourly_energy_gas_file=input_model.energy_param_files[1],

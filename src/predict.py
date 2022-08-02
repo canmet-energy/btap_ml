@@ -222,8 +222,8 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
     # Retrain the model
     y_test['y_pred_transformed'] = scalery.inverse_transform(y_test['y_pred'].values.reshape(-1,1))
     y_validate['y_pred_transformed'] = scalery.inverse_transform(y_validate['y_pred'].values.reshape(-1,1))
-    test_score = score( y_test['energy'], y_test['y_pred_transformed'])
-    val_score = score( y_validate['energy'], y_validate['y_pred_transformed'])
+    test_score = score(y_test['energy'], y_test['y_pred_transformed'])
+    val_score = score(y_validate['energy'], y_validate['y_pred_transformed'])
 
     print("[Score test loss, test mae, test mse]:", test_score)
     print("[Score val loss, val mae, val mse]:", val_score)

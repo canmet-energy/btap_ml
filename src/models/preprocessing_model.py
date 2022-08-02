@@ -11,7 +11,6 @@ class PreprocessingModel(pydantic.BaseModel):
         input_prefix: The input prefix to be used for all files provided.
         building_param_files: List of two building files [electricity, gas (optional)].
         energy_param_files: List of two energy files [electricity, gas (optional)].
-        weather_file: Location and name of a .parquet weather file to be used.
         val_hourly_energy_file: Location and name of a electricity energy validation file to be used if the config file is not used.
         val_building_params_file: Location and name of a electricity building parameters validation file to be used if the config file is not used.
         hourly_energy_gas_file: Location and name of a gas energy file to be used if the config file is not used.
@@ -28,7 +27,6 @@ class PreprocessingModel(pydantic.BaseModel):
     input_prefix: str
     building_param_files: Optional[list]
     energy_param_files: Optional[list]
-    weather_file: str
     val_hourly_energy_file: Optional[str]
     val_building_params_file: Optional[str]
     hourly_energy_gas_file: Optional[str]
@@ -42,7 +40,7 @@ class PreprocessingModel(pydantic.BaseModel):
     ohe_file: Optional[str]
     cleaned_columns_file: Optional[str]
 
-    @pydantic.validator("building_param_files", "energy_param_files", "weather_file", "val_hourly_energy_file", "val_building_params_file", "ohe_file", "cleaned_columns_file")
+    @pydantic.validator("building_param_files", "energy_param_files", "val_hourly_energy_file", "val_building_params_file", "ohe_file", "cleaned_columns_file")
     @classmethod
     def validate_files_exist(cls, value, values):
         """

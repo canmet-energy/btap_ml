@@ -1,4 +1,5 @@
 ###################################
+###################################
 ##
 ## BTAP ML - INPUT CONFIGURATION FILE
 ##
@@ -18,27 +19,16 @@
 ##
 ###################################
 
+###################################
+##
+## USAGE NOTES (if needed for logging purposes)
+## - ...
+##
+###################################
+
 # Random seed
 # Default value=7
 random_seed: 7
-
-###################################
-##
-## FOR WEATHER PROCESSING (USED FOR BOTH TRAINING AND RUNNING A MODEL)
-##
-###################################
-# Specify the epw key to be used
-# Only one key should be selected within the list
-# Default value='CAN_QC_Montreal-Trudeau.Intl.AP.716270_CWEC2016.epw'
-epw_file: [
-  'CAN_QC_Montreal-Trudeau.Intl.AP.716270_CWEC2016.epw',
-# 'CAN_NS_Halifax.Dockyard.713280_CWEC2016.epw',
-# 'CAN_AB_Edmonton.Intl.AP.711230_CWEC2016.epw',
-# 'CAN_BC_Vancouver.Intl.AP.718920_CWEC2016.epw',
-# 'CAN_AB_Calgary.Intl.AP.718770_CWEC2016.epw',
-# 'CAN_ON_Toronto.Pearson.Intl.AP.716240_CWEC2016.epw',
-# 'CAN_YT_Whitehorse.Intl.AP.719640_CWEC2016.epw'
-]
 
 ###################################
 ##

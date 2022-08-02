@@ -11,11 +11,6 @@ class TrainingModel(pydantic.BaseModel):
         input_prefix: The input prefix to be used for all files provided.
         config_file: Location of the .yml config file (default name is input_config.yml).
         random_seed: Random seed to be used when training.
-        epw_file: The epw file key to be used (only the key, not the full GitHub repository link).
-        weather_file: Location and name of a .parquet weather file to be used if weather generation is skipped.
-        skip_weather_generation: True if the .parquet weather file generation should be skipped,
-                                 where the weather_file input is used, False if the weather file generation should be performed.
-
         building_param_files: List of two building files [electricity, gas (optional)].
         energy_param_files: List of two energy files [electricity, gas (optional)].
         val_hourly_energy_file: Location and name of a electricity energy validation file to be used if the config file is not used.
@@ -34,9 +29,6 @@ class TrainingModel(pydantic.BaseModel):
     input_prefix: str
     config_file: Optional[str]
     random_seed: int
-    epw_file: list
-    weather_file: Optional[str]
-    skip_weather_generation: bool
     building_param_files: list
     energy_param_files: list
     val_hourly_energy_file: Optional[str]
@@ -49,7 +41,7 @@ class TrainingModel(pydantic.BaseModel):
     perform_param_search: str
     skip_model_training: bool
 
-    @pydantic.validator("weather_file", "building_param_files", "energy_param_files", "val_hourly_energy_file", "val_building_params_file", "preprocessed_data_file", "selected_features_file")
+    @pydantic.validator("building_param_files", "energy_param_files", "val_hourly_energy_file", "val_building_params_file", "preprocessed_data_file", "selected_features_file")
     @classmethod
     def validate_files_exist(cls, value, values):
         """

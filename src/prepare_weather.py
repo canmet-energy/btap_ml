@@ -98,7 +98,7 @@ def process_weather_file(filename: str):
     """Process a weather file and return the dataframe.
 
     Args:
-        filename: The name of the weather file to load, as defined in the building config file.
+        filename: The name of the weather file to load.
 
     Returns:
         A pd.DataFrame object with the ready to use weather information.
@@ -119,6 +119,29 @@ def process_weather_file(filename: str):
         logger.warn("Hour values greater than 23 found. Date parsing will likely return values coded to the following days.")
     return df
 
+def process_weather_files(filenames: list):
+    """
+    Process a batch of weather files and return the dataframe
+
+    Args:
+        filenames: The names of the weather files to load.
+
+    Returns:
+        A pd.DataFrame object with the ready to use weather information
+    """
+    combined_weather_df = None
+    # Loop through all weather keys
+    for filename in filenames:
+        # Process each file individually
+        weather_df = process_weather_file(filename)
+        # Add the epw_key as a column
+        weather_df[':epw_file'] = filename
+        # Set/merge the output with the other processed weather data
+        if combined_weather_df is not None:
+            combined_weather_df = pd.concat([combined_weather_df, weather_df], ignore_index=True)
+        else:
+            combined_weather_df = weather_df
+    return combined_weather_df
 
 def main(config_file: str = typer.Argument(..., help="Path to configuration YAML file."),
          epw_file: str = typer.Option("", help="The epw key to be used if the config file is not used."),

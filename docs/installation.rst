@@ -29,6 +29,10 @@ Additional dependencies exist if you would like to participate in the developmen
 
     pip install -r requirements-dev.txt
 
+.. warning::
+
+   If the code is being run in an environment with existing dependencies, a new environment should be defined to avoid conflicts.
+
 Pre-commit hooks
 ^^^^^^^^^^^^^^^^
 

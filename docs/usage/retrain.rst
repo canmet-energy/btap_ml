@@ -2,8 +2,7 @@ Train the model
 ===============
 
 If there are new data files that significantly change the types of information the model knows how to predict you need to retrain the model.
-In the case that you want to retrain the model but are not dealing with significant changes in the data (for example,
-using the same weather data) you can skip the weather data preparation or cleaning and splitting steps, as needed.
+In the case that you want to retrain the model but are not dealing with significant changes in the data cleaning and splitting steps, as needed.
 The steps of training a model are called inside of ``train_model_pipeline.py``, but each of the individual steps performed
 are also discussed below.
 

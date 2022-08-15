@@ -39,7 +39,7 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
          skip_feature_selection: bool = typer.Option(False, help="True if the .json feature selection file generation should be skipped, where the selected_features_file input is used, False if the feature selection file generation should be performed."),
         # Training
          selected_features_file: str = typer.Option("", help="Location and name of a .json feature selection file to be used if the feature selection is skipped."),
-         perform_param_search: str = typer.Option("no", help="'yes' if hyperparameter tuning should be performed (increases runtime), 'no' if the default hyperparameters should be used."),
+         perform_param_search: str = typer.Option("", help="'yes' if hyperparameter tuning should be performed (increases runtime), 'no' if the default hyperparameters should be used."),
          skip_model_training: bool = typer.Option(False, help="True if the model training should be skipped. Useful if only the preprocessing steps should be performed."),
          ) -> None:
     """

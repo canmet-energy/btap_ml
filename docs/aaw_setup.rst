@@ -12,7 +12,7 @@ when creating the notebook:
 * Memory: 32.0Gi
 * Workspace volume: New (let it create one for you)
   * Size: 16.0Gi
-* GPUs: None
+* GPUs: None for basic use OR 1 Nvidia GPU for enhanced use (where the GPU usage may change the parameters above)
 
 It takes a few minutes to create the notebook, but from that point on you can connect to it easily from the
 ``Notebook Servers`` menu (left side) in the Kubeflow dashboard.

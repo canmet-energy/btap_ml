@@ -26,11 +26,10 @@ After installation, the processing can either take the form of running a model t
       bgcolor=transparent;
       rankdir=LR;
 
-      start -> weather -> preprocess -> features -> build -> end;
+      start -> preprocess -> features -> build -> end;
 
       start [shape=Mdiamond];
-      weather [label="Prepare weather"];
-      preprocess [label="Run preprocessing"];
+      preprocess [label="Preprocess input data and prepare weather data"];
       features [label="Feature selection"];
       build [label="Build the model"];
       end [shape=Msquare];
@@ -43,11 +42,10 @@ After installation, the processing can either take the form of running a model t
       bgcolor=transparent;
       rankdir=LR;
 
-      start -> weather -> preprocess -> run -> end;
+      start -> preprocess -> run -> end;
 
       start [shape=Mdiamond];
-      weather [label="Prepare weather"];
-      preprocess [label="Preprocess data"];
+      preprocess [label="Preprocess input data and prepare weather data"];
       run [label="Obtain predictions"];
       end [shape=Msquare];
     }

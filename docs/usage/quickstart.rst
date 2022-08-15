@@ -33,7 +33,7 @@ Assuming that only the ``input_config.yml`` file is used and located inside of t
 
     python train_model_pipeline.py input_config.yml
 
-This will process the specified weather file (outputting a .parquet file), preprocess all input files (outputting various preprocessed files),
+This will preprocess all input files and any corresponding weather files which need to be retrieved (outputting various preprocessed files),
 perform feature selection (outputting a .json file), and train the model (outputting a .h5 trained model, two .pkl files, a .json file, and a .csv file).
 
 Getting model predictions
@@ -46,8 +46,8 @@ Assuming that only the ``input_config.yml`` file is used and located inside of t
 
     python run_model.py input_config.yml
 
-This will process the specified weather file to be used, preprocess all input data, and obtain predictions for all input data (outputting two .csv files
-which contain the prediction outputs alongside identifiers for each building in the form building_file_name/building_index).
+This will preprocess all input files and any corresponding weather files which need to be retrieved, and obtain predictions for all input data
+(outputting two .csv files which contain the prediction outputs alongside identifiers for each building in the form building_file_name/building_index).
 
 Input configuration file (input_config.yml)
 -------------------------------------------

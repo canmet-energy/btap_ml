@@ -45,11 +45,10 @@ input through the command line or through the provided <code class="docutils lit
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">run_model</span><span class="o">.</span><span class="n">py</span> <span class="n">input_config</span><span class="o">.</span><span class="n">py</span>
 </pre></div>
 </div>
-<p>The file begins by calling <code class="docutils literal notranslate"><span class="pre">prepare_weather.py</span></code> to generate a .parquet weather file
-if it is not included and specified to be skipped.</p>
-<p>The weather file and an input directory of .xlsx building output files are passed to
-<code class="docutils literal notranslate"><span class="pre">preprocessing.py</span></code> to be preprocessed into a single dataset which will then be
-passed through the trained model to obtain the predictions.</p>
+<p>The file begins by initializing the preprocessing step which will process all input files
+and identify/load the weather data from present climate zones. An input directory of .xlsx
+building output files are passed to <code class="docutils literal notranslate"><span class="pre">preprocessing.py</span></code> to be preprocessed into a single
+dataset which will then be passed through the trained model to obtain the predictions.</p>
 <p>The dataset will be adjusted with the selected features .json file which is generated
 when training the specified .h5 trained model. The input data is also scaled with the
 same scalers used when training. This ensures that all input data is of the same format
@@ -138,7 +137,7 @@ the specified start and end dates. These typically are 365 days to represent a f
       &copy;2021, Natural Resources Canada.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.1.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

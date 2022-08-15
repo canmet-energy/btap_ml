@@ -66,7 +66,7 @@ Assuming that only the <code class="docutils literal notranslate"><span class="p
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">train_model_pipeline</span><span class="o">.</span><span class="n">py</span> <span class="n">input_config</span><span class="o">.</span><span class="n">yml</span>
 </pre></div>
 </div>
-<p>This will process the specified weather file (outputting a .parquet file), preprocess all input files (outputting various preprocessed files),
+<p>This will preprocess all input files and any corresponding weather files which need to be retrieved (outputting various preprocessed files),
 perform feature selection (outputting a .json file), and train the model (outputting a .h5 trained model, two .pkl files, a .json file, and a .csv file).</p>
 </section>
 <section id="getting-model-predictions">
@@ -78,8 +78,8 @@ Assuming that only the <code class="docutils literal notranslate"><span class="p
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">run_model</span><span class="o">.</span><span class="n">py</span> <span class="n">input_config</span><span class="o">.</span><span class="n">yml</span>
 </pre></div>
 </div>
-<p>This will process the specified weather file to be used, preprocess all input data, and obtain predictions for all input data (outputting two .csv files
-which contain the prediction outputs alongside identifiers for each building in the form building_file_name/building_index).</p>
+<p>This will preprocess all input files and any corresponding weather files which need to be retrieved, and obtain predictions for all input data
+(outputting two .csv files which contain the prediction outputs alongside identifiers for each building in the form building_file_name/building_index).</p>
 </section>
 <section id="input-configuration-file-input-config-yml">
 <h2>Input configuration file (input_config.yml)<a class="headerlink" href="#input-configuration-file-input-config-yml" title="Permalink to this heading">¶</a></h2>
@@ -180,7 +180,7 @@ the Docker image is available <a class="reference external" href="https://hub.do
       &copy;2021, Natural Resources Canada.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.1.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

@@ -18,8 +18,9 @@ During preprocessing, the hourly energy consumption file is transposed such that
 (365 * 24). Hence, for a simulation run containing 5000 ``datapoint_id`` values, there would be 5000 * 8760 rows which would
 be 43.8 million rows. In order to avoid the preprocessing stage to become computationally expensive due to large
 datapoints created, the transposed hourly energy file is aggregated to daily energy for each ``datapoint_id``. Similarly,
-the weather information is aggregated from hourly to daily, so that it can be merged with the hourly energy file.
-In essence, the simulation I/O file(s), weather file and the hourly energy consumption file(s) are all merged to one
+the weather information is loaded based on which climate zones are used within the building input data, which is then
+aggregated from hourly to daily, so that it can be merged with the hourly energy file.
+In essence, the simulation I/O file(s), weather data from the specified climate zones and the hourly energy consumption file(s) are all merged to one
 dataframe which is then split for training and testing purposes (training set, testing set, validation set).
 
 .. note::

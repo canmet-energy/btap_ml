@@ -46,28 +46,26 @@ associated with calculating such a large solution space. Even with High Performa
 stock of models is estimated to take 57 centuries. Surrogate models significantly reduce the time and resources
 required to produce usable outputs.</p>
 <p>After installation, the processing can either take the form of running a model training pipeline or of running a trained model to obtain predictions:</p>
-<div class="graphviz"><img src="_images/graphviz-925b4f46562ce43bee6642fec531296ef1fbb5ce.png" alt="digraph G {
+<div class="graphviz"><img src="_images/graphviz-e9ac75300f7e2a6c59dfb01301bf23ed03175f0c.png" alt="digraph G {
    bgcolor=transparent;
    rankdir=LR;
 
-   start -&gt; weather -&gt; preprocess -&gt; features -&gt; build -&gt; end;
+   start -&gt; preprocess -&gt; features -&gt; build -&gt; end;
 
    start [shape=Mdiamond];
-   weather [label=&quot;Prepare weather&quot;];
-   preprocess [label=&quot;Run preprocessing&quot;];
+   preprocess [label=&quot;Preprocess input data and prepare weather data&quot;];
    features [label=&quot;Feature selection&quot;];
    build [label=&quot;Build the model&quot;];
    end [shape=Msquare];
  }" class="graphviz" /></div>
-<div class="graphviz"><img src="_images/graphviz-7a0adc3f16beac7e3c3f7dc4133a619c8feafa62.png" alt="digraph G {
+<div class="graphviz"><img src="_images/graphviz-a15bded9eaa62d4ea511b31b11222f88236bad4f.png" alt="digraph G {
    bgcolor=transparent;
    rankdir=LR;
 
-   start -&gt; weather -&gt; preprocess -&gt; run -&gt; end;
+   start -&gt; preprocess -&gt; run -&gt; end;
 
    start [shape=Mdiamond];
-   weather [label=&quot;Prepare weather&quot;];
-   preprocess [label=&quot;Preprocess data&quot;];
+   preprocess [label=&quot;Preprocess input data and prepare weather data&quot;];
    run [label=&quot;Obtain predictions&quot;];
    end [shape=Msquare];
  }" class="graphviz" /></div>
@@ -211,7 +209,7 @@ required to produce usable outputs.</p>
       &copy;2021, Natural Resources Canada.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.1.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

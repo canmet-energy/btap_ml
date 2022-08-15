@@ -51,8 +51,9 @@ need to be manually combined before passing them as input.</p>
 (365 * 24). Hence, for a simulation run containing 5000 <code class="docutils literal notranslate"><span class="pre">datapoint_id</span></code> values, there would be 5000 * 8760 rows which would
 be 43.8 million rows. In order to avoid the preprocessing stage to become computationally expensive due to large
 datapoints created, the transposed hourly energy file is aggregated to daily energy for each <code class="docutils literal notranslate"><span class="pre">datapoint_id</span></code>. Similarly,
-the weather information is aggregated from hourly to daily, so that it can be merged with the hourly energy file.
-In essence, the simulation I/O file(s), weather file and the hourly energy consumption file(s) are all merged to one
+the weather information is loaded based on which climate zones are used within the building input data, which is then
+aggregated from hourly to daily, so that it can be merged with the hourly energy file.
+In essence, the simulation I/O file(s), weather data from the specified climate zones and the hourly energy consumption file(s) are all merged to one
 dataframe which is then split for training and testing purposes (training set, testing set, validation set).</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -156,7 +157,7 @@ implies that a <code class="docutils literal notranslate"><span class="pre">data
       &copy;2021, Natural Resources Canada.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.1.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

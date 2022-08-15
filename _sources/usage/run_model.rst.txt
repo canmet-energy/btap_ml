@@ -10,12 +10,10 @@ input through the command line or through the provided ``input_config.yml`` file
 
     python run_model.py input_config.py
 
-The file begins by calling ``prepare_weather.py`` to generate a .parquet weather file
-if it is not included and specified to be skipped.
-
-The weather file and an input directory of .xlsx building output files are passed to
-``preprocessing.py`` to be preprocessed into a single dataset which will then be
-passed through the trained model to obtain the predictions.
+The file begins by initializing the preprocessing step which will process all input files
+and identify/load the weather data from present climate zones. An input directory of .xlsx
+building output files are passed to ``preprocessing.py`` to be preprocessed into a single
+dataset which will then be passed through the trained model to obtain the predictions.
 
 The dataset will be adjusted with the selected features .json file which is generated
 when training the specified .h5 trained model. The input data is also scaled with the

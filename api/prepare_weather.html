@@ -103,10 +103,24 @@ saved to blob storage for use in later processing stages.</p>
 <dd><p>Process a weather file and return the dataframe.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>filename</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – The name of the weather file to load, as defined in the building config file.</p>
+<dd class="field-odd"><p><strong>filename</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – The name of the weather file to load.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A pd.DataFrame object with the ready to use weather information.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="prepare_weather.process_weather_files">
+<span class="sig-prename descclassname"><span class="pre">prepare_weather.</span></span><span class="sig-name descname"><span class="pre">process_weather_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filenames</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prepare_weather.process_weather_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process a batch of weather files and return the dataframe</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>filenames</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>) – The names of the weather files to load.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A pd.DataFrame object with the ready to use weather information</p>
 </dd>
 </dl>
 </dd></dl>
@@ -207,7 +221,7 @@ The filename of the original file is used, with the extension replaced with .par
       &copy;2021, Natural Resources Canada.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.1.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

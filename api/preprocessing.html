@@ -150,7 +150,7 @@ y_test_complete: Dataframe containing the target variable with corresponding dat
 
 <dl class="py function">
 <dt class="sig sig-object py" id="preprocessing.main">
-<span class="sig-prename descclassname"><span class="pre">preprocessing.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_file=&lt;typer.models.ArgumentInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hourly_energy_electric_file=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">building_params_electric_file=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weather_file=&lt;typer.models.ArgumentInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_hourly_energy_file=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_building_params_file=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hourly_energy_gas_file=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">building_params_gas_file=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preprocess_only_for_predictions=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">building_params_folder=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_date=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_date=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ohe_file=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cleaned_columns_file=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#preprocessing.main" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">preprocessing.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_file=&lt;typer.models.ArgumentInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hourly_energy_electric_file=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">building_params_electric_file=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_hourly_energy_file=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_building_params_file=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hourly_energy_gas_file=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">building_params_gas_file=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preprocess_only_for_predictions=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">building_params_folder=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_date=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_date=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ohe_file=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cleaned_columns_file=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#preprocessing.main" title="Permalink to this definition">¶</a></dt>
 <dd><p>Used to encode the categorical variables contained in the x_train, x_test and x_validate
 Note that the encoded data return creates additional columns equivalent to the unique categorical values in the each categorical column.</p>
 <dl class="field-list simple">
@@ -159,7 +159,6 @@ Note that the encoded data return creates additional columns equivalent to the u
 <li><p><strong>config_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location of the .yml config file (default name is input_config.yml).</p></li>
 <li><p><strong>hourly_energy_electric_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location and name of a electricity energy file to be used if the config file is not used.</p></li>
 <li><p><strong>building_params_electric_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location and name of a electricity building parameters file to be used if the config file is not used.</p></li>
-<li><p><strong>weather_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location and name of a .parquet weather file to be used.</p></li>
 <li><p><strong>val_hourly_energy_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location and name of a electricity energy validation file to be used if the config file is not used.</p></li>
 <li><p><strong>val_building_params_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location and name of a electricity building parameters validation file to be used if the config file is not used.</p></li>
 <li><p><strong>hourly_energy_gas_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location and name of a gas energy file to be used if the config file is not used.</p></li>
@@ -191,7 +190,8 @@ Note that the encoded data return creates additional columns equivalent to the u
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Dataframe containing the clean building parameters file.
-floor_sq: the square foot of the building</p>
+floor_sq: the square foot of the building
+epw_keys: Dictionary containing all unique weather keys.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>btap_df</p>
@@ -219,7 +219,8 @@ if unused.</p>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Dataframe containing the clean building parameters files.</p>
+<dd class="field-even"><p>Dataframe containing the clean building parameters files.
+epw_keys: Dictionary containing all unique weather keys.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>buildings_df</p>
@@ -250,14 +251,14 @@ if unused.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="preprocessing.read_weather">
-<span class="sig-prename descclassname"><span class="pre">preprocessing.</span></span><span class="sig-name descname"><span class="pre">read_weather</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#preprocessing.read_weather" title="Permalink to this definition">¶</a></dt>
-<dd><p>Used to read the weather .parquet file</p>
+<span class="sig-prename descclassname"><span class="pre">preprocessing.</span></span><span class="sig-name descname"><span class="pre">read_weather</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epw_keys</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#preprocessing.read_weather" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used to read retrieve all weather data for the specified epw_keys.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>path</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – file path where weather file is to be read</p>
+<dd class="field-odd"><p><strong>epw_keys</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>) – Weather file keys to be loaded.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Dataframe containing the clean weather file.</p>
+<dd class="field-even"><p>Dataframe containing the clean weather data.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>btap_df</p>
@@ -343,7 +344,7 @@ if unused.</p>
       &copy;2021, Natural Resources Canada.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.1.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

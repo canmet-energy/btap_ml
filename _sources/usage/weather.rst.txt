@@ -4,8 +4,13 @@ order to be consumed by the model, the data needs to undergo several steps befor
 
 The weather data is received from a `GitHub repo <https://raw.githubusercontent.com/NREL/openstudio-standards/nrcan/data/weather/>`_.
 
-Weather data can be automatically preprared from the information found in the ``input_config.yml`` configuration file. The
+Weather data can be automatically preprared from the information found in the input building .xlsx files. The
 ``prepare_weather.py`` script can be used to process and save weather data.
+
+Although ``prepare_weather.py`` can be used to process the weather files directly, within the training and
+running pipelines, the weather is processed as part of the data preprocessing step by loading all weather
+files attached to buildings in the input file(s). The contents of this subsection outline how the weather data
+is processed.
 
 .. code::
 
@@ -15,9 +20,16 @@ Weather data can be automatically preprared from the information found in the ``
 
    The input to ``prepare_weather.py`` is the same configuration file that is given to ``train_model_pipeline.py``
    and to ``run_model.py``. The CLI can also be used to invoke the process without a complete configuration file.
+   The weather files to process must now be passed through the CLI since it is no longer an input in the
+   configuration file.
 
 Outputs are placed into a ``/weather`` folder (by default) in storage as parquet files. The name of the weather files
 will match the input name found in the YAML file, but with a ``.parquet`` file extension.
+
+.. note::
+
+    When called within the data preprocessing step, no ``.parquet`` file is output. The output is directly used without
+    needing to be loaded again.
 
 What this does
 ^^^^^^^^^^^^^^

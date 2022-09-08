@@ -94,7 +94,7 @@ def process_building_files(path_elec, path_gas, clean_dataframe=True):
     # Unique weather keys
     epw_keys = btap_df[':epw_file'].unique()
     # Dynamic list of columns to remove
-    output_drop_list = ['Unnamed: 0', ':erv_package', ':template']
+    output_drop_list = ['Unnamed: 0', ':template']
     # List of columns to keep despite being ruled to be removed
     output_drop_list_exceptions = ['energy_eui_additional_fuel_gj_per_m_sq',
                                    'energy_eui_electricity_gj_per_m_sq',
@@ -102,7 +102,8 @@ def process_building_files(path_elec, path_gas, clean_dataframe=True):
                                    'net_site_eui_gj_per_m_sq',
                                    ':building_type',
                                    ':epw_file',
-                                   'bldg_conditioned_floor_area_m_sq'
+                                   'bldg_conditioned_floor_area_m_sq',
+                                   ':erv_package'
                                   ]
     # Remove columns without a ':' and which are not exceptions
     for col in btap_df.columns:
@@ -120,7 +121,8 @@ def process_building_files(path_elec, path_gas, clean_dataframe=True):
                  'energy_eui_electricity_gj_per_m_sq',
                  'energy_eui_natural_gas_gj_per_m_sq',
                  'net_site_eui_gj_per_m_sq',
-                 ':analysis_id']
+                 ':analysis_id',
+                 ':analysis_name']
     # Drop any remaining fields which exist, ignoring raised errors
     btap_df = btap_df.drop(drop_list, axis=1, errors='ignore')
 

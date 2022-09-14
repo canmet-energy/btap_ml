@@ -32,6 +32,7 @@ from tensorflow.keras import layers
 
 import config
 import plot as pl
+import preprocessing
 from models.predict_model import PredictModel
 
 logging.basicConfig(level=logging.INFO)
@@ -86,7 +87,7 @@ def model_builder(hp):
     model.add(keras.layers.Flatten())
 
     hp_activation= hp.Choice('activation', values=['relu','tanh','sigmoid'])
-    for i in range(hp.Int("num_layers", 1,1)):
+    for i in range(hp.Int("num_layers", 1, 1)):
         model.add(layers.Dense(
             units=hp.Int("units_" + str(i), min_value=8, max_value=96, step=8),
             activation=hp_activation,
@@ -197,7 +198,7 @@ def predicts_hp(X_train, y_train, X_test, y_test, selected_feature, output_path,
     return hypermodel
 
 
-def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete):
+def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path):
     """
     The model selected with the best hyperparameter is used to make predictions.
     Args:
@@ -208,13 +209,20 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
         X_validate: X validationset
         y_validate: y validationset
         validate: validation dataset
+        path_elec: Filepath of the electricity building file which has been used
+        path_gas: Filepath of the gas building file, if it has been used (pass nothing otherwise)
+        val_building_path: Filepath of the validation building file, if it has been used (pass nothing otherwise).
     Returns:
         metric: evaluation results containing the loss value from the testset prediction,
-        annual_metric: predicted value for each datapooint_id is summed to calculate the annual energy consumed and the loss value from the testset prediction,
-        output_df: merge of y_pred, y_test, datapoint_id, the final dataframe showing the model output using the testset
+        annual_metric: predicted value for each datapooint_id is summed to calculate the annual energy consumed and the loss value from the test set prediction,
+        output_df: merge of y_pred, y_test, datapoint_id, the final dataframe showing the model output using the test set
         val_metric:evaluation results containing the loss value from the validationset prediction,
         val_annual_metric:predicted value for each datapooint_id is summed to calculate the annual energy consumed and the loss value from the validationset prediction,,
         output_val_df: merge of y_pred, y_validate, datapoint_id, the final dataframe showing the model output using the validation set
+        output_df_average_predictions_buildings: The mean energy predictions and actual energy values per building type in the test set
+        output_df_average_predictions_climates: The mean energy predictions and actual energy values per climate zone in the test set
+        output_val_df_average_predictions_buildings: The mean energy predictions and actual energy values per building type in the validation set
+        output_val_df_average_predictions_climates:  The mean energy predictions and actual energy values per climate zone in the validation set
     """
     # evaluate the hypermodel on the test data.
     y_test['y_pred'] = model.predict(X_test)
@@ -235,27 +243,48 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
     y_test['energy'] = y_test['energy'].apply(lambda r : float((r*1.0)/1000))
     y_test['y_pred_transformed'] = y_test['y_pred_transformed'].apply(lambda r : float((r*1.0)/1000))
     output_df = pd.merge(y_test, y_test_complete, left_index=True, right_index=True, how='left')
-    annual_metric=score(output_df['Total Energy'], output_df['y_pred_transformed'])
+    annual_metric = score(output_df['Total Energy'], output_df['y_pred_transformed'])
 
     y_validate_complete = y_validate_complete.groupby(['datapoint_id']).sum()
     y_validate_complete['Total Energy'] = y_validate_complete['Total Energy'].apply(lambda r: float(r / 365))
     output_val_df = ''
     y_validate = y_validate.groupby(['datapoint_id']).sum()
-    y_validate['energy'] = y_validate['energy'].apply(lambda r : float((r*1.0)/1000))
-    y_validate['y_pred_transformed'] = y_validate['y_pred_transformed'].apply(lambda r : float((r*1.0)/1000))
+    y_validate['energy'] = y_validate['energy'].apply(lambda r: float((r*1.0)/1000))
+    y_validate['y_pred_transformed'] = y_validate['y_pred_transformed'].apply(lambda r: float((r*1.0)/1000))
 
 
     output_val_df = pd.merge(y_validate, y_validate_complete, left_index=True, right_index=True, how='left')
     annual_metric_val = score(output_val_df['Total Energy'], output_val_df['y_pred_transformed'])
 
-    output_df = output_df.drop(['y_pred', 'energy_y', 'energy_x'],axis=1)
-    output_val_df = output_val_df.drop(['y_pred','energy_y','energy_x'],axis=1)
+    output_df = output_df.drop(['y_pred', 'energy_y', 'energy_x'], axis=1)
+    output_val_df = output_val_df.drop(['y_pred', 'energy_y', 'energy_x'], axis=1)
 
 #     pl.daily_plot(y_test,'test_set')
 #     pl.daily_plot(y_validate,'validation_set')
 
 #     pl.annual_plot(output_df,'test_set')
 #     pl.annual_plot(output_val_df,'validation_set')
+
+    # Load the original building data to allow for more detailed results to be returned
+    train_building_data, _, _ = preprocessing.process_building_files(path_elec, path_gas, False)
+    output_df = pd.merge(output_df, train_building_data, left_on="datapoint_id", right_on= ":datapoint_id", how="left")
+    # Generate the average predictions for both the building types and the climate zones
+    # 1. Merge back the datapoint ids with the building data (test and validation)
+    if val_building_path:
+        val_building_data, _, _ = preprocessing.process_building_files(val_building_path, "", False)
+        output_val_df = pd.merge(output_val_df, val_building_data, left_on="datapoint_id", right_on= ":datapoint_id", how="left")
+    else:
+        output_val_df = pd.merge(output_val_df, train_building_data, left_on="datapoint_id",  right_on= ":datapoint_id", how="left")
+    # Get the absolute difference and squared difference between the predicted and actual energy use
+    output_df['abs_difference'] = abs(output_df['Total Energy_x'] - output_df["y_pred_transformed"])
+    output_df['mse_difference'] = (output_df['Total Energy_x'] - output_df["y_pred_transformed"]) ** 2
+    output_val_df['abs_difference'] = abs(output_val_df['Total Energy_x'] - output_val_df["y_pred_transformed"])
+    output_val_df['mse_difference'] = (output_val_df['Total Energy_x'] - output_val_df["y_pred_transformed"]) ** 2
+    # 2. Group by building type and epw file, then compute the means for BOTH the actual and predicted energy
+    avg_energy_buildings = output_df[[":building_type", "Total Energy_x", "y_pred_transformed", "abs_difference", "mse_difference"]].groupby([':building_type'], sort=False, as_index=False).mean()
+    avg_energy_climates = output_df[[":epw_file", "Total Energy_x", "y_pred_transformed", "abs_difference", "mse_difference"]].groupby([':epw_file'], sort=False, as_index=False).mean()
+    avg_energy_buildings_val = output_val_df[[":building_type", "Total Energy_x", "y_pred_transformed", "abs_difference", "mse_difference"]].groupby([':building_type'], sort=False, as_index=False).mean()
+    avg_energy_climates_val = output_val_df[[":epw_file", "Total Energy_x", "y_pred_transformed", "abs_difference", "mse_difference"]].groupby([':epw_file'], sort=False, as_index=False).mean()
 
 
     print('****************TEST SET****************************')
@@ -268,18 +297,22 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
 
     results = {
             'test_daily_metric': test_score,
-            'test_annual_metric':annual_metric,
-            'output_df':output_df.values.tolist(),
-            'val_daily_metric' : val_score,
-            'val_annual_metric':annual_metric_val,
-            'output_val_df':output_val_df.values.tolist(),
+            'test_annual_metric': annual_metric,
+            'output_df': output_df.values.tolist(),
+            'val_daily_metric': val_score,
+            'val_annual_metric': annual_metric_val,
+            'output_val_df': output_val_df.values.tolist(),
+            'output_df_average_predictions_buildings (mean actual energy, mean predicted energy, MAE, MSE)': avg_energy_buildings.values.tolist(),
+            'output_df_average_predictions_climates (mean actual energy, mean predicted energy, MAE, MSE)': avg_energy_climates.values.tolist(),
+            'output_val_df_average_predictions_buildings (mean actual energy, mean predicted energy, MAE, MSE)': avg_energy_buildings_val.values.tolist(),
+            'output_val_df_average_predictions_climates (mean actual energy, mean predicted energy, MAE, MSE)': avg_energy_climates_val.values.tolist(),
             }
 
     return results
 
 
 def create_model(dense_layers, activation, optimizer, dropout_rate, length, learning_rate, epochs, batch_size, X_train, y_train, X_test, y_test, y_test_complete, scalery,
-                 X_validate, y_validate, y_validate_complete, output_path):
+                 X_validate, y_validate, y_validate_complete, output_path, path_elec, path_gas, val_building_path):
     """
     Creates a model with defaulted values without need to perform an hyperparameter search at all times.
     Its initutive to have run the hyperparameter search beforehand to know the hyperparameter value to set.
@@ -300,7 +333,10 @@ def create_model(dense_layers, activation, optimizer, dropout_rate, length, lear
         X_validate: X validation set
         y_validate: y validation set
         y_validate_complete: dataframe containing the target variable with corresponding datapointid for the validation set
-        output_path: Where the outputs will be placed/
+        output_path: Where the outputs will be placed
+        path_elec: Filepath of the electricity building file which has been used
+        path_gas: Filepath of the gas building file, if it has been used (pass nothing otherwise)
+        val_building_path: Filepath of the validation building file, if it has been used (pass nothing otherwise).
     Returns:
         metric: evaluation results containing the loss value from the testset prediction,
         annual_metric: predicted value for each datapooint_id is summed to calculate the annual energy consumed and the loss value from the testset prediction,
@@ -365,12 +401,12 @@ def create_model(dense_layers, activation, optimizer, dropout_rate, length, lear
     print(model.summary())
     plt.ylabel('loss')
 
-    result = evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete)
+    result = evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path)
 
     return result, model
 
 
-def fit_evaluate(preprocessed_data_file, selected_features_file, param_search, output_path, random_seed):
+def fit_evaluate(preprocessed_data_file, selected_features_file, param_search, output_path, random_seed, path_elec, path_gas, val_building_path):
     """
     Downloads the output from preprocessing and feature selection from mino, builds the model and then evaluate the model.
     Args:
@@ -423,7 +459,7 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, param_search, o
     # If set to "yes", search for best hyperparameters before training
     if param_search.lower() == "yes":
         hypermodel = predicts_hp(X_train, y_train, X_test, y_test, features, output_path, random_seed)
-        results_pred = evaluate(hypermodel, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete)
+        results_pred = evaluate(hypermodel, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path)
     # Otherwise use a default model design and train with that model
     else:
         results_pred, hypermodel = create_model(
@@ -444,7 +480,10 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, param_search, o
                                     X_validate = X_validate,
                                     y_validate=y_validate,
                                     y_validate_complete= y_validate_complete,
-                                    output_path=output_path
+                                    output_path=output_path,
+                                    path_elec=path_elec,
+                                    path_gas=path_gas,
+                                    val_building_path=val_building_path,
                                    )
     # Calculate the time spent training in minutes
     time_taken = ((time.time() - start_time) / 60)
@@ -483,6 +522,9 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
          perform_param_search: str = typer.Option("no", help="'yes' if hyperparameter tuning should be performed (increases runtime), 'no' if the default hyperparameters should be used."),
          output_path: str = typer.Option("", help="The output path to be used. Note that this value should be empty unless this file is called from a pipeline."),
          random_seed: int = typer.Option(-1, help="Random seed to be used when training. Should not be -1 when used through the CLI."),
+         path_elec: str = typer.Argument(..., help="Filepath of the electricity building file which has been used."),
+         path_gas: str = typer.Option("", help="Filepath of the gas building file, if it has been used (pass nothing otherwise)."),
+         val_building_path: str = typer.Option("", help="Filepath of the validation building file, if it has been used (pass nothing otherwise)."),
          ):
     """
     Select the feature which contribute most to the prediction for the total energy consumed.
@@ -495,6 +537,9 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
         perform_param_search: 'yes' if hyperparameter tuning should be performed (increases runtime), 'no' if the default hyperparameters should be used.
         output_path: Where output data should be placed. Note that this value should be empty unless this file is called from a pipeline.
         random_seed: Random seed to be used when training. Should not be -1 when used through the CLI.
+        path_elec: Filepath of the electricity building file which has been used.
+        path_gas: Filepath of the gas building file, if it has been used (pass nothing otherwise).
+        val_building_path: Filepath of the validation building file, if it has been used (pass nothing otherwise).
     """
     DOCKER_INPUT_PATH = config.Settings().APP_CONFIG.DOCKER_INPUT_PATH
     # Load all content stored from the config file, if provided
@@ -509,11 +554,14 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
                                preprocessed_data_file=preprocessed_data_file,
                                selected_features_file=selected_features_file,
                                perform_param_search=perform_param_search,
-                               random_seed=random_seed)
+                               random_seed=random_seed,
+                               building_param_files=[path_elec, path_gas],
+                               val_building_params_file=val_building_path)
     # If the output path is blank, map to the docker output path
     if len(output_path) < 1:
         output_path = config.Settings().APP_CONFIG.DOCKER_OUTPUT_PATH
-    return fit_evaluate(input_model.preprocessed_data_file, input_model.selected_features_file, input_model.perform_param_search, output_path, input_model.random_seed)
+    return fit_evaluate(input_model.preprocessed_data_file, input_model.selected_features_file, input_model.perform_param_search, output_path, input_model.random_seed,
+                        input_model.building_param_files[0], input_model.building_param_files[1], input_model.val_building_params_file)
 
 if __name__ == '__main__':
     # Load settings from the environment

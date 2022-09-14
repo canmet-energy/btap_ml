@@ -154,7 +154,10 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
                                                  input_model.selected_features_file,
                                                  input_model.perform_param_search,
                                                  output_path,
-                                                 input_model.random_seed)
+                                                 input_model.random_seed,
+                                                 input_model.building_param_files[0],
+                                                 input_model.building_param_files[1],
+                                                 input_model.val_building_params_file)
     # Provide any additional outputs/plots as needed
     #...
     logger.info("Training process has been completed.")

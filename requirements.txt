@@ -17,3 +17,4 @@ typer==0.4.1
 xgboost==1.4.2
 openpyxl==3.0.9
 pyarrow==7.0.0
+pydantic==1.9.2

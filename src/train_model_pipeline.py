@@ -22,6 +22,9 @@ from models.training_model import TrainingModel
 # Get a log handler
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+# Ensure reproduability when using a GPU
+os.environ["TF_CUDNN_DETERMINISTIC"] = "true"
+os.environ["TF_DETERMINISTIC_OPS"] = "true"
 
 def main(config_file: str = typer.Argument(..., help="Location of the .yml config file (default name is input_config.yml)."),
          random_seed: int = typer.Option(-1, help="The random seed to be used when training. Should not be -1 when used through the CLI."),

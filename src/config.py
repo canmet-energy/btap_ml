@@ -20,6 +20,9 @@ class AppConfig(BaseModel):
     # Bucket prefix to be used as part of the run folder being created for training and running
     TRAIN_BUCKET_NAME: str = 'training_model_'
     RUN_BUCKET_NAME: str = 'running_model_'
+    # Shareed parameters to denote the type of training or running being performed
+    ENERGY = 'energy'
+    COSTING = 'costing'
     # Bucket used to store weather data
     WEATHER_BUCKET_NAME: str = 'weather'
     # Bucket used to store building/energy preprocessing data

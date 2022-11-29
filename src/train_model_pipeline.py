@@ -96,71 +96,80 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
         if val_building_params_file == "": val_building_params_file = cfg.get(config.Settings().APP_CONFIG.VAL_BUILDING_PARAM_FILE)
         if estimator_type == "": estimator_type = cfg.get(config.Settings().APP_CONFIG.ESTIMATOR_TYPE)
         if perform_param_search == "": perform_param_search = cfg.get(config.Settings().APP_CONFIG.PARAM_SEARCH)
-    # Validate all input arguments before continuing
-    # Program will output an error if validation fails
-    input_model = TrainingModel(input_prefix=DOCKER_INPUT_PATH,
-                                config_file=config_file,
-                                random_seed=random_seed,
-                                building_param_files=[building_params_electric_file,
-                                                      building_params_gas_file],
-                                energy_param_files=[hourly_energy_electric_file,
-                                                    hourly_energy_gas_file],
-                                val_hourly_energy_file=val_hourly_energy_file,
-                                val_building_params_file=val_building_params_file,
-                                skip_file_preprocessing=skip_file_preprocessing,
-                                preprocessed_data_file=preprocessed_data_file,
-                                estimator_type=estimator_type,
-                                skip_feature_selection=skip_feature_selection,
-                                selected_features_file=selected_features_file,
-                                perform_param_search=perform_param_search,
-                                skip_model_training=skip_model_training)
 
-    # Create directory to hold all data for the run (datetime/...)
-    # If used, copy the config file within the directory to log the input values
-    output_path = config.Settings().APP_CONFIG.DOCKER_OUTPUT_PATH
-    output_path = Path(output_path).joinpath(settings.APP_CONFIG.TRAIN_BUCKET_NAME + str(datetime.now()))
-    # Create the root directory in the mounted drive
-    logger.info("Creating output directory %s.", str(output_path))
-    config.create_directory(str(output_path))
-    # If the config file is used, copy it into the output folder
-    logger.info("Copying config file into %s.", str(output_path))
-    if len(config_file) > 0:
-        shutil.copy(DOCKER_INPUT_PATH + config_file, str(output_path.joinpath(INPUT_CONFIG_FILENAME)))
-    output_path = str(output_path)
-    # Preprocess the data (generates json with train, test, validate)
-    if not skip_file_preprocessing:
-        input_model.preprocessed_data_file = preprocessing.main(config_file=input_model.config_file,
-                                                                hourly_energy_electric_file=input_model.energy_param_files[0],
-                                                                building_params_electric_file=input_model.building_param_files[0],
-                                                                val_hourly_energy_file=input_model.val_hourly_energy_file,
-                                                                val_building_params_file=input_model.val_building_params_file,
-                                                                hourly_energy_gas_file=input_model.energy_param_files[1],
-                                                                building_params_gas_file=input_model.building_param_files[1],
-                                                                output_path=output_path,
-                                                                preprocess_only_for_predictions=False,
-                                                                random_seed=input_model.random_seed,
-                                                                building_params_folder='',
-                                                                start_date='',
-                                                                end_date='',
-                                                                ohe_file='',
-                                                                cleaned_columns_file='')
-    # Perform feature selection (retrieve the features to be used)
-    if not skip_feature_selection:
-        input_model.selected_features_file = feature_selection.main(input_model.config_file,
-                                                                    input_model.preprocessed_data_file,
-                                                                    input_model.estimator_type,
-                                                                    output_path)
-    # Perform the training and output the model
-    if not skip_model_training:
-        model_path, train_results = predict.main(input_model.config_file,
-                                                 input_model.preprocessed_data_file,
-                                                 input_model.selected_features_file,
-                                                 input_model.perform_param_search,
-                                                 output_path,
-                                                 input_model.random_seed,
-                                                 input_model.building_param_files[0],
-                                                 input_model.building_param_files[1],
-                                                 input_model.val_building_params_file)
+    # Identify the training processes to be taken (energy and/or costing)
+    TRAINING_PROCESSES = [#config.Settings().APP_CONFIG.ENERGY,
+                          config.Settings().APP_CONFIG.COSTING]
+
+    # Perform all specified training processes
+    for training_process in TRAINING_PROCESSES:
+
+        # Validate all input arguments before continuing
+        # Program will output an error if validation fails
+        input_model = TrainingModel(input_prefix=DOCKER_INPUT_PATH,
+                                    config_file=config_file,
+                                    random_seed=random_seed,
+                                    building_param_files=[building_params_electric_file,
+                                                          building_params_gas_file],
+                                    energy_param_files=[hourly_energy_electric_file,
+                                                        hourly_energy_gas_file],
+                                    val_hourly_energy_file=val_hourly_energy_file,
+                                    val_building_params_file=val_building_params_file,
+                                    skip_file_preprocessing=skip_file_preprocessing,
+                                    preprocessed_data_file=preprocessed_data_file,
+                                    estimator_type=estimator_type,
+                                    skip_feature_selection=skip_feature_selection,
+                                    selected_features_file=selected_features_file,
+                                    perform_param_search=perform_param_search,
+                                    skip_model_training=skip_model_training)
+
+        # Create directory to hold all data for the run (datetime/...)
+        # If used, copy the config file within the directory to log the input values
+        output_path = config.Settings().APP_CONFIG.DOCKER_OUTPUT_PATH
+        output_path = Path(output_path).joinpath(settings.APP_CONFIG.TRAIN_BUCKET_NAME + str(datetime.now()))
+        # Create the root directory in the mounted drive
+        logger.info("Creating output directory %s.", str(output_path))
+        config.create_directory(str(output_path))
+        # If the config file is used, copy it into the output folder
+        logger.info("Copying config file into %s.", str(output_path))
+        if len(config_file) > 0:
+            shutil.copy(DOCKER_INPUT_PATH + config_file, str(output_path.joinpath(INPUT_CONFIG_FILENAME)))
+        output_path = str(output_path)
+        # Preprocess the data (generates json with train, test, validate)
+        if not skip_file_preprocessing:
+            input_model.preprocessed_data_file = preprocessing.main(config_file=input_model.config_file,
+                                                                    process_type=training_process,
+                                                                    hourly_energy_electric_file=input_model.energy_param_files[0],
+                                                                    building_params_electric_file=input_model.building_param_files[0],
+                                                                    val_hourly_energy_file=input_model.val_hourly_energy_file,
+                                                                    val_building_params_file=input_model.val_building_params_file,
+                                                                    hourly_energy_gas_file=input_model.energy_param_files[1],
+                                                                    building_params_gas_file=input_model.building_param_files[1],
+                                                                    output_path=output_path,
+                                                                    preprocess_only_for_predictions=False,
+                                                                    random_seed=input_model.random_seed,
+                                                                    building_params_folder='',
+                                                                    start_date='',
+                                                                    end_date='',
+                                                                    ohe_file='',
+                                                                    cleaned_columns_file='')
+        # Perform feature selection (retrieve the features to be used)
+        if not skip_feature_selection:
+            input_model.selected_features_file = feature_selection.main(input_model.config_file,
+                                                                        input_model.preprocessed_data_file,
+                                                                        input_model.estimator_type,
+                                                                        output_path)
+        # Perform the training and output the model
+        if not skip_model_training:
+            model_path, train_results = predict.main(input_model.config_file,
+                                                     input_model.preprocessed_data_file,
+                                                     input_model.selected_features_file,
+                                                     input_model.perform_param_search,
+                                                     output_path,
+                                                     input_model.random_seed,
+                                                     input_model.building_param_files[0],
+                                                     input_model.building_param_files[1],
+                                                     input_model.val_building_params_file)
     # Provide any additional outputs/plots as needed
     #...
     logger.info("Training process has been completed.")

@@ -98,12 +98,27 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
         if perform_param_search == "": perform_param_search = cfg.get(config.Settings().APP_CONFIG.PARAM_SEARCH)
 
     # Identify the training processes to be taken (energy and/or costing)
-    TRAINING_PROCESSES = [#config.Settings().APP_CONFIG.ENERGY,
+    TRAINING_PROCESSES = [config.Settings().APP_CONFIG.ENERGY,
                           config.Settings().APP_CONFIG.COSTING]
+
+    # Create directory to hold all data for the run (datetime/...)
+    # If used, copy the config file within the directory to log the input values
+    output_path_root = config.Settings().APP_CONFIG.DOCKER_OUTPUT_PATH
+    # With Windows, the colon may cause issues depending on how the
+    # dependencies work with them, thus they are removed
+    output_path_root = Path(output_path_root).joinpath(settings.APP_CONFIG.TRAIN_BUCKET_NAME + str(datetime.now()).replace(":", "-"))
+
+    # Create the root directory
+    logger.info("Creating output directory %s.", str(output_path_root))
+    config.create_directory(str(output_path_root))
+
+    # If the config file is used, copy it into the output folder
+    logger.info("Copying config file into %s.", str(output_path_root))
+    if len(config_file) > 0:
+        shutil.copy(DOCKER_INPUT_PATH + config_file, str(output_path_root.joinpath(INPUT_CONFIG_FILENAME)))
 
     # Perform all specified training processes
     for training_process in TRAINING_PROCESSES:
-
         # Validate all input arguments before continuing
         # Program will output an error if validation fails
         input_model = TrainingModel(input_prefix=DOCKER_INPUT_PATH,
@@ -122,18 +137,13 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
                                     selected_features_file=selected_features_file,
                                     perform_param_search=perform_param_search,
                                     skip_model_training=skip_model_training)
+        # Define the output path for the current training process
+        output_path = output_path_root.joinpath(training_process)
 
-        # Create directory to hold all data for the run (datetime/...)
-        # If used, copy the config file within the directory to log the input values
-        output_path = config.Settings().APP_CONFIG.DOCKER_OUTPUT_PATH
-        output_path = Path(output_path).joinpath(settings.APP_CONFIG.TRAIN_BUCKET_NAME + str(datetime.now()))
         # Create the root directory in the mounted drive
         logger.info("Creating output directory %s.", str(output_path))
         config.create_directory(str(output_path))
-        # If the config file is used, copy it into the output folder
-        logger.info("Copying config file into %s.", str(output_path))
-        if len(config_file) > 0:
-            shutil.copy(DOCKER_INPUT_PATH + config_file, str(output_path.joinpath(INPUT_CONFIG_FILENAME)))
+
         output_path = str(output_path)
         # Preprocess the data (generates json with train, test, validate)
         if not skip_file_preprocessing:
@@ -162,6 +172,7 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
         # Perform the training and output the model
         if not skip_model_training:
             model_path, train_results = predict.main(input_model.config_file,
+                                                     training_process,
                                                      input_model.preprocessed_data_file,
                                                      input_model.selected_features_file,
                                                      input_model.perform_param_search,

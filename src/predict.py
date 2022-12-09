@@ -198,7 +198,7 @@ def predicts_hp(X_train, y_train, X_test, y_test, selected_feature, output_path,
     return hypermodel
 
 
-def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path):
+def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type):
     """
     The model selected with the best hyperparameter is used to make predictions.
     Args:
@@ -212,6 +212,7 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
         path_elec: Filepath of the electricity building file which has been used
         path_gas: Filepath of the gas building file, if it has been used (pass nothing otherwise)
         val_building_path: Filepath of the validation building file, if it has been used (pass nothing otherwise).
+        process_type: Either 'energy' or 'costing' to specify the operations to be performed.
     Returns:
         metric: evaluation results containing the loss value from the testset prediction,
         annual_metric: predicted value for each datapooint_id is summed to calculate the annual energy consumed and the loss value from the test set prediction,
@@ -230,35 +231,47 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
     # Retrain the model
     y_test['y_pred_transformed'] = scalery.inverse_transform(y_test['y_pred'].values.reshape(-1,1))
     y_validate['y_pred_transformed'] = scalery.inverse_transform(y_validate['y_pred'].values.reshape(-1,1))
-    test_score = score(y_test['energy'], y_test['y_pred_transformed'])
-    val_score = score(y_validate['energy'], y_validate['y_pred_transformed'])
+    # Specify whether energy or costing is being predicted
+    y_label = "energy"
+    if process_type.lower() == config.Settings().APP_CONFIG.COSTING:
+        y_label = "cost_equipment_total_cost_per_m_sq"
+    test_score = score(y_test[y_label], y_test['y_pred_transformed'])
+    val_score = score(y_validate[y_label], y_validate['y_pred_transformed'])
 
     print("[Score test loss, test mae, test mse]:", test_score)
     print("[Score val loss, val mae, val mse]:", val_score)
 
-    y_test_complete = y_test_complete.groupby(['datapoint_id']).sum()
-    y_test_complete['Total Energy'] = y_test_complete['Total Energy'].apply(lambda r: float(r / 365))
-    output_df = ''
-    y_test = y_test.groupby(['datapoint_id']).sum()
-    y_test['energy'] = y_test['energy'].apply(lambda r : float((r*1.0)/1000))
-    y_test['y_pred_transformed'] = y_test['y_pred_transformed'].apply(lambda r : float((r*1.0)/1000))
+    if process_type.lower() == config.Settings().APP_CONFIG.ENERGY:
+        y_test_complete = y_test_complete.groupby(['datapoint_id']).sum()
+        y_test_complete['Total Energy'] = y_test_complete['Total Energy'].apply(lambda r: float(r / 365))
+        output_df = ''
+        y_test = y_test.groupby(['datapoint_id']).sum()
+        y_test['energy'] = y_test['energy'].apply(lambda r : float((r*1.0)/1000))
+        y_test['y_pred_transformed'] = y_test['y_pred_transformed'].apply(lambda r : float((r*1.0)/1000))
+
+        y_validate_complete = y_validate_complete.groupby(['datapoint_id']).sum()
+        y_validate_complete['Total Energy'] = y_validate_complete['Total Energy'].apply(lambda r: float(r / 365))
+        output_val_df = ''
+        y_validate = y_validate.groupby(['datapoint_id']).sum()
+        y_validate['energy'] = y_validate['energy'].apply(lambda r: float((r*1.0)/1000))
+        y_validate['y_pred_transformed'] = y_validate['y_pred_transformed'].apply(lambda r: float((r*1.0)/1000))
+    else:
+        # Drop the duplicate datapoint_id entry
+        y_test_complete = y_test_complete.drop(['datapoint_id'], axis=1)
+        y_validate_complete = y_validate_complete.drop(['datapoint_id'], axis=1)
+
+    # Specify whether energy or costing is being predicted
+    y_label = "Total Energy"
+    if process_type.lower() == config.Settings().APP_CONFIG.COSTING:
+        y_label = "cost_equipment_total_cost_per_m_sq_x"
+    # Merge the results with the datapoint ids
     output_df = pd.merge(y_test, y_test_complete, left_index=True, right_index=True, how='left')
-    annual_metric = score(output_df['Total Energy'], output_df['y_pred_transformed'])
-
-    y_validate_complete = y_validate_complete.groupby(['datapoint_id']).sum()
-    y_validate_complete['Total Energy'] = y_validate_complete['Total Energy'].apply(lambda r: float(r / 365))
-    output_val_df = ''
-    y_validate = y_validate.groupby(['datapoint_id']).sum()
-    y_validate['energy'] = y_validate['energy'].apply(lambda r: float((r*1.0)/1000))
-    y_validate['y_pred_transformed'] = y_validate['y_pred_transformed'].apply(lambda r: float((r*1.0)/1000))
-
-
+    annual_metric = score(output_df[y_label], output_df['y_pred_transformed'])
     output_val_df = pd.merge(y_validate, y_validate_complete, left_index=True, right_index=True, how='left')
-    annual_metric_val = score(output_val_df['Total Energy'], output_val_df['y_pred_transformed'])
+    annual_metric_val = score(output_val_df[y_label], output_val_df['y_pred_transformed'])
 
-    output_df = output_df.drop(['y_pred', 'energy_y', 'energy_x'], axis=1)
-    output_val_df = output_val_df.drop(['y_pred', 'energy_y', 'energy_x'], axis=1)
-
+    output_df = output_df.drop(['y_pred', 'energy_y', 'energy_x'], axis=1, errors='ignore')
+    output_val_df = output_val_df.drop(['y_pred', 'energy_y', 'energy_x'], axis=1, errors='ignore')
 #     pl.daily_plot(y_test,'test_set')
 #     pl.daily_plot(y_validate,'validation_set')
 
@@ -267,6 +280,7 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
 
     # Load the original building data to allow for more detailed results to be returned
     train_building_data, _, _ = preprocessing.process_building_files(path_elec, path_gas, False)
+    print(output_df.columns)
     output_df = pd.merge(output_df, train_building_data, left_on="datapoint_id", right_on= ":datapoint_id", how="left")
     # Generate the average predictions for both the building types and the climate zones
     # 1. Merge back the datapoint ids with the building data (test and validation)
@@ -275,16 +289,20 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
         output_val_df = pd.merge(output_val_df, val_building_data, left_on="datapoint_id", right_on= ":datapoint_id", how="left")
     else:
         output_val_df = pd.merge(output_val_df, train_building_data, left_on="datapoint_id",  right_on= ":datapoint_id", how="left")
-    # Get the absolute difference and squared difference between the predicted and actual energy use
-    output_df['abs_difference'] = abs(output_df['Total Energy_x'] - output_df["y_pred_transformed"])
-    output_df['mse_difference'] = (output_df['Total Energy_x'] - output_df["y_pred_transformed"]) ** 2
-    output_val_df['abs_difference'] = abs(output_val_df['Total Energy_x'] - output_val_df["y_pred_transformed"])
-    output_val_df['mse_difference'] = (output_val_df['Total Energy_x'] - output_val_df["y_pred_transformed"]) ** 2
+    # Specify whether energy or costing is being predicted
+    y_label = "Total Energy_x"
+    if process_type.lower() == config.Settings().APP_CONFIG.COSTING:
+        y_label = "cost_equipment_total_cost_per_m_sq_x"
+    # Get the absolute difference and squared difference between the predicted and actual energy/costing use
+    output_df['abs_difference'] = abs(output_df[y_label] - output_df["y_pred_transformed"])
+    output_df['mse_difference'] = (output_df[y_label] - output_df["y_pred_transformed"]) ** 2
+    output_val_df['abs_difference'] = abs(output_val_df[y_label] - output_val_df["y_pred_transformed"])
+    output_val_df['mse_difference'] = (output_val_df[y_label] - output_val_df["y_pred_transformed"]) ** 2
     # 2. Group by building type and epw file, then compute the means for BOTH the actual and predicted energy
-    avg_energy_buildings = output_df[[":building_type", "Total Energy_x", "y_pred_transformed", "abs_difference", "mse_difference"]].groupby([':building_type'], sort=False, as_index=False).mean()
-    avg_energy_climates = output_df[[":epw_file", "Total Energy_x", "y_pred_transformed", "abs_difference", "mse_difference"]].groupby([':epw_file'], sort=False, as_index=False).mean()
-    avg_energy_buildings_val = output_val_df[[":building_type", "Total Energy_x", "y_pred_transformed", "abs_difference", "mse_difference"]].groupby([':building_type'], sort=False, as_index=False).mean()
-    avg_energy_climates_val = output_val_df[[":epw_file", "Total Energy_x", "y_pred_transformed", "abs_difference", "mse_difference"]].groupby([':epw_file'], sort=False, as_index=False).mean()
+    avg_energy_buildings = output_df[[":building_type", y_label, "y_pred_transformed", "abs_difference", "mse_difference"]].groupby([':building_type'], sort=False, as_index=False).mean()
+    avg_energy_climates = output_df[[":epw_file", y_label, "y_pred_transformed", "abs_difference", "mse_difference"]].groupby([':epw_file'], sort=False, as_index=False).mean()
+    avg_energy_buildings_val = output_val_df[[":building_type", y_label, "y_pred_transformed", "abs_difference", "mse_difference"]].groupby([':building_type'], sort=False, as_index=False).mean()
+    avg_energy_climates_val = output_val_df[[":epw_file", y_label, "y_pred_transformed", "abs_difference", "mse_difference"]].groupby([':epw_file'], sort=False, as_index=False).mean()
 
 
     print('****************TEST SET****************************')
@@ -312,7 +330,7 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
 
 
 def create_model(dense_layers, activation, optimizer, dropout_rate, length, learning_rate, epochs, batch_size, X_train, y_train, X_test, y_test, y_test_complete, scalery,
-                 X_validate, y_validate, y_validate_complete, output_path, path_elec, path_gas, val_building_path):
+                 X_validate, y_validate, y_validate_complete, output_path, path_elec, path_gas, val_building_path, process_type):
     """
     Creates a model with defaulted values without need to perform an hyperparameter search at all times.
     Its initutive to have run the hyperparameter search beforehand to know the hyperparameter value to set.
@@ -337,6 +355,7 @@ def create_model(dense_layers, activation, optimizer, dropout_rate, length, lear
         path_elec: Filepath of the electricity building file which has been used
         path_gas: Filepath of the gas building file, if it has been used (pass nothing otherwise)
         val_building_path: Filepath of the validation building file, if it has been used (pass nothing otherwise).
+        process_type: Either 'energy' or 'costing' to specify the operations to be performed.
     Returns:
         metric: evaluation results containing the loss value from the testset prediction,
         annual_metric: predicted value for each datapooint_id is summed to calculate the annual energy consumed and the loss value from the testset prediction,
@@ -401,16 +420,24 @@ def create_model(dense_layers, activation, optimizer, dropout_rate, length, lear
     print(model.summary())
     plt.ylabel('loss')
 
-    result = evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path)
+    result = evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
 
     return result, model
 
 
-def fit_evaluate(preprocessed_data_file, selected_features_file, param_search, output_path, random_seed, path_elec, path_gas, val_building_path):
+def fit_evaluate(preprocessed_data_file, selected_features_file, param_search, output_path, random_seed, path_elec, path_gas, val_building_path, process_type):
     """
     Downloads the output from preprocessing and feature selection from mino, builds the model and then evaluate the model.
     Args:
-         args: arguements provided from the main
+        preprocessed_data_file: Location and name of a .json preprocessing file to be used.
+        selected_features_file: Location and name of a .json feature selection file to be used.
+        param_search: 'yes' if hyperparameter tuning should be performed (increases runtime), 'no' if the default hyperparameters should be used.
+        output_path: Where output data should be placed. Note that this value should be empty unless this file is called from a pipeline.
+        random_seed: Random seed to be used when training. Should not be -1 when used through the CLI.
+        path_elec: Filepath of the electricity building file which has been used.
+        path_gas: Filepath of the gas building file, if it has been used (pass nothing otherwise).
+        val_building_path: Filepath of the validation building file, if it has been used (pass nothing otherwise).
+        process_type: Either 'energy' or 'costing' to specify the operations to be performed.
     Returns:
         the results from the model prediction is uploaded to minio
     """
@@ -442,11 +469,24 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, param_search, o
     X_validate = X_validate[selected_features]
     col_length = X_train.shape[1]
 
-    # Extract the test data for the target variable
-    y_test_complete = pd.DataFrame(preprocessing_json["y_test_complete"], columns=['energy', 'datapoint_id', 'Total Energy'])
-    y_test = pd.DataFrame(preprocessing_json["y_test"], columns=['energy', 'datapoint_id'])
-    y_validate_complete = pd.DataFrame(preprocessing_json["y_validate_complete"], columns=['energy', 'datapoint_id', 'Total Energy'])
-    y_validate= pd.DataFrame(preprocessing_json["y_validate"], columns=['energy', 'datapoint_id'])
+    json_columns = ['energy', 'datapoint_id', 'Total Energy']
+    if process_type.lower() == config.Settings().APP_CONFIG.COSTING:
+        json_columns = ['cost_equipment_total_cost_per_m_sq',
+                        'cost_equipment_envelope_total_cost_per_m_sq',
+                        'cost_equipment_heating_and_cooling_total_cost_per_m_sq',
+                        'cost_equipment_lighting_total_cost_per_m_sq',
+                        'cost_equipment_ventilation_total_cost_per_m_sq',
+                        'cost_equipment_renewables_total_cost_per_m_sq',
+                        'cost_equipment_shw_total_cost_per_m_sq',
+                        'datapoint_id']
+    # Extract the test and valuidation data for the target variable
+    y_test_complete = pd.DataFrame(preprocessing_json["y_test_complete"], columns=json_columns)
+    y_validate_complete = pd.DataFrame(preprocessing_json["y_validate_complete"], columns=json_columns)
+    # Remove "Total Energy" from json_columns if the energy predictions are being performed
+    if process_type.lower() == config.Settings().APP_CONFIG.ENERGY:
+        json_columns = json_columns[:-1]
+    y_test = pd.DataFrame(preprocessing_json["y_test"], columns=json_columns)
+    y_validate= pd.DataFrame(preprocessing_json["y_validate"], columns=json_columns)
 
     # Scale the data to be used for training and testing
     scalerx = RobustScaler()
@@ -459,7 +499,7 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, param_search, o
     # If set to "yes", search for best hyperparameters before training
     if param_search.lower() == "yes":
         hypermodel = predicts_hp(X_train, y_train, X_test, y_test, features, output_path, random_seed)
-        results_pred = evaluate(hypermodel, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path)
+        results_pred = evaluate(hypermodel, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
     # Otherwise use a default model design and train with that model
     else:
         results_pred, hypermodel = create_model(
@@ -484,6 +524,7 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, param_search, o
                                     path_elec=path_elec,
                                     path_gas=path_gas,
                                     val_building_path=val_building_path,
+                                    process_type=process_type
                                    )
     # Calculate the time spent training in minutes
     time_taken = ((time.time() - start_time) / 60)
@@ -495,14 +536,18 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, param_search, o
     # Define the output files
     output_filename_json = str(model_path) + "/" + config.Settings().APP_CONFIG.TRAINING_RESULTS_FILENAME + ".json"
     output_filename_csv = str(model_path) + "/" + config.Settings().APP_CONFIG.TRAINING_RESULTS_FILENAME + ".csv"
+    # Specify the indices where the target outputs are
+    output_indices = [0, 1]
+    if process_type.lower() == config.Settings().APP_CONFIG.COSTING:
+        output_indices = [8, 9]
     # Output the results within a csv for each prediction
     with open(output_filename_csv, 'a', encoding='utf-8') as csv_output:
         writer = csv.writer(csv_output)
         writer.writerow(['ID', 'Predicted energy', 'Actual energy'])
         for i, pair in enumerate(results_pred['output_df']):
-            writer.writerow(['Test_' + str(i), pair[0], pair[1]])
+            writer.writerow(['Test_' + str(i), pair[output_indices[0]], pair[output_indices[1]]])
         for i, pair in enumerate(results_pred['output_val_df']):
-            writer.writerow(['Validation_' + str(i), pair[0], pair[1]])
+            writer.writerow(['Validation_' + str(i), pair[output_indices[0]], pair[output_indices[1]]])
     # Also output all training information within one json file
     with open(output_filename_json, 'w', encoding='utf8') as json_output:
         json.dump(results_pred, json_output)
@@ -517,6 +562,7 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, param_search, o
     return model_output_path, output_filename_csv
 
 def main(config_file: str = typer.Argument(..., help="Location of the .yml config file (default name is input_config.yml)."),
+         process_type: str = typer.Argument(..., help="Either 'energy' or 'costing' to specify the operations to be performed."),
          preprocessed_data_file: str = typer.Argument(..., help="Location and name of a .json preprocessing file to be used."),
          selected_features_file: str = typer.Argument(..., help="Location and name of a .json feature selection file to be used."),
          perform_param_search: str = typer.Option("no", help="'yes' if hyperparameter tuning should be performed (increases runtime), 'no' if the default hyperparameters should be used."),
@@ -532,6 +578,7 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
 
     Args:
         config_file: Location of the .yml config file (default name is input_config.yml).
+        process_type: Either 'energy' or 'costing' to specify the operations to be performed.
         preprocessed_data_file: Location and name of a .json preprocessing file to be used.
         selected_features_file: Location and name of a .json feature selection file to be used.
         perform_param_search: 'yes' if hyperparameter tuning should be performed (increases runtime), 'no' if the default hyperparameters should be used.
@@ -561,7 +608,7 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
     if len(output_path) < 1:
         output_path = config.Settings().APP_CONFIG.DOCKER_OUTPUT_PATH
     return fit_evaluate(input_model.preprocessed_data_file, input_model.selected_features_file, input_model.perform_param_search, output_path, input_model.random_seed,
-                        input_model.building_param_files[0], input_model.building_param_files[1], input_model.val_building_params_file)
+                        input_model.building_param_files[0], input_model.building_param_files[1], input_model.val_building_params_file, process_type)
 
 if __name__ == '__main__':
     # Load settings from the environment

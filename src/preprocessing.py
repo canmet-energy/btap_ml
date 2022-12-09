@@ -52,7 +52,7 @@ def process_costing_building_files(path_elec, path_gas, clean_dataframe=True):
                            'cost_equipment_heating_and_cooling_total_cost_per_m_sq',
                            'cost_equipment_lighting_total_cost_per_m_sq',
                            'cost_equipment_ventilation_total_cost_per_m_sq',
-                           #'cost_equipment_renewables_total_cost_per_m_sq',
+                           'cost_equipment_renewables_total_cost_per_m_sq',
                            'cost_equipment_shw_total_cost_per_m_sq']
     # Extract the costing columns
     costing_df = btap_df[costing_value_names]
@@ -165,13 +165,14 @@ def process_building_files(path_elec, path_gas, clean_dataframe=True):
                  'energy_eui_natural_gas_gj_per_m_sq',
                  'net_site_eui_gj_per_m_sq',
                  ':analysis_id',
-                 ':analysis_name']
+                 ':analysis_name',
+                 ':srr_set'] # TODO: REMOVE THE REMOVAL OF :srr_set
     # Drop any remaining fields which exist, ignoring raised errors
     btap_df = btap_df.drop(drop_list, axis=1, errors='ignore')
 
     return btap_df, floor_sq, epw_keys
 
-def process_building_files_batch(directory: str, start_date: str, end_date: str, span_dates: bool=True):
+def process_building_files_batch(directory: str, start_date: str, end_date: str, for_energy: bool=True):
     """
     Given a directory of .xlsx building files, process and clean each file, combining
     them into one dataframe with entries for every day within a provided timespan
@@ -204,16 +205,19 @@ def process_building_files_batch(directory: str, start_date: str, end_date: str,
         # Only process .xlsx files in case other filetypes are in the directory
         if filename.endswith(".xlsx"):
             # Process the single building file
-            building_df, floor_sq, weather_keys = process_building_files(directory + '/' + filename, False, False)
-            # Add the weather keys to the set of unique weather keys
-            for weather_key in weather_keys:
-                epw_keys[weather_key] = True
+            if for_energy:
+                building_df, floor_sq, weather_keys = process_building_files(directory + '/' + filename, False, False)
+                # Add the weather keys to the set of unique weather keys
+                for weather_key in weather_keys:
+                    epw_keys[weather_key] = True
+                # Add a column to track the floor_sq values as needed for the specific file
+                building_df["floor_sq"] = building_df.apply(lambda r: floor_sq[0], axis=1)
+            else:
+                building_df, _ = process_costing_building_files(directory + '/' + filename, False, False)
             # Update the received outputs include a custom identifier column of the form '<filename>/<row_index>'
             building_df["Prediction Identifier"] = building_df.apply(lambda r: filename + '/' + str(r.name), axis=1)
-            # Add a column to track the floor_sq values as needed for the specific file
-            building_df["floor_sq"] = building_df.apply(lambda r: floor_sq[0], axis=1)
             # Only create copied rows for the buildings if specified
-            if span_dates:
+            if for_energy:
                 # Duplicate each row for every day between the specified start and end dates (ignoring the year)
                 # Holds a set of dataframes which each have the specified date range for a specific row
                 # Uses this approach since the dictionary must be edited before converted back into a dataframe
@@ -420,7 +424,7 @@ def create_costing_dataset(energy_daily_df, val_df, costing_df, costing_df_val, 
         y_validate_complete: Dataframe containing the target variable with corresponding datapointid for the validation set
     """
     logger.info("train_test_split with valsplit: %s", valsplit)
-    drop_list = ['index', ':datapoint_id', 'level_0', 'index', 'date_int', 'datapoint_id', 'Total Energy']
+    drop_list = ['index', ':datapoint_id', 'level_0', 'index', 'date_int', 'Total Energy'] #datapoint_id
 
     #split to train and test datasets
     y = costing_df
@@ -586,17 +590,28 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
     # If the preprocessing is only being done for the building and weather files, begin preparing the output,
     # skipping the preprocessing steps used for training
     if input_model.preprocess_only_for_predictions:
-        btap_df, epw_keys = process_building_files_batch(input_model.building_params_folder, input_model.start_date, input_model.end_date)
-        weather_df = read_weather(epw_keys.keys())
-        btap_df_ids = btap_df[["Prediction Identifier", "date_int"]]
+        span_dates = process_type.lower() == config.Settings().APP_CONFIG.ENERGY
+        btap_df, epw_keys = process_building_files_batch(input_model.building_params_folder, input_model.start_date, input_model.end_date, span_dates)
+        if process_type.lower() == config.Settings().APP_CONFIG.ENERGY:
+            weather_df = read_weather(epw_keys.keys())
+        keys = ["Prediction Identifier", "date_int"]
+        if process_type.lower() == config.Settings().APP_CONFIG.COSTING:
+            keys = ["Prediction Identifier"]
+        btap_df_ids = btap_df[keys]
         btap_df = btap_df.drop(['floor_sq', ':datapoint_id', "Prediction Identifier", "Total Energy"], axis='columns', errors='ignore')
         # Keep only the columns used when training alongside the date_int column
+        print(btap_df.columns)
         with open(input_model.cleaned_columns_file, 'r', encoding='UTF-8') as cleaned_columns_f:
             cleaned_columns = json.load(cleaned_columns_f)["columns"]
-            cleaned_columns.append('date_int')
+            if process_type.lower() == config.Settings().APP_CONFIG.ENERGY:
+                cleaned_columns.append('date_int')
+            else:
+                cleaned_columns.append("bldg_conditioned_floor_area_m_sq")
+                cleaned_columns.remove('datapoint_id')
             btap_df = btap_df[cleaned_columns]
-        btap_df = pd.merge(btap_df, weather_df, on=['date_int', ':epw_file'], how='left').reset_index()
-        btap_df = btap_df.drop(['date_int', 'index', ':epw_file'], axis='columns')
+        if process_type.lower() == config.Settings().APP_CONFIG.ENERGY:
+            btap_df = pd.merge(btap_df, weather_df, on=['date_int', ':epw_file'], how='left').reset_index()
+            btap_df = btap_df.drop(['date_int', 'index', ':epw_file'], axis='columns', errors='ignore')
         logger.info("Generating dataset to get predictions for.")
         X, _, _, all_features = categorical_encode(btap_df, None, None, output_path, input_model.ohe_file)
         return X, btap_df_ids, all_features
@@ -699,14 +714,6 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
 
     logger.info("Preprocessing file has been saved as %s.", output_file)
     return output_file
-
-    try:
-        pl.target_plot(y_train, y_test)
-        pl.corr_plot(btap_df)
-    except ValueError as ve:
-        logger.error("Unable to produce plots. Plotting threw an exception: %s", ve)
-    except matplotlib.units.ConversionError as ce:
-        logger.error("Unable to produce plots. matplotlib conversion error: %s", ce)
 
 if __name__ == '__main__':
     # Load settings from the environment

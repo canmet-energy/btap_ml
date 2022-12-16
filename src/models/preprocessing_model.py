@@ -11,8 +11,8 @@ class PreprocessingModel(pydantic.BaseModel):
         input_prefix: The input prefix to be used for all files provided.
         building_param_files: List of two building files [electricity, gas (optional)].
         energy_param_files: List of two energy files [electricity, gas (optional)].
-        val_hourly_energy_file: Location and name of a electricity energy validation file to be used if the config file is not used.
-        val_building_params_file: Location and name of a electricity building parameters validation file to be used if the config file is not used.
+        val_hourly_energy_file: Location and name of an energy validation file to be used if the config file is not used.
+        val_building_params_file: Location and name of a building parameters validation file to be used if the config file is not used.
         hourly_energy_gas_file: Location and name of a gas energy file to be used if the config file is not used.
         building_params_gas_file: Location and name of a gas building parameters file to be used if the config file is not used.
         output_path: Where output data should be placed.

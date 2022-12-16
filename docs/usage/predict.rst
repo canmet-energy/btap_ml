@@ -13,6 +13,9 @@ performed. When used, the `Keras Hyperband Tuner <https://keras.io/api/keras_tun
 to optimize the parameters based on the loss. The tuner also uses early stopping by monitoring the loss with a
 patience of 5. Once the tuner finishes, the optimized model is built and used for training.
 
-If hyperparameter tuning is not performed, the default model which has been evaluated as a baseline for performance is used. This model uses a dense layer of 56 nodes with the ReLU activation function and a dropout layer of 10% applied afterwards. The adam optimizer is used with a learning rate of 0.001.
+If hyperparameter tuning is not performed, the default model which has been evaluated as a baseline for performance is used.
+This model uses a dense layer of 56 nodes with the ReLU activation function and a dropout layer of 10% applied afterwards. The adam optimizer is used with a learning rate of 0.001.
 
 A customized RMSE loss function is defined and used for training which takes a sum of the labels and predictions before computing the RMSE loss.
+
+The outputs will include breakdowns on the model's overall performance and the model's performance for each building type and climate zone.

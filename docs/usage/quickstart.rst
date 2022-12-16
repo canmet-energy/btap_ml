@@ -27,27 +27,30 @@ config files can also be used.
 Training a model
 ----------------
 
-The first step to perform is to generate a trained Machine Learning model to later be used for obtaining predictions on energy values.
+The first step to perform is to generate a trained Machine Learning model to later be used for obtaining predictions on energy or costing values.
 Obtaining a trained model can be performed by calling the ``train_model_pipeline.py`` file and passing the appropriate arguements.
 Assuming that only the ``input_config.yml`` file is used and located inside of the current directory, the arguement to pass is::
 
     python train_model_pipeline.py input_config.yml
 
-This will preprocess all input files and any corresponding weather files which need to be retrieved (outputting various preprocessed files),
-perform feature selection (outputting a .json file), and train the model (outputting a .h5 trained model, two .pkl files, a .json file, and a .csv file).
+This will preprocess all input files and any corresponding weather files which need to be retrieved (outputting various preprocessed files which can later be removed),
+perform feature selection (outputting a .json file), and train the model (outputting a .h5 trained model, two .pkl files, a .json file, and a .csv file). These
+steps are performed appropriately for both energy and costing in sequence.
 
 Getting model predictions
 -------------------------
 
 With a trained Machine Learning model in the form of a .h5 file, the model will be used to obtain the predicted daily Megajoules per meter squared
-and the predicted aggregated Gigajoules per meter squared (for a specified timeframe) for a batch of specified building files within a specified directory.
+and the predicted aggregated Gigajoules per meter squared for energy predictions (for a specified timeframe) for a batch of specified building files
+within a specified directory. Costing predictions will then be output.
 Obtaining the predictions from a model can be performed by calling the ``run_model.py`` file and passing the appropriate arguements.
 Assuming that only the ``input_config.yml`` file is used and located inside of the current directory, the arguement to pass is::
 
     python run_model.py input_config.yml
 
 This will preprocess all input files and any corresponding weather files which need to be retrieved, and obtain predictions for all input data
-(outputting two .csv files which contain the prediction outputs alongside identifiers for each building in the form building_file_name/building_index).
+(outputting two energy .csv files and one costing .csv file which contain the prediction outputs alongside identifiers
+for each building in the form building_file_name/building_index).
 
 Input configuration file (input_config.yml)
 -------------------------------------------

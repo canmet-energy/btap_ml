@@ -7,11 +7,10 @@ Using the ``input_config.yml`` file or the passed command line arguements (which
 passing the ``--help`` arguement), each required input will be validated before being used within the
 program.
 
-The first step performed is the processing of weather data via the ``prepare_weather.py`` file.
-
-Next, the data will be passed to ``preprocessing.py`` to load the building data and the energy data,
-and merge the two with the weather data. Following additional data cleaning, the data is split into
-train/test/validation sets, where the validation set is either split from the regular input data or
+The data will first be loaded by ``preprocessing.py``, which load the building data and the energy data,
+and merges the two with the weather data (for energy training). For costing, no weather or energy data is loaded.
+Following additional data cleaning, the data is split into train/test/validation sets,
+where the validation set is either split from the regular input data or
 is loaded from an explicitly provided file to be used for validation.
 
 Before training the Machine Learning model, the optimal features will be selected by calling
@@ -22,3 +21,5 @@ useful in the training process.
 Using the selected features and preprocessed datasets, ``predict.py`` will be called to train the model.
 Hyperparameter tuning can be performed at the cost of additional time complexity or the default
 model architecture can be used. The trained model and test results will be output for future use.
+In the output ``.json file``, there will be breakdowns on the model's performance for each building type
+and climate zone

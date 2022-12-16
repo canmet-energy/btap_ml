@@ -17,7 +17,8 @@ associated with calculating such a large solution space. Even with High Performa
 stock of models is estimated to take 57 centuries. Surrogate models significantly reduce the time and resources
 required to produce usable outputs.
 
-After installation, the processing can either take the form of running a model training pipeline or of running a trained model to obtain predictions:
+After installation, the processing can either take the form of running a model training pipeline or of running a trained model to obtain predictions for
+both energy and costing:
 
 .. graphviz::
    :name: Training a model

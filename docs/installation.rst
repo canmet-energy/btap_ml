@@ -1,14 +1,15 @@
 Installation
 ============
 
-This project implements a pipeline designed to run on \*nix based systems, and as such may have requirements not
-documented here to be able to run on Windows. Some elements of this documentation may be specific to running on the
+This project implements a pipeline designed to run on both \*nix and Windows based systems.
+Some elements of this documentation may be specific to running on the
 `DAaaS <https://statcan.github.io/daaas/>`_ environment. If you will be working on AAW, you may want to refer to
 :doc:`aaw_setup` to configure the environment first.
 
 To download and utilize the Docker image of the project, consult the documentation on the
 `Docker image's page <https://hub.docker.com/r/juliantemp/btap_ml>`_. The content below is only when the project
-is being worked on without Docker.
+is being worked on without Docker. To utilize your GPU with the docker image, you will need to ensure that your
+computer is configured to pass your GPU through to Docker with the appropriate drivers.
 
 Python
 ------
@@ -43,6 +44,11 @@ Pre-commit hooks
 .. warning::
 
    ``pre-commit`` is installed as part of the ``requirements-dev.txt``. Ensure to run that step first.
+
+.. warning::
+
+   You may run into issues with conda environments in which pre-commit fails unless on the base environment.
+   This may require ``pre-commit`` to be installed on your base conda environment to work.
 
 The project makes use of ``pre-commit``, which is a package that helps to keep source code clean and consistent
 through hooks run against every commit. When these hooks detect something to fix they can cause your commit to fail,

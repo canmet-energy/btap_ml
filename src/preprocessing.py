@@ -1,7 +1,7 @@
 """
 Preprocesses each dataset and splits the data into train, test and validation set.
-
-CLI arguments match those defined by ``main()``.
+There are separate preprocessing steps which are applied depending on whether energy
+or costing predictions are being done.
 """
 import json
 import logging
@@ -28,6 +28,52 @@ from models.preprocessing_model import PreprocessingModel
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
+def process_costing_building_files(path_elec, path_gas, clean_dataframe=True):
+    """
+    Used to read the building simulation I/O file in preparation for costing
+    predictions/training
+
+    Args:
+        path_elec: file path where data is to be read. This is a mandatory parameter and in the case where only one simulation I/O file is provided, the path to this file should be indicated here.
+        path_gas: This would be path to the gas output file. This is optional, if there is no gas output file to the loaded, then a value of path_gas ='' should be used
+        clean_dataframe: True if the loaded data should be cleaned, False if cleaning should be skipped
+
+    Returns:
+        btap_df: Dataframe containing the clean building parameters file.
+        costing_df: Dataframe containing the costing output values.
+    """
+    btap_df = pd.read_excel(path_elec)
+    if path_gas:
+        btap_df = pd.concat([btap_df, pd.read_excel(path_gas)], ignore_index=True)
+    # List of all costing values
+    costing_value_names = ['cost_equipment_total_cost_per_m_sq',
+                           'cost_equipment_envelope_total_cost_per_m_sq',
+                           'cost_equipment_heating_and_cooling_total_cost_per_m_sq',
+                           'cost_equipment_lighting_total_cost_per_m_sq',
+                           'cost_equipment_ventilation_total_cost_per_m_sq',
+                           'cost_equipment_renewables_total_cost_per_m_sq',
+                           'cost_equipment_shw_total_cost_per_m_sq']
+    # Extract the costing columns
+    costing_df = btap_df[costing_value_names]
+    btap_df['datapoint_id'] = btap_df[':datapoint_id']
+    costing_df['datapoint_id'] = btap_df[':datapoint_id']
+    # Since :srr_set contains string and float values, we replace it with
+    # TODO: Remove when the inputs handle default values
+    btap_df[':srr_set'] = btap_df['bldg_srr'] / 100
+    # Dynamic list of columns to remove
+    output_drop_list = costing_value_names
+    # Populate the drop list from the file containing all columns to ignore
+    # TODO: Populate paths in config
+    with open(config.Settings().APP_CONFIG.COSTING_COLUMNS_FILE, 'r', encoding='UTF-8') as cols:
+        output_drop_list += cols.read().split("\n")
+    # Drop the specified columns
+    btap_df = btap_df.drop(output_drop_list, axis=1, errors='ignore')
+    # If specified, clean the data using the generic cleaning call
+    if clean_dataframe:
+        btap_df = clean_data(btap_df)
+    # Columns with nan values are removed to ensure compatability with each potential feature selection algorithm
+    return btap_df.dropna(axis="columns"), costing_df
 
 def clean_data(df) -> pd.DataFrame:
     """
@@ -105,6 +151,11 @@ def process_building_files(path_elec, path_gas, clean_dataframe=True):
                                    'bldg_conditioned_floor_area_m_sq',
                                    ':erv_package'
                                   ]
+
+    # Since :srr_set contains string and float values, we replace it with
+    # TODO: Remove when the inputs handle default values
+    btap_df[':srr_set'] = btap_df['bldg_srr'] / 100
+
     # Remove columns without a ':' and which are not exceptions
     for col in btap_df.columns:
         if ((':' not in col) and (col not in output_drop_list_exceptions)):
@@ -128,11 +179,11 @@ def process_building_files(path_elec, path_gas, clean_dataframe=True):
 
     return btap_df, floor_sq, epw_keys
 
-def process_building_files_batch(directory: str, start_date: str, end_date: str, span_dates: bool=True):
+def process_building_files_batch(directory: str, start_date: str, end_date: str, for_energy: bool=True):
     """
     Given a directory of .xlsx building files, process and clean each file, combining
     them into one dataframe with entries for every day within a provided timespan
-    (only if the span_dates arguement is true, otherwise the files are loaded normally).
+    (only if the for_energy arguement is true, otherwise the files are loaded normally).
     Each row will be assigned a custom identifier following the format:
     name_of_file/index_number_in_file
     The square foot of the building will be added in a column 'square_foot' which can be removed
@@ -142,7 +193,7 @@ def process_building_files_batch(directory: str, start_date: str, end_date: str,
         directory: Directory containing one or more .xlsx building files (with no other .xlsx files present)
         start_date: Starting date of the specified timespan (in the form Month_number-Day_number)
         end_date: Ending date of the specified timespan (in the form Month_number-Day_number)
-        span_dates: If true, adjust the loaded buildings to have rows for each day in the provided date span, otherwise just load individual building rows
+        for_energy: If true, adjust the loaded buildings to have rows for each day in the provided date span, otherwise just load individual building rows
 
     Returns:
         buildings_df: Dataframe containing the clean building parameters files.
@@ -161,16 +212,19 @@ def process_building_files_batch(directory: str, start_date: str, end_date: str,
         # Only process .xlsx files in case other filetypes are in the directory
         if filename.endswith(".xlsx"):
             # Process the single building file
-            building_df, floor_sq, weather_keys = process_building_files(directory + '/' + filename, False, False)
-            # Add the weather keys to the set of unique weather keys
-            for weather_key in weather_keys:
-                epw_keys[weather_key] = True
+            if for_energy:
+                building_df, floor_sq, weather_keys = process_building_files(directory + '/' + filename, False, False)
+                # Add the weather keys to the set of unique weather keys
+                for weather_key in weather_keys:
+                    epw_keys[weather_key] = True
+                # Add a column to track the floor_sq values as needed for the specific file
+                building_df["floor_sq"] = building_df.apply(lambda r: floor_sq[0], axis=1)
+            else:
+                building_df, _ = process_costing_building_files(directory + '/' + filename, False, False)
             # Update the received outputs include a custom identifier column of the form '<filename>/<row_index>'
             building_df["Prediction Identifier"] = building_df.apply(lambda r: filename + '/' + str(r.name), axis=1)
-            # Add a column to track the floor_sq values as needed for the specific file
-            building_df["floor_sq"] = building_df.apply(lambda r: floor_sq[0], axis=1)
             # Only create copied rows for the buildings if specified
-            if span_dates:
+            if for_energy:
                 # Duplicate each row for every day between the specified start and end dates (ignoring the year)
                 # Holds a set of dataframes which each have the specified date range for a specific row
                 # Uses this approach since the dictionary must be edited before converted back into a dataframe
@@ -301,7 +355,7 @@ def groupsplit(X, y, valsplit, random_seed=42):
 
 def create_dataset(energy_daily_df, val_df, valsplit, random_seed):
     """
-    Used to split the dataset by datapoint_id into train , test and validation sets.
+    Used to split the dataset by datapoint_id into train, test and validation sets for the energy training process.
 
     Args:
         energy_daily_df: the merged dataframe for simulation I/O, weather, and hourly energy file.
@@ -355,6 +409,62 @@ def create_dataset(energy_daily_df, val_df, valsplit, random_seed):
 
     return X_train, X_test, y_train, y_test, y_test_complete, X_validate, y_validate, y_validate_complete
 
+def create_costing_dataset(energy_daily_df, val_df, costing_df, costing_df_val, valsplit, random_seed):
+    """
+    Used to split the dataset by datapoint_id into train, test and validation sets for the costing training process.
+
+    Args:
+        energy_daily_df: the merged dataframe for simulation I/O, weather, and hourly energy file.
+        val_df: the merged dataframe for simulation I/O, weather, and hourly energy file validation set. Where there is no validation set, its value is null
+        costing_df: The dataframe containing costing values.
+        costing_df_val: The dataframe containing costing values for the validation set.
+        valsplit: flag to indicate if there is a dataframe for the validation set. Accepeted values are "yes" or "no"
+        random_seed: random seed to be passed for when splitting the data
+
+    Returns:
+        X_train: X trainset
+        y_train: y trainset
+        X_test: X testset
+        y_test_complete: Dataframe containing the target variable with corresponding datapointid
+        X_validate: X validate set
+        y_validate: y validate set
+        y_validate_complete: Dataframe containing the target variable with corresponding datapointid for the validation set
+    """
+    logger.info("train_test_split with valsplit: %s", valsplit)
+    drop_list = ['index', ':datapoint_id', 'level_0', 'index', 'date_int', 'Total Energy'] #datapoint_id
+
+    #split to train and test datasets
+    y = costing_df
+    X = energy_daily_df
+    X_train, y_train, X_test, y_test_complete = groupsplit(X, y, valsplit, random_seed)
+    y_test = y_test_complete
+
+    if valsplit.lower() == 'yes':
+        y_validate_complete = costing_df_val
+        X_val = val_df
+        y_validate = costing_df_val
+        X_validate = X_val.drop(drop_list, axis=1, errors='ignore')
+        X_validate = X_validate.drop(['datapoint_id'], axis=1, errors='ignore')
+    else:
+        y_test = y_test_complete
+        X_test = X_test.reset_index(drop=True)
+        y_test = y_test.reset_index(drop=True)
+        X_test, y_test, X_validate, y_validate_complete = groupsplit(X_test, y_test, valsplit, random_seed)
+        y_test_complete = y_test
+        y_validate = y_validate_complete
+        y_test = y_test
+        # TODO: Move to central call since many duplicate/uneeded lines
+        X_validate = X_validate.drop(drop_list, axis=1, errors='ignore')
+        X_validate = X_validate
+
+    X_train = X_train.drop(drop_list, axis=1, errors='ignore')
+    X_test = X_test.drop(drop_list, axis=1, errors='ignore')
+    y_train = y_train['cost_equipment_total_cost_per_m_sq']#y_train['energy']
+    X_train = X_train.drop(['datapoint_id'], axis=1, errors='ignore')
+    X_test = X_test.drop(['datapoint_id'], axis=1, errors='ignore')
+
+    return X_train, X_test, y_train, y_test, y_test_complete, X_validate, y_validate, y_validate_complete
+
 def categorical_encode(x_train, x_test, x_validate, output_path, ohe_file=''):
     """
     Used to encode the categorical variables contained in the x_train, x_test and x_validate
@@ -377,6 +487,8 @@ def categorical_encode(x_train, x_test, x_validate, output_path, ohe_file=''):
     # extracting the categorical columns
     cat_cols = x_train.select_dtypes(include=['object']).columns
     other_cols = x_train.drop(columns=cat_cols).columns
+    print(cat_cols)
+    print(other_cols)
     logger.info("categorical encode: %s", cat_cols)
     # Create the encoder.
     ct = ColumnTransformer([('ohe', OneHotEncoder(sparse=False, handle_unknown="ignore"), cat_cols)], remainder=MinMaxScaler())
@@ -399,10 +511,11 @@ def categorical_encode(x_train, x_test, x_validate, output_path, ohe_file=''):
     return x_train_oh, x_test_oh, x_val_oh, all_features
 
 def main(config_file: str = typer.Argument(..., help="Location of the .yml config file (default name is input_config.yml)."),
+         process_type: str = typer.Argument(..., help="Either 'energy' or 'costing' to specify the operations to be performed."),
          hourly_energy_electric_file: str = typer.Option("", help="Location and name of a electricity energy file to be used if the config file is not used."),
          building_params_electric_file: str = typer.Option("", help="Location and name of a electricity building parameters file to be used if the config file is not used."),
-         val_hourly_energy_file: str = typer.Option("", help="Location and name of a electricity energy validation file to be used if the config file is not used."),
-         val_building_params_file: str = typer.Option("", help="Location and name of a electricity building parameters validation file to be used if the config file is not used."),
+         val_hourly_energy_file: str = typer.Option("", help="Location and name of an energy validation file to be used if the config file is not used."),
+         val_building_params_file: str = typer.Option("", help="Location and name of a building parameters validation file to be used if the config file is not used."),
          hourly_energy_gas_file: str = typer.Option("", help="Location and name of a gas energy file to be used if the config file is not used."),
          building_params_gas_file: str = typer.Option("", help="Location and name of a gas building parameters file to be used if the config file is not used."),
          output_path: str = typer.Option("", help="The output path to be used. Note that this value should be empty unless this file is called from a pipeline."),
@@ -420,10 +533,11 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
 
     Args:
         config_file: Location of the .yml config file (default name is input_config.yml).
+        process_type: Either 'energy' or 'costing' to specify the operations to be performed.
         hourly_energy_electric_file: Location and name of a electricity energy file to be used if the config file is not used.
         building_params_electric_file: Location and name of a electricity building parameters file to be used if the config file is not used.
-        val_hourly_energy_file: Location and name of a electricity energy validation file to be used if the config file is not used.
-        val_building_params_file: Location and name of a electricity building parameters validation file to be used if the config file is not used.
+        val_hourly_energy_file: Location and name of an energy validation file to be used if the config file is not used.
+        val_building_params_file: Location and name of a building parameters validation file to be used if the config file is not used.
         hourly_energy_gas_file: Location and name of a gas energy file to be used if the config file is not used.
         building_params_gas_file: Location and name of a gas building parameters file to be used if the config file is not used.
         output_path: Where output data should be placed. Note that this value should be empty unless this file is called from a pipeline.
@@ -477,73 +591,101 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
                                      cleaned_columns_file=cleaned_columns_file)
     # Building parameters (electric - mandatory, gas - optional)
     logger.info("Loading and preparing the building file(s).")
+
     # If the preprocessing is only being done for the building and weather files, begin preparing the output,
     # skipping the preprocessing steps used for training
     if input_model.preprocess_only_for_predictions:
-        btap_df, epw_keys = process_building_files_batch(input_model.building_params_folder, input_model.start_date, input_model.end_date)
-        weather_df = read_weather(epw_keys.keys())
-        btap_df_ids = btap_df[["Prediction Identifier", "date_int"]]
+        span_dates = process_type.lower() == config.Settings().APP_CONFIG.ENERGY
+        btap_df, epw_keys = process_building_files_batch(input_model.building_params_folder, input_model.start_date, input_model.end_date, span_dates)
+        if process_type.lower() == config.Settings().APP_CONFIG.ENERGY:
+            weather_df = read_weather(epw_keys.keys())
+        keys = ["Prediction Identifier", "date_int"]
+        if process_type.lower() == config.Settings().APP_CONFIG.COSTING:
+            keys = ["Prediction Identifier"]
+        btap_df_ids = btap_df[keys]
         btap_df = btap_df.drop(['floor_sq', ':datapoint_id', "Prediction Identifier", "Total Energy"], axis='columns', errors='ignore')
         # Keep only the columns used when training alongside the date_int column
+        print(btap_df.columns)
         with open(input_model.cleaned_columns_file, 'r', encoding='UTF-8') as cleaned_columns_f:
             cleaned_columns = json.load(cleaned_columns_f)["columns"]
-            cleaned_columns.append('date_int')
+            if process_type.lower() == config.Settings().APP_CONFIG.ENERGY:
+                cleaned_columns.append('date_int')
+            else:
+                cleaned_columns.append("bldg_conditioned_floor_area_m_sq")
+                cleaned_columns.remove('datapoint_id')
             btap_df = btap_df[cleaned_columns]
-        btap_df = pd.merge(btap_df, weather_df, on=['date_int', ':epw_file'], how='left').reset_index()
-        btap_df = btap_df.drop(['date_int', 'index', ':epw_file'], axis='columns')
+        if process_type.lower() == config.Settings().APP_CONFIG.ENERGY:
+            btap_df = pd.merge(btap_df, weather_df, on=['date_int', ':epw_file'], how='left').reset_index()
+            btap_df = btap_df.drop(['date_int', 'index', ':epw_file'], axis='columns', errors='ignore')
         logger.info("Generating dataset to get predictions for.")
         X, _, _, all_features = categorical_encode(btap_df, None, None, output_path, input_model.ohe_file)
         return X, btap_df_ids, all_features
 
     # Otherwise, load the file(s) to be used for training
-    btap_df, floor_sq, epw_keys = process_building_files(input_model.building_param_files[0], input_model.building_param_files[1])
+    if process_type.lower() == config.Settings().APP_CONFIG.ENERGY:
+        btap_df, floor_sq, epw_keys = process_building_files(input_model.building_param_files[0], input_model.building_param_files[1])
+    elif process_type.lower() == config.Settings().APP_CONFIG.COSTING:
+        btap_df, costing_df = process_costing_building_files(input_model.building_param_files[0], input_model.building_param_files[1])
     # Save the column names from the cleaning process
     column_path = Path(output_path).joinpath(config.Settings().APP_CONFIG.CLEANED_COLUMNS_FILENAME)
     cleaned_column_data = btap_df.columns
     with open(str(column_path), 'w', encoding='utf8') as json_output:
         json.dump({'columns': [col for col in btap_df.columns if col not in ["Total Energy", ":datapoint_id", "bldg_conditioned_floor_area_m_sq"]]}, json_output)
-    # Hourly energy consumption (electric - mandatory, gas - optional)
-    logger.info("Loading and preparing the energy file(s).")
-    # Merge the building parameters with the hourly energy consuption
-    btap_df = pd.merge(process_hourly_energy(input_model.energy_param_files[0],
-                                             input_model.energy_param_files[1],
-                                             floor_sq),
-                       btap_df,
-                       left_on=['datapoint_id'],
-                       right_on=[':datapoint_id'],
-                       how='left').reset_index()
-    # Adjust the energy values based on the floor area in meters squared
-    btap_df['energy'] = btap_df['energy'] / (btap_df['bldg_conditioned_floor_area_m_sq'] * 1000000)
+    if process_type.lower() == config.Settings().APP_CONFIG.ENERGY:
+        # Hourly energy consumption (electric - mandatory, gas - optional)
+        logger.info("Loading and preparing the energy file(s).")
+        # Merge the building parameters with the hourly energy consuption
+        btap_df = pd.merge(process_hourly_energy(input_model.energy_param_files[0],
+                                                 input_model.energy_param_files[1],
+                                                 floor_sq),
+                           btap_df,
+                           left_on=['datapoint_id'],
+                           right_on=[':datapoint_id'],
+                           how='left').reset_index()
+        # Adjust the energy values based on the floor area in meters squared
+        btap_df['energy'] = btap_df['energy'] / (btap_df['bldg_conditioned_floor_area_m_sq'] * 1000000)
 
-    logger.info("NA values in btap_df after merging with energy:\n%s", btap_df.isna().any())
+        logger.info("NA values in btap_df after merging with energy:\n%s", btap_df.isna().any())
 
-    # Derive a daily consumption dataframe between the weather and hourly energy consumption
-    #btap_df = pd.merge(btap_df, weather_df, on='date_int', how='left').reset_index()
-    logger.info("NA values in btap_df after merging with weather:\n%s", btap_df.isna().any())
+        # Derive a daily consumption dataframe between the weather and hourly energy consumption
+        #btap_df = pd.merge(btap_df, weather_df, on='date_int', how='left').reset_index()
+        logger.info("NA values in btap_df after merging with weather:\n%s", btap_df.isna().any())
     # Proceed normally to construct the train/test/val sets only if the data will be used for training
     btap_df_val = ''
+    costing_df_val = ''
     if input_model.val_building_params_file:
         logger.info("Loading files to be used for the validation set.")
         # Use the same columns from the training/testing sets
-        btap_df_val, floor_sq, val_epw_keys = process_building_files(input_model.val_building_params_file, '', False)
-        # Update the epw_keys to be loaded, ensuring that only unique values are used
-        epw_keys = list(set(np.append(epw_keys, val_epw_keys)))
-        btap_df_val = btap_df_val[cleaned_column_data]
-        btap_df_val = pd.merge(process_hourly_energy(input_model.val_hourly_energy_file, '', floor_sq),
-                               btap_df_val,
-                               left_on=['datapoint_id'],
-                               right_on=[':datapoint_id'],
-                               how='left').reset_index()
-        logger.info("NA values in btap_df_val after merging with energy:\n%s", btap_df_val.isna().any())
-        weather_df = read_weather(epw_keys)
-        btap_df = pd.merge(btap_df, weather_df, on=['date_int', ':epw_file'], how='left').reset_index()
-        btap_df_val = pd.merge(btap_df_val, weather_df, on=['date_int', ':epw_file'], how='left').reset_index()
-        logger.info("NA values in btap_df_val after merging with weather:\n%s", btap_df_val.isna().any())
-        X_train, X_test, y_train, y_test, y_test_complete, X_validate, y_validate, y_validate_complete = create_dataset(btap_df, btap_df_val, 'yes', input_model.random_seed)
+        if process_type.lower() == config.Settings().APP_CONFIG.ENERGY:
+            btap_df_val, floor_sq, val_epw_keys = process_building_files(input_model.val_building_params_file, '', False)
+            # Update the epw_keys to be loaded, ensuring that only unique values are used
+            epw_keys = list(set(np.append(epw_keys, val_epw_keys)))
+            btap_df_val = btap_df_val[cleaned_column_data]
+            btap_df_val = pd.merge(process_hourly_energy(input_model.val_hourly_energy_file, '', floor_sq),
+                                   btap_df_val,
+                                   left_on=['datapoint_id'],
+                                   right_on=[':datapoint_id'],
+                                   how='left').reset_index()
+            logger.info("NA values in btap_df_val after merging with energy:\n%s", btap_df_val.isna().any())
+            weather_df = read_weather(epw_keys)
+            btap_df = pd.merge(btap_df, weather_df, on=['date_int', ':epw_file'], how='left').reset_index()
+            btap_df_val = pd.merge(btap_df_val, weather_df, on=['date_int', ':epw_file'], how='left').reset_index()
+            logger.info("NA values in btap_df_val after merging with weather:\n%s", btap_df_val.isna().any())
+            # Generate the dataset
+            X_train, X_test, y_train, y_test, y_test_complete, X_validate, y_validate, y_validate_complete = create_dataset(btap_df, btap_df_val, 'yes', input_model.random_seed)
+        elif process_type.lower() == config.Settings().APP_CONFIG.COSTING:
+            btap_df_val, costing_df_val = process_costing_building_files(input_model.val_building_params_file, '', False)
+            # Generate the dataset
+            X_train, X_test, y_train, y_test, y_test_complete, X_validate, y_validate, y_validate_complete = create_costing_dataset(btap_df, btap_df_val, costing_df, costing_df_val, 'yes', input_model.random_seed)
     else:
-        weather_df = read_weather(epw_keys)
-        btap_df = pd.merge(btap_df, weather_df, on=['date_int', ':epw_file'], how='left').reset_index()
-        X_train, X_test, y_train, y_test, y_test_complete, X_validate, y_validate, y_validate_complete = create_dataset(btap_df, btap_df_val, 'no', input_model.random_seed)
+        if process_type.lower() == config.Settings().APP_CONFIG.ENERGY:
+            weather_df = read_weather(epw_keys)
+            btap_df = pd.merge(btap_df, weather_df, on=['date_int', ':epw_file'], how='left').reset_index()
+            # Generate the dataset
+            X_train, X_test, y_train, y_test, y_test_complete, X_validate, y_validate, y_validate_complete = create_dataset(btap_df, btap_df_val, 'no', input_model.random_seed)
+        elif process_type.lower() == config.Settings().APP_CONFIG.COSTING:
+            # Generate the dataset
+            X_train, X_test, y_train, y_test, y_test_complete, X_validate, y_validate, y_validate_complete = create_costing_dataset(btap_df, btap_df_val, costing_df, costing_df_val, 'no', input_model.random_seed)
     # Otherwise generate the samples to get predictions for
     # Encode any categorical features
     X_train_oh, X_test_oh, X_val_oh, all_features = categorical_encode(X_train, X_test, X_validate, output_path)
@@ -577,14 +719,6 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
 
     logger.info("Preprocessing file has been saved as %s.", output_file)
     return output_file
-
-    try:
-        pl.target_plot(y_train, y_test)
-        pl.corr_plot(btap_df)
-    except ValueError as ve:
-        logger.error("Unable to produce plots. Plotting threw an exception: %s", ve)
-    except matplotlib.units.ConversionError as ce:
-        logger.error("Unable to produce plots. matplotlib conversion error: %s", ce)
 
 if __name__ == '__main__':
     # Load settings from the environment

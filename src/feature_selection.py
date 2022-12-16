@@ -1,7 +1,5 @@
 """
 Select features that are used to build the surrogate mode.
-
-CLI arguments match those defined by ``main()``.
 """
 import json
 import logging
@@ -109,7 +107,7 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
          output_path: str = typer.Option("", help="The output path to be used. Note that this value should be empty unless this file is called from a pipeline."),
          ) -> str:
     """
-    Select the feature which contribute most to the prediction for the total energy consumed.
+    Select the feature which contribute most to the prediction for the total energy or costing consumed.
     Default estimator_type used for feature selection is 'LassoCV'
 
     Args:

@@ -12,6 +12,11 @@ running pipelines, the weather is processed as part of the data preprocessing st
 files attached to buildings in the input file(s). The contents of this subsection outline how the weather data
 is processed.
 
+.. note::
+
+    The weather data is only loaded for energy preprocessing and if there are connection issues, the code may
+    return an error when retrieving the weather from the repo.
+
 .. code::
 
     python prepare_weather.py input_config.yml

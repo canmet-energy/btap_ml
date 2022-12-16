@@ -13,8 +13,8 @@ class TrainingModel(pydantic.BaseModel):
         random_seed: Random seed to be used when training.
         building_param_files: List of two building files [electricity, gas (optional)].
         energy_param_files: List of two energy files [electricity, gas (optional)].
-        val_hourly_energy_file: Location and name of a electricity energy validation file to be used if the config file is not used.
-        val_building_params_file: Location and name of a electricity building parameters validation file to be used if the config file is not used.
+        val_hourly_energy_file: Location and name of an energy validation file to be used if the config file is not used.
+        val_building_params_file: Location and name of a building parameters validation file to be used if the config file is not used.
         skip_file_preprocessing: True if the .json preprocessing file generation should be skipped,
                                  where the preprocessed_data_file input is used, False if the preprocessing file generation should be performed.
         preprocessed_data_file: Location and name of a .json preprocessing file to be used if the preprocessing is skipped.

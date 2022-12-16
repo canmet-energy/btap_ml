@@ -1,7 +1,5 @@
 """
-Given all data files, preprocess the data and train a model with the preprocessed data
-
-CLI arguments match those defined by ``main()``.
+Given all data files, preprocess the data and train an energy model and a costing model with the preprocessed data
 """
 import logging
 import os
@@ -31,11 +29,12 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
         # Preprocessing
          hourly_energy_electric_file: str = typer.Option("", help="Location and name of a electricity energy file to be used if the config file is not used."),
          building_params_electric_file: str = typer.Option("", help="Location and name of a electricity building parameters file to be used if the config file is not used."),
-         val_hourly_energy_file: str = typer.Option("", help="Location and name of a electricity energy validation file to be used if the config file is not used."),
-         val_building_params_file: str = typer.Option("", help="Location and name of a electricity building parameters validation file to be used if the config file is not used."),
+         val_hourly_energy_file: str = typer.Option("", help="Location and name of an energy validation file to be used if the config file is not used."),
+         val_building_params_file: str = typer.Option("", help="Location and name of a building parameters validation file to be used if the config file is not used."),
          hourly_energy_gas_file: str = typer.Option("", help="Location and name of a gas energy file to be used if the config file is not used."),
          building_params_gas_file: str = typer.Option("", help="Location and name of a gas building parameters file to be used if the config file is not used."),
          skip_file_preprocessing: bool = typer.Option(False, help="True if the .json preprocessing file generation should be skipped, where the preprocessed_data_file input is used, False if the preprocessing file generation should be performed."),
+         delete_preprocessing_file: bool = typer.Option(True, help="True if the preprocessing output file should be removed after use, False if the preprocessing file should be kept (for analysis or to use in later training runs)."),
         # Feature selection
          preprocessed_data_file: str = typer.Option("", help="Location and name of a .json preprocessing file to be used if the preprocessing is skipped."),
          estimator_type: str = typer.Option("", help="The type of feature selection to be performed. The default is lasso, which will be used if nothing is passed. The other options are 'linear', 'elasticnet', and 'xgb'."),
@@ -46,11 +45,14 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
          skip_model_training: bool = typer.Option(False, help="True if the model training should be skipped. Useful if only the preprocessing steps should be performed."),
          ) -> None:
     """
-    Run through the entire training pipeline to train a surrogate Machine Learning model which predicts energy output.
+    Run through the entire training pipeline to train two surrogate Machine Learning models, one to predict energy and one to predict costing.
+    The process below is repeated for both the energy and costing training processes.
+    First, the energy model will be trained, then the costing model will be trained.
     All outputs will be placed within a folder created in the specified output path which uniquely uses the datetime for naming the folder.
-    First, the specified weather file will be retrieved and converted into a .parquet file.
-    Second, the provided input building and energy files will be preprocessed and split into train/test/validation sets.
-    Third, the best features from the input data will be selected to be used for training.
+    First, the provided input building files will be loaded.
+    Second, for energy training, the energy files will be preprocessed. The weather data will also be collected and processed for energy training.
+    Third, the dataset is split into train/test/validation sets.
+    Fourth, the best features from the input data will be selected to be used for training.
     Finally, a Machine Learning model will be instantiated and trained with the preprocessed data and selected features.
     Note that all inputs except for the config file are optional, however the arguements can be set from the command line
     if an empty string is passed as input for the config .yml file.
@@ -60,12 +62,14 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
         random_seed: Random seed to be used when training.
         hourly_energy_electric_file: Location and name of a electricity energy file to be used if the config file is not used.
         building_params_electric_file: Location and name of a electricity building parameters file to be used if the config file is not used.
-        val_hourly_energy_file: Location and name of a electricity energy validation file to be used if the config file is not used.
-        val_building_params_file: Location and name of a electricity building parameters validation file to be used if the config file is not used.
+        val_hourly_energy_file: Location and name of an energy validation file to be used if the config file is not used.
+        val_building_params_file: Location and name of a building parameters validation file to be used if the config file is not used.
         hourly_energy_gas_file: Location and name of a gas energy file to be used if the config file is not used.
         building_params_gas_file: Location and name of a gas building parameters file to be used if the config file is not used.
         skip_file_preprocessing: True if the .json preprocessing file generation should be skipped,
                                  where the preprocessed_data_file input is used, False if the preprocessing file generation should be performed.
+        delete_preprocessing_file: True if the preprocessing output file should be removed after use, False if the preprocessing file should be
+                                   kept (for analysis or to use in later training runs).
         preprocessed_data_file: Location and name of a .json preprocessing file to be used if the preprocessing is skipped.
         estimator_type: The type of feature selection to be performed. The default is lasso, which will be used if nothing is passed.
                         The other options are 'linear', 'elasticnet', and 'xgb'.
@@ -181,6 +185,13 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
                                                      input_model.building_param_files[0],
                                                      input_model.building_param_files[1],
                                                      input_model.val_building_params_file)
+
+        # If requested, delete the preprocessing file after completion
+        if delete_preprocessing_file:
+            try:
+                os.remove(input_model.preprocessed_data_file)
+            except OSError:
+                pass
     # Provide any additional outputs/plots as needed
     #...
     logger.info("Training process has been completed.")

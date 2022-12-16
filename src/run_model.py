@@ -1,7 +1,6 @@
 """
-Given a specific model and files, output the model's predictions for the files.
-
-CLI arguments match those defined by ``main()``.
+For both the energy and costing training outputs, use the specified models and files to output the model predictions
+for the specified batch of building files.
 """
 import json
 import logging
@@ -76,12 +75,12 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
          end_date: str = typer.Option("", help="The end date to specify the end of which weather data is attached to the building data. Expects the input to be in the form Month_number-Day_number (ex: 12-31)."),
          ) -> None:
     """
-    Preprocess a set of input building files and a weather file to obtain a dataset to obtain daily energy predictions for.
+    Preprocess a set of input building files to obtain a dataset to obtain daily energy and total costing predictions for.
     The feature selection file that has been used with the trained model must be included to appropriately preprocess the data.
     The start/end dates to be spanned are specified within the provided config_file or through the CLI, but it is assumed that
     each day within an arbitrary year will receive predictions.
     A trained Keras model must be provided as input to perform the predictions on the data. These predictions will be output into a
-    .csv file which follows the format of the energy files which are used to train the models. The outputs will be for daily energy
+    .csv file which follows the format of the input files which are used to train the models. The energy outputs will be for daily energy
     values rather than hourly energy values, where outputs represent the total energy output observed from generated energy files
     from rows without the Electricity:Facility Name.
 
@@ -106,10 +105,12 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
     settings = config.Settings()
     DOCKER_INPUT_PATH = config.Settings().APP_CONFIG.DOCKER_INPUT_PATH
     # Define the year to be used for any date operations (a non leap year)
+    # This value does not need to be adjusted for the current year
     TEMP_YEAR = "2022-"
     # Define the output column names to be used
     COL_NAME_DAILY_MEGAJOULES = "Predicted Daily Energy Total (Megajoules per square meter)"
     COL_NAME_AGGREGATED_GIGAJOULES = "Predicted Energy Total (Gigajoules per square meter)"
+    COL_NAME_TOTAL_COSTING = "Predicted Total Costing"
 
     if len(config_file) > 0:
         #load_and_validate_config(config_file)
@@ -207,7 +208,10 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
         logger.info("Getting the predictions for the input data.")
 
         predictions = scaler_y.inverse_transform(model.predict(X))
-        X_ids[COL_NAME_DAILY_MEGAJOULES] = predictions
+        if running_process.lower() == config.Settings().APP_CONFIG.ENERGY:
+            X_ids[COL_NAME_DAILY_MEGAJOULES] = predictions
+        elif running_process.lower() == config.Settings().APP_CONFIG.COSTING:
+            X_ids[COL_NAME_TOTAL_COSTING] = predictions
         """
         # Get the megajoule predictions (or call the predict.evaluate function!)
         X_ids[COL_NAME_DAILY_MEGAJOULES] = model.predict(X)
@@ -234,14 +238,16 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
             X_aggregated[COL_NAME_AGGREGATED_GIGAJOULES] = X_aggregated[COL_NAME_DAILY_MEGAJOULES].apply(lambda r: float((r*1.0)/1000))
             X_aggregated = X_aggregated.drop(COL_NAME_DAILY_MEGAJOULES, axis=1)
         # Merge the processed building data used for training with the preprocessed building data
-        if not buildings_df:
-            buildings_df, _ = preprocessing.process_building_files_batch(input_model.building_params_folder, "", "", False)
+        if buildings_df is None:
+            buildings_df, _ = preprocessing.process_building_files_batch(input_model.building_params_folder, "", "", running_process.lower() == config.Settings().APP_CONFIG.ENERGY)
         X_aggregated = pd.merge(X_aggregated, buildings_df, on='Prediction Identifier', how='left')
         # Output the predictions alongside any relevant information
         logger.info("Outputting predictions to %s.", str(output_path))
+        aggregated_filename = settings.APP_CONFIG.RUNNING_COSTING_RESULTS_FILENAME
         if running_process.lower() == config.Settings().APP_CONFIG.ENERGY:
+            aggregated_filename = settings.APP_CONFIG.RUNNING_AGGREGATED_RESULTS_FILENAME
             X_ids.to_csv(output_path + '/' + settings.APP_CONFIG.RUNNING_DAILY_RESULTS_FILENAME)
-        X_aggregated.to_csv(output_path + '/' + running_process + settings.APP_CONFIG.RUNNING_AGGREGATED_RESULTS_FILENAME)
+        X_aggregated.to_csv(output_path + '/' + aggregated_filename)
     return
 
 if __name__ == '__main__':

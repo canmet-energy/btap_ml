@@ -1,7 +1,5 @@
 """
-Uses the output from preprocessing and feature selection from mino, builds the model and then evaluate the model.
-
-CLI arguments match those defined by ``main()``.
+Uses the output from preprocessing and feature selection to build, train, and evaluate the model.
 """
 import csv
 import datetime
@@ -313,6 +311,10 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
     print(output_val_df.head(50))
     print(annual_metric_val)
 
+    output_label = '(mean actual energy, mean predicted energy, MAE, MSE)'
+    if process_type.lower() == config.Settings().APP_CONFIG.COSTING:
+        output_label = '(mean actual costing, mean predicted costing, MAE, MSE)'
+
     results = {
             'test_daily_metric': test_score,
             'test_annual_metric': annual_metric,
@@ -320,10 +322,10 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
             'val_daily_metric': val_score,
             'val_annual_metric': annual_metric_val,
             'output_val_df': output_val_df.values.tolist(),
-            'output_df_average_predictions_buildings (mean actual energy, mean predicted energy, MAE, MSE)': avg_energy_buildings.values.tolist(),
-            'output_df_average_predictions_climates (mean actual energy, mean predicted energy, MAE, MSE)': avg_energy_climates.values.tolist(),
-            'output_val_df_average_predictions_buildings (mean actual energy, mean predicted energy, MAE, MSE)': avg_energy_buildings_val.values.tolist(),
-            'output_val_df_average_predictions_climates (mean actual energy, mean predicted energy, MAE, MSE)': avg_energy_climates_val.values.tolist(),
+            'output_df_average_predictions_buildings ' + output_label: avg_energy_buildings.values.tolist(),
+            'output_df_average_predictions_climates ' + output_label: avg_energy_climates.values.tolist(),
+            'output_val_df_average_predictions_buildings ' + output_label: avg_energy_buildings_val.values.tolist(),
+            'output_val_df_average_predictions_climates ' + output_label: avg_energy_climates_val.values.tolist(),
             }
 
     return results
@@ -538,12 +540,14 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, param_search, o
     output_filename_csv = str(model_path) + "/" + config.Settings().APP_CONFIG.TRAINING_RESULTS_FILENAME + ".csv"
     # Specify the indices where the target outputs are
     output_indices = [0, 1]
+    output_label = config.Settings().APP_CONFIG.ENERGY
     if process_type.lower() == config.Settings().APP_CONFIG.COSTING:
         output_indices = [8, 9]
+        output_label = config.Settings().APP_CONFIG.COSTING
     # Output the results within a csv for each prediction
     with open(output_filename_csv, 'a', encoding='utf-8') as csv_output:
         writer = csv.writer(csv_output)
-        writer.writerow(['ID', 'Predicted energy', 'Actual energy'])
+        writer.writerow(['ID', 'Predicted ' + output_label, 'Actual ' + output_label])
         for i, pair in enumerate(results_pred['output_df']):
             writer.writerow(['Test_' + str(i), pair[output_indices[0]], pair[output_indices[1]]])
         for i, pair in enumerate(results_pred['output_val_df']):
@@ -573,8 +577,9 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
          val_building_path: str = typer.Option("", help="Filepath of the validation building file, if it has been used (pass nothing otherwise)."),
          ):
     """
-    Select the feature which contribute most to the prediction for the total energy consumed.
-    Default estimator_type used for feature selection is 'LassoCV'
+    Using all preprocessed data, build and train a Machine Learning model to predict the total energy or costing values.
+    All steps of this process are saved, and the model is evaluated to determine its effectiveness overall and on
+    specific building types and climate zones.
 
     Args:
         config_file: Location of the .yml config file (default name is input_config.yml).

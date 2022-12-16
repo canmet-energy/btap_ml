@@ -1,7 +1,7 @@
 """
 Preprocesses each dataset and splits the data into train, test and validation set.
-
-CLI arguments match those defined by ``main()``.
+There are separate preprocessing steps which are applied depending on whether energy
+or costing predictions are being done.
 """
 import json
 import logging
@@ -58,18 +58,21 @@ def process_costing_building_files(path_elec, path_gas, clean_dataframe=True):
     costing_df = btap_df[costing_value_names]
     btap_df['datapoint_id'] = btap_df[':datapoint_id']
     costing_df['datapoint_id'] = btap_df[':datapoint_id']
+    # Since :srr_set contains string and float values, we replace it with
+    # TODO: Remove when the inputs handle default values
+    btap_df[':srr_set'] = btap_df['bldg_srr'] / 100
     # Dynamic list of columns to remove
     output_drop_list = costing_value_names
     # Populate the drop list from the file containing all columns to ignore
     # TODO: Populate paths in config
-    with open("column_files/costing_columns_to_ignore.txt", 'r', encoding='UTF-8') as cols:
+    with open(config.Settings().APP_CONFIG.COSTING_COLUMNS_FILE, 'r', encoding='UTF-8') as cols:
         output_drop_list += cols.read().split("\n")
     # Drop the specified columns
     btap_df = btap_df.drop(output_drop_list, axis=1, errors='ignore')
     # If specified, clean the data using the generic cleaning call
     if clean_dataframe:
         btap_df = clean_data(btap_df)
-
+    # Columns with nan values are removed to ensure compatability with each potential feature selection algorithm
     return btap_df.dropna(axis="columns"), costing_df
 
 def clean_data(df) -> pd.DataFrame:
@@ -148,6 +151,11 @@ def process_building_files(path_elec, path_gas, clean_dataframe=True):
                                    'bldg_conditioned_floor_area_m_sq',
                                    ':erv_package'
                                   ]
+
+    # Since :srr_set contains string and float values, we replace it with
+    # TODO: Remove when the inputs handle default values
+    btap_df[':srr_set'] = btap_df['bldg_srr'] / 100
+
     # Remove columns without a ':' and which are not exceptions
     for col in btap_df.columns:
         if ((':' not in col) and (col not in output_drop_list_exceptions)):
@@ -165,8 +173,7 @@ def process_building_files(path_elec, path_gas, clean_dataframe=True):
                  'energy_eui_natural_gas_gj_per_m_sq',
                  'net_site_eui_gj_per_m_sq',
                  ':analysis_id',
-                 ':analysis_name',
-                 ':srr_set'] # TODO: REMOVE THE REMOVAL OF :srr_set
+                 ':analysis_name']
     # Drop any remaining fields which exist, ignoring raised errors
     btap_df = btap_df.drop(drop_list, axis=1, errors='ignore')
 
@@ -176,7 +183,7 @@ def process_building_files_batch(directory: str, start_date: str, end_date: str,
     """
     Given a directory of .xlsx building files, process and clean each file, combining
     them into one dataframe with entries for every day within a provided timespan
-    (only if the span_dates arguement is true, otherwise the files are loaded normally).
+    (only if the for_energy arguement is true, otherwise the files are loaded normally).
     Each row will be assigned a custom identifier following the format:
     name_of_file/index_number_in_file
     The square foot of the building will be added in a column 'square_foot' which can be removed
@@ -186,7 +193,7 @@ def process_building_files_batch(directory: str, start_date: str, end_date: str,
         directory: Directory containing one or more .xlsx building files (with no other .xlsx files present)
         start_date: Starting date of the specified timespan (in the form Month_number-Day_number)
         end_date: Ending date of the specified timespan (in the form Month_number-Day_number)
-        span_dates: If true, adjust the loaded buildings to have rows for each day in the provided date span, otherwise just load individual building rows
+        for_energy: If true, adjust the loaded buildings to have rows for each day in the provided date span, otherwise just load individual building rows
 
     Returns:
         buildings_df: Dataframe containing the clean building parameters files.
@@ -348,7 +355,7 @@ def groupsplit(X, y, valsplit, random_seed=42):
 
 def create_dataset(energy_daily_df, val_df, valsplit, random_seed):
     """
-    Used to split the dataset by datapoint_id into train , test and validation sets.
+    Used to split the dataset by datapoint_id into train, test and validation sets for the energy training process.
 
     Args:
         energy_daily_df: the merged dataframe for simulation I/O, weather, and hourly energy file.
@@ -404,7 +411,7 @@ def create_dataset(energy_daily_df, val_df, valsplit, random_seed):
 
 def create_costing_dataset(energy_daily_df, val_df, costing_df, costing_df_val, valsplit, random_seed):
     """
-    Used to split the dataset by datapoint_id into train , test and validation sets.
+    Used to split the dataset by datapoint_id into train, test and validation sets for the costing training process.
 
     Args:
         energy_daily_df: the merged dataframe for simulation I/O, weather, and hourly energy file.
@@ -449,8 +456,6 @@ def create_costing_dataset(energy_daily_df, val_df, costing_df, costing_df_val, 
         # TODO: Move to central call since many duplicate/uneeded lines
         X_validate = X_validate.drop(drop_list, axis=1, errors='ignore')
         X_validate = X_validate
-    # TODO: Remove since not needed
-    #energy_daily_df = energy_daily_df.drop(drop_list, axis=1)
 
     X_train = X_train.drop(drop_list, axis=1, errors='ignore')
     X_test = X_test.drop(drop_list, axis=1, errors='ignore')
@@ -509,8 +514,8 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
          process_type: str = typer.Argument(..., help="Either 'energy' or 'costing' to specify the operations to be performed."),
          hourly_energy_electric_file: str = typer.Option("", help="Location and name of a electricity energy file to be used if the config file is not used."),
          building_params_electric_file: str = typer.Option("", help="Location and name of a electricity building parameters file to be used if the config file is not used."),
-         val_hourly_energy_file: str = typer.Option("", help="Location and name of a electricity energy validation file to be used if the config file is not used."),
-         val_building_params_file: str = typer.Option("", help="Location and name of a electricity building parameters validation file to be used if the config file is not used."),
+         val_hourly_energy_file: str = typer.Option("", help="Location and name of an energy validation file to be used if the config file is not used."),
+         val_building_params_file: str = typer.Option("", help="Location and name of a building parameters validation file to be used if the config file is not used."),
          hourly_energy_gas_file: str = typer.Option("", help="Location and name of a gas energy file to be used if the config file is not used."),
          building_params_gas_file: str = typer.Option("", help="Location and name of a gas building parameters file to be used if the config file is not used."),
          output_path: str = typer.Option("", help="The output path to be used. Note that this value should be empty unless this file is called from a pipeline."),
@@ -531,8 +536,8 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
         process_type: Either 'energy' or 'costing' to specify the operations to be performed.
         hourly_energy_electric_file: Location and name of a electricity energy file to be used if the config file is not used.
         building_params_electric_file: Location and name of a electricity building parameters file to be used if the config file is not used.
-        val_hourly_energy_file: Location and name of a electricity energy validation file to be used if the config file is not used.
-        val_building_params_file: Location and name of a electricity building parameters validation file to be used if the config file is not used.
+        val_hourly_energy_file: Location and name of an energy validation file to be used if the config file is not used.
+        val_building_params_file: Location and name of a building parameters validation file to be used if the config file is not used.
         hourly_energy_gas_file: Location and name of a gas energy file to be used if the config file is not used.
         building_params_gas_file: Location and name of a gas building parameters file to be used if the config file is not used.
         output_path: Where output data should be placed. Note that this value should be empty unless this file is called from a pipeline.

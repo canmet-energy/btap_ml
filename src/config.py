@@ -36,6 +36,8 @@ class AppConfig(BaseModel):
     TRAINING_BUCKET_NAME: str = 'model_training'
     # URL where weather files are stored
     WEATHER_DATA_STORE: AnyHttpUrl = 'https://raw.githubusercontent.com/NREL/openstudio-standards/nrcan/data/weather/'
+    # File location of the file listing columns to ignore for costing predictions
+    COSTING_COLUMNS_FILE: str = 'column_files/costing_columns_to_ignore.txt'
     # Parent level key within input_config.yml
     RANDOM_SEED: str = 'random_seed'
     BUILDING_PARAM_FILES: str = 'building_param_files'
@@ -64,6 +66,7 @@ class AppConfig(BaseModel):
     TRAINING_RESULTS_FILENAME: str = 'training_results'
     RUNNING_DAILY_RESULTS_FILENAME: str = 'daily_energy_predictions.csv'
     RUNNING_AGGREGATED_RESULTS_FILENAME: str = 'aggregated_energy_predictions.csv'
+    RUNNING_COSTING_RESULTS_FILENAME: str = 'costing_predictions.csv'
 
 # There's a JSON file available with required credentials in it
 def json_config_settings_source(settings: BaseSettings) -> Dict[str, Any]:

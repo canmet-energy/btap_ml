@@ -8,8 +8,13 @@ run ``proprocessing.py`` to clean and split the data into train, test, and valid
    Update the input parameters to point to the appropriate input files.
    Check :py:mod:`preprocessing` for full detail description of each parameter.
 
-Aside from supporting optional files for electricity and gas, if you have mutliple input files to combine, they
+Aside from supporting optional files for electricity and gas, if you have multiple input files to combine, they
 need to be manually combined before passing them as input.
+
+.. note::
+
+    The system will not work with columns containing strings and floats together. A mix of default values which
+    require conversion and regular numbers must be updated to be only numbers.
 
 What this does
 ^^^^^^^^^^^^^^
@@ -22,6 +27,8 @@ the weather information is loaded based on which climate zones are used within t
 aggregated from hourly to daily, so that it can be merged with the hourly energy file.
 In essence, the simulation I/O file(s), weather data from the specified climate zones and the hourly energy consumption file(s) are all merged to one
 dataframe which is then split for training and testing purposes (training set, testing set, validation set).
+
+For costing, the only preprocessing performed is on the building input files, with the weather and energy preprocessing being skipped.
 
 .. note::
 

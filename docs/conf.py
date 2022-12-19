@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.abspath('../src'))
 # -- Project information -----------------------------------------------------
 
 project = 'BTAP: ML'
-copyright = '2021, Natural Resources Canada'
+copyright = '2022, Natural Resources Canada'
 author = 'Natural Resources Canada, Statistics Canada'
 
 

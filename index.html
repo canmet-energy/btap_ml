@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
 
-<html lang="en">
+<html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
     <title>Building Technology Assessment Platform (BTAP): Machine Learning Implementation &#8212; BTAP: ML  documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
@@ -13,9 +13,7 @@
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
-    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Installation" href="installation.html" />
@@ -36,7 +34,7 @@
           <div class="body" role="main">
             
   <section id="building-technology-assessment-platform-btap-machine-learning-implementation">
-<h1>Building Technology Assessment Platform (BTAP): Machine Learning Implementation<a class="headerlink" href="#building-technology-assessment-platform-btap-machine-learning-implementation" title="Permalink to this heading">¶</a></h1>
+<h1>Building Technology Assessment Platform (BTAP): Machine Learning Implementation<a class="headerlink" href="#building-technology-assessment-platform-btap-machine-learning-implementation" title="Permalink to this headline">¶</a></h1>
 <p>Based on a whole building energy simulation engine, BTAP calculates capital and operating costs, energy consumption
 and demand, and related GHG emissions for over 60,000 difference reference housing and building models. This supports
 the development of the next generation of building codes for new construction and the development of the first code on
@@ -46,7 +44,8 @@ to meet energy consumption, cost, and GHG targets.</p>
 associated with calculating such a large solution space. Even with High Performance Computing, calculating the entire
 stock of models is estimated to take 57 centuries. Surrogate models significantly reduce the time and resources
 required to produce usable outputs.</p>
-<p>After installation, the processing can either take the form of running a model training pipeline or of running a trained model to obtain predictions:</p>
+<p>After installation, the processing can either take the form of running a model training pipeline or of running a trained model to obtain predictions for
+both energy and costing:</p>
 <div class="graphviz"><img src="_images/graphviz-e9ac75300f7e2a6c59dfb01301bf23ed03175f0c.png" alt="digraph G {
    bgcolor=transparent;
    rankdir=LR;
@@ -71,7 +70,7 @@ required to produce usable outputs.</p>
    end [shape=Msquare];
  }" class="graphviz" /></div>
 <section id="contents">
-<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this heading">¶</a></h2>
+<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <div class="toctree-wrapper compound">
 <p class="caption" role="heading"><span class="caption-text">Setup</span></p>
 <ul>
@@ -127,7 +126,7 @@ required to produce usable outputs.</p>
 </section>
 </section>
 <section id="indices-and-tables">
-<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this heading">¶</a></h1>
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
 <ul class="simple">
 <li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
 <li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
@@ -193,7 +192,7 @@ required to produce usable outputs.</p>
     </form>
     </div>
 </div>
-<script>document.getElementById('searchbox').style.display = "block"</script>
+<script>$('#searchbox').show(0);</script>
 
 
 
@@ -210,7 +209,7 @@ required to produce usable outputs.</p>
       &copy;2021, Natural Resources Canada.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.2.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.5.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

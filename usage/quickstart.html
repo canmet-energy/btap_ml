@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
 
-<html lang="en">
+<html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
     <title>Quickstart &#8212; BTAP: ML  documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
@@ -13,9 +13,7 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Train the model" href="retrain.html" />
@@ -37,7 +35,7 @@
           <div class="body" role="main">
             
   <section id="quickstart">
-<h1>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this heading">¶</a></h1>
+<h1>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">¶</a></h1>
 <p>If you just want to run all of the steps from training a model to using the model to obtain predictions, here are the steps to run. You may be able to skip some
 of these depending on if the data has already been processed.</p>
 <p>Each of the Python files can use an input configuration .yml file which contains all inputs to be used alongside descriptions of the inputs.
@@ -60,30 +58,33 @@ by calling the python file with <code class="docutils literal notranslate"><span
 as needed if the RAM usage is too high.</p>
 </div>
 <section id="training-a-model">
-<h2>Training a model<a class="headerlink" href="#training-a-model" title="Permalink to this heading">¶</a></h2>
-<p>The first step to perform is to generate a trained Machine Learning model to later be used for obtaining predictions on energy values.
+<h2>Training a model<a class="headerlink" href="#training-a-model" title="Permalink to this headline">¶</a></h2>
+<p>The first step to perform is to generate a trained Machine Learning model to later be used for obtaining predictions on energy or costing values.
 Obtaining a trained model can be performed by calling the <code class="docutils literal notranslate"><span class="pre">train_model_pipeline.py</span></code> file and passing the appropriate arguements.
 Assuming that only the <code class="docutils literal notranslate"><span class="pre">input_config.yml</span></code> file is used and located inside of the current directory, the arguement to pass is:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">train_model_pipeline</span><span class="o">.</span><span class="n">py</span> <span class="n">input_config</span><span class="o">.</span><span class="n">yml</span>
 </pre></div>
 </div>
-<p>This will preprocess all input files and any corresponding weather files which need to be retrieved (outputting various preprocessed files),
-perform feature selection (outputting a .json file), and train the model (outputting a .h5 trained model, two .pkl files, a .json file, and a .csv file).</p>
+<p>This will preprocess all input files and any corresponding weather files which need to be retrieved (outputting various preprocessed files which can later be removed),
+perform feature selection (outputting a .json file), and train the model (outputting a .h5 trained model, two .pkl files, a .json file, and a .csv file). These
+steps are performed appropriately for both energy and costing in sequence.</p>
 </section>
 <section id="getting-model-predictions">
-<h2>Getting model predictions<a class="headerlink" href="#getting-model-predictions" title="Permalink to this heading">¶</a></h2>
+<h2>Getting model predictions<a class="headerlink" href="#getting-model-predictions" title="Permalink to this headline">¶</a></h2>
 <p>With a trained Machine Learning model in the form of a .h5 file, the model will be used to obtain the predicted daily Megajoules per meter squared
-and the predicted aggregated Gigajoules per meter squared (for a specified timeframe) for a batch of specified building files within a specified directory.
+and the predicted aggregated Gigajoules per meter squared for energy predictions (for a specified timeframe) for a batch of specified building files
+within a specified directory. Costing predictions will then be output.
 Obtaining the predictions from a model can be performed by calling the <code class="docutils literal notranslate"><span class="pre">run_model.py</span></code> file and passing the appropriate arguements.
 Assuming that only the <code class="docutils literal notranslate"><span class="pre">input_config.yml</span></code> file is used and located inside of the current directory, the arguement to pass is:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">run_model</span><span class="o">.</span><span class="n">py</span> <span class="n">input_config</span><span class="o">.</span><span class="n">yml</span>
 </pre></div>
 </div>
 <p>This will preprocess all input files and any corresponding weather files which need to be retrieved, and obtain predictions for all input data
-(outputting two .csv files which contain the prediction outputs alongside identifiers for each building in the form building_file_name/building_index).</p>
+(outputting two energy .csv files and one costing .csv file which contain the prediction outputs alongside identifiers
+for each building in the form building_file_name/building_index).</p>
 </section>
 <section id="input-configuration-file-input-config-yml">
-<h2>Input configuration file (input_config.yml)<a class="headerlink" href="#input-configuration-file-input-config-yml" title="Permalink to this heading">¶</a></h2>
+<h2>Input configuration file (input_config.yml)<a class="headerlink" href="#input-configuration-file-input-config-yml" title="Permalink to this headline">¶</a></h2>
 <p>When providing an input to one of the pipelines above, the command line arguements can be used or the input configuration can be used (or a combination of the two).
 The template for the <code class="docutils literal notranslate"><span class="pre">input_config.yml</span></code> file can be found <a class="reference external" href="https://github.com/canmet-energy/btap_ml/blob/main/src/input_config.yml">here</a>.
 Within this configuration file are different fields which are required for training and/or running. Each section is clearly labelled with
@@ -164,7 +165,7 @@ the Docker image is available <a class="reference external" href="https://hub.do
     </form>
     </div>
 </div>
-<script>document.getElementById('searchbox').style.display = "block"</script>
+<script>$('#searchbox').show(0);</script>
 
 
 
@@ -181,7 +182,7 @@ the Docker image is available <a class="reference external" href="https://hub.do
       &copy;2021, Natural Resources Canada.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.2.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.5.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
 
-<html lang="en">
+<html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
     <title>Installation &#8212; BTAP: ML  documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
@@ -13,9 +13,7 @@
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
-    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Working on AAW" href="aaw_setup.html" />
@@ -37,20 +35,21 @@
           <div class="body" role="main">
             
   <section id="installation">
-<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this heading">¶</a></h1>
-<p>This project implements a pipeline designed to run on *nix based systems, and as such may have requirements not
-documented here to be able to run on Windows. Some elements of this documentation may be specific to running on the
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<p>This project implements a pipeline designed to run on both *nix and Windows based systems.
+Some elements of this documentation may be specific to running on the
 <a class="reference external" href="https://statcan.github.io/daaas/">DAaaS</a> environment. If you will be working on AAW, you may want to refer to
 <a class="reference internal" href="aaw_setup.html"><span class="doc">Working on AAW</span></a> to configure the environment first.</p>
 <p>To download and utilize the Docker image of the project, consult the documentation on the
 <a class="reference external" href="https://hub.docker.com/r/juliantemp/btap_ml">Docker image’s page</a>. The content below is only when the project
-is being worked on without Docker.</p>
+is being worked on without Docker. To utilize your GPU with the docker image, you will need to ensure that your
+computer is configured to pass your GPU through to Docker with the appropriate drivers.</p>
 <section id="python">
-<h2>Python<a class="headerlink" href="#python" title="Permalink to this heading">¶</a></h2>
+<h2>Python<a class="headerlink" href="#python" title="Permalink to this headline">¶</a></h2>
 <p>A minimum of Python 3.8+ is required to reliably run this project.</p>
 </section>
 <section id="dependencies">
-<span id="dependency-install"></span><h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this heading">¶</a></h2>
+<span id="dependency-install"></span><h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h2>
 <p>Basic dependencies required to run the simulations are listed in <cite>requirements.txt</cite>. Open a terminal window and
 run <code class="docutils literal notranslate"><span class="pre">pip</span></code> to install the requirements:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">r</span> <span class="n">requirements</span><span class="o">.</span><span class="n">txt</span>
@@ -65,7 +64,7 @@ run <code class="docutils literal notranslate"><span class="pre">pip</span></cod
 <p>If the code is being run in an environment with existing dependencies, a new environment should be defined to avoid conflicts.</p>
 </div>
 <section id="pre-commit-hooks">
-<h3>Pre-commit hooks<a class="headerlink" href="#pre-commit-hooks" title="Permalink to this heading">¶</a></h3>
+<h3>Pre-commit hooks<a class="headerlink" href="#pre-commit-hooks" title="Permalink to this headline">¶</a></h3>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>This step is only necessary if you are interested in participating in the development of the model.</p>
@@ -73,6 +72,11 @@ run <code class="docutils literal notranslate"><span class="pre">pip</span></cod
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p><code class="docutils literal notranslate"><span class="pre">pre-commit</span></code> is installed as part of the <code class="docutils literal notranslate"><span class="pre">requirements-dev.txt</span></code>. Ensure to run that step first.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>You may run into issues with conda environments in which pre-commit fails unless on the base environment.
+This may require <code class="docutils literal notranslate"><span class="pre">pre-commit</span></code> to be installed on your base conda environment to work.</p>
 </div>
 <p>The project makes use of <code class="docutils literal notranslate"><span class="pre">pre-commit</span></code>, which is a package that helps to keep source code clean and consistent
 through hooks run against every commit. When these hooks detect something to fix they can cause your commit to fail,
@@ -150,7 +154,7 @@ for example).</p>
     </form>
     </div>
 </div>
-<script>document.getElementById('searchbox').style.display = "block"</script>
+<script>$('#searchbox').show(0);</script>
 
 
 
@@ -167,7 +171,7 @@ for example).</p>
       &copy;2021, Natural Resources Canada.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.2.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.5.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

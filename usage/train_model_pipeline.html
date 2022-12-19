@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
 
-<html lang="en">
+<html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
     <title>&lt;no title&gt; &#8212; BTAP: ML  documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
@@ -13,9 +13,7 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
    
@@ -41,10 +39,10 @@ All outputs will be located within the new directory.</p>
 <p>Using the <code class="docutils literal notranslate"><span class="pre">input_config.yml</span></code> file or the passed command line arguements (which can be viewed by
 passing the <code class="docutils literal notranslate"><span class="pre">--help</span></code> arguement), each required input will be validated before being used within the
 program.</p>
-<p>The first step performed is the processing of weather data via the <code class="docutils literal notranslate"><span class="pre">prepare_weather.py</span></code> file.</p>
-<p>Next, the data will be passed to <code class="docutils literal notranslate"><span class="pre">preprocessing.py</span></code> to load the building data and the energy data,
-and merge the two with the weather data. Following additional data cleaning, the data is split into
-train/test/validation sets, where the validation set is either split from the regular input data or
+<p>The data will first be loaded by <code class="docutils literal notranslate"><span class="pre">preprocessing.py</span></code>, which load the building data and the energy data,
+and merges the two with the weather data (for energy training). For costing, no weather or energy data is loaded.
+Following additional data cleaning, the data is split into train/test/validation sets,
+where the validation set is either split from the regular input data or
 is loaded from an explicitly provided file to be used for validation.</p>
 <p>Before training the Machine Learning model, the optimal features will be selected by calling
 <code class="docutils literal notranslate"><span class="pre">feature_selection.py</span></code>. This process will use one of several avilable tools for feature selection
@@ -52,7 +50,9 @@ to derive a list of features which will be used for training. This omits any fea
 useful in the training process.</p>
 <p>Using the selected features and preprocessed datasets, <code class="docutils literal notranslate"><span class="pre">predict.py</span></code> will be called to train the model.
 Hyperparameter tuning can be performed at the cost of additional time complexity or the default
-model architecture can be used. The trained model and test results will be output for future use.</p>
+model architecture can be used. The trained model and test results will be output for future use.
+In the output <code class="docutils literal notranslate"><span class="pre">.json</span> <span class="pre">file</span></code>, there will be breakdowns on the model’s performance for each building type
+and climate zone</p>
 
 
           </div>
@@ -111,7 +111,7 @@ model architecture can be used. The trained model and test results will be outpu
     </form>
     </div>
 </div>
-<script>document.getElementById('searchbox').style.display = "block"</script>
+<script>$('#searchbox').show(0);</script>
 
 
 
@@ -128,7 +128,7 @@ model architecture can be used. The trained model and test results will be outpu
       &copy;2021, Natural Resources Canada.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.2.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.5.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

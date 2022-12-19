@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
 
-<html lang="en">
+<html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
     <title>Running a model &#8212; BTAP: ML  documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
@@ -13,9 +13,7 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Config" href="../api/config.html" />
@@ -37,10 +35,11 @@
           <div class="body" role="main">
             
   <section id="running-a-model">
-<h1>Running a model<a class="headerlink" href="#running-a-model" title="Permalink to this heading">¶</a></h1>
-<p>A trained model and its related outputs from <a class="reference internal" href="../api/train_model_pipeline.html#module-train_model_pipeline" title="train_model_pipeline"><code class="xref py py-mod docutils literal notranslate"><span class="pre">train_model_pipeline</span></code></a> can be used to obtain
-energy predictions for input building and weather data over a specified period of time (typically
-from January 1 to December 31 with no added day for a leap year).</p>
+<h1>Running a model<a class="headerlink" href="#running-a-model" title="Permalink to this headline">¶</a></h1>
+<p>A trained model and its related outputs from <code class="xref py py-mod docutils literal notranslate"><span class="pre">train_model_pipeline</span></code> can be used to obtain
+energy and costing predictions for input building and weather data over a specified period of time (typically
+from January 1 to December 31 with no added day for a leap year). Note that costing is not daily and thus the
+timespan and weather information is not applicable for the costing process.</p>
 <p>Predictions can be obtained by running the following command, with all needed inputs being
 input through the command line or through the provided <code class="docutils literal notranslate"><span class="pre">input_config.yml</span></code> file:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">run_model</span><span class="o">.</span><span class="n">py</span> <span class="n">input_config</span><span class="o">.</span><span class="n">py</span>
@@ -54,12 +53,14 @@ dataset which will then be passed through the trained model to obtain the predic
 when training the specified .h5 trained model. The input data is also scaled with the
 same scalers used when training. This ensures that all input data is of the same format
 as what has been used for the training.</p>
-<p>The predictions are then made by the model, with the output values placed within two csv files,
+<p>The predictions are then made by the model, with the output values placed within three csv files,
 which link the predictions to the specific buildings within the specific building files.
 The <code class="docutils literal notranslate"><span class="pre">daily_energy_predictions.csv</span></code> file outputs the predicted daily energy for a building on
 each day in Megajoules per meter squared. The <code class="docutils literal notranslate"><span class="pre">aggregated_energy_predictions.csv</span></code> file
 contains the aggregated daily energy outputs in Gigajoules per meter squared for each building within
-the specified start and end dates. These typically are 365 days to represent a full year.</p>
+the specified start and end dates. These typically are 365 days to represent a full year.
+The <code class="docutils literal notranslate"><span class="pre">costing_predictions.csv</span></code> file outputs the costing predictions alongside the corresponding rows
+from the input files.</p>
 </section>
 
 
@@ -121,7 +122,7 @@ the specified start and end dates. These typically are 365 days to represent a f
     </form>
     </div>
 </div>
-<script>document.getElementById('searchbox').style.display = "block"</script>
+<script>$('#searchbox').show(0);</script>
 
 
 
@@ -138,7 +139,7 @@ the specified start and end dates. These typically are 365 days to represent a f
       &copy;2021, Natural Resources Canada.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.2.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.5.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

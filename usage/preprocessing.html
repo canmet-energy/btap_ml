@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
 
-<html lang="en">
+<html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
     <title>What this does &#8212; BTAP: ML  documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
@@ -13,9 +13,7 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
    
@@ -42,12 +40,17 @@ run <code class="docutils literal notranslate"><span class="pre">proprocessing.p
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Update the input parameters to point to the appropriate input files.
-Check <a class="reference internal" href="../api/preprocessing.html#module-preprocessing" title="preprocessing"><code class="xref py py-mod docutils literal notranslate"><span class="pre">preprocessing</span></code></a> for full detail description of each parameter.</p>
+Check <code class="xref py py-mod docutils literal notranslate"><span class="pre">preprocessing</span></code> for full detail description of each parameter.</p>
 </div>
-<p>Aside from supporting optional files for electricity and gas, if you have mutliple input files to combine, they
+<p>Aside from supporting optional files for electricity and gas, if you have multiple input files to combine, they
 need to be manually combined before passing them as input.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The system will not work with columns containing strings and floats together. A mix of default values which
+require conversion and regular numbers must be updated to be only numbers.</p>
+</div>
 <section id="what-this-does">
-<h1>What this does<a class="headerlink" href="#what-this-does" title="Permalink to this heading">¶</a></h1>
+<h1>What this does<a class="headerlink" href="#what-this-does" title="Permalink to this headline">¶</a></h1>
 <p>During preprocessing, the hourly energy consumption file is transposed such that each <code class="docutils literal notranslate"><span class="pre">datapoint_id</span></code> has 8760 rows
 (365 * 24). Hence, for a simulation run containing 5000 <code class="docutils literal notranslate"><span class="pre">datapoint_id</span></code> values, there would be 5000 * 8760 rows which would
 be 43.8 million rows. In order to avoid the preprocessing stage to become computationally expensive due to large
@@ -56,6 +59,7 @@ the weather information is loaded based on which climate zones are used within t
 aggregated from hourly to daily, so that it can be merged with the hourly energy file.
 In essence, the simulation I/O file(s), weather data from the specified climate zones and the hourly energy consumption file(s) are all merged to one
 dataframe which is then split for training and testing purposes (training set, testing set, validation set).</p>
+<p>For costing, the only preprocessing performed is on the building input files, with the weather and energy preprocessing being skipped.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The total daily energy computed for each <code class="docutils literal notranslate"><span class="pre">datapoint_id</span></code> is converted to Megajoules per meter square (mj_per_m_sq),
@@ -141,7 +145,7 @@ implies that a <code class="docutils literal notranslate"><span class="pre">data
     </form>
     </div>
 </div>
-<script>document.getElementById('searchbox').style.display = "block"</script>
+<script>$('#searchbox').show(0);</script>
 
 
 
@@ -158,7 +162,7 @@ implies that a <code class="docutils literal notranslate"><span class="pre">data
       &copy;2021, Natural Resources Canada.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.2.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.5.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

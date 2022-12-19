@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
 
-<html lang="en">
+<html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
     <title>Working on AAW &#8212; BTAP: ML  documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
@@ -13,9 +13,7 @@
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
-    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Quickstart" href="usage/quickstart.html" />
@@ -37,7 +35,7 @@
           <div class="body" role="main">
             
   <section id="working-on-aaw">
-<h1>Working on AAW<a class="headerlink" href="#working-on-aaw" title="Permalink to this heading">¶</a></h1>
+<h1>Working on AAW<a class="headerlink" href="#working-on-aaw" title="Permalink to this headline">¶</a></h1>
 <p>Getting the project set up on the Advanced Analytics Workspace (AAW) can be achieved by following the guide provided
 for <a class="reference external" href="https://statcan.github.io/daaas/en/1-Experiments/Kubeflow/">Kubeflow Setup</a>. Here are some values you can use
 when creating the notebook:</p>
@@ -54,20 +52,20 @@ when creating the notebook:</p>
 <p>It takes a few minutes to create the notebook, but from that point on you can connect to it easily from the
 <code class="docutils literal notranslate"><span class="pre">Notebook</span> <span class="pre">Servers</span></code> menu (left side) in the Kubeflow dashboard.</p>
 <section id="logging-in">
-<h2>Logging in<a class="headerlink" href="#logging-in" title="Permalink to this heading">¶</a></h2>
+<h2>Logging in<a class="headerlink" href="#logging-in" title="Permalink to this headline">¶</a></h2>
 <p>When the notebook is ready, you can log in to see the <a class="reference external" href="https://statcan.github.io/daaas/en/1-Experiments/Jupyter/">Jupyter Launcher</a>
 screen. From there you can use, open, or create notebooks, or you can launch Visual Studio Code to have an IDE environment.</p>
 </section>
 </section>
 <section id="project-source-code">
-<h1>Project source code<a class="headerlink" href="#project-source-code" title="Permalink to this heading">¶</a></h1>
+<h1>Project source code<a class="headerlink" href="#project-source-code" title="Permalink to this headline">¶</a></h1>
 <p>Once you have the machine set up, you can access the project source code by cloning the <a class="reference external" href="https://github.com/canmet-energy/btap_ml.git">git repository</a>. Use the git
 icon on the left side of the Jupyter interface to clone the repository.</p>
 <p>The repository is available at <a class="reference external" href="https://github.com/canmet-energy/btap_ml">https://github.com/canmet-energy/btap_ml</a>. Once the clone is complete you can interact
 with the files through <a class="reference external" href="https://statcan.github.io/daaas/en/1-Experiments/Jupyter/">the jupyter interface</a>, and use
 the launcher interface (top left of interface) to open a new terminal to run the scripts in the project.</p>
 <section id="required-packages">
-<h2>Required packages<a class="headerlink" href="#required-packages" title="Permalink to this heading">¶</a></h2>
+<h2>Required packages<a class="headerlink" href="#required-packages" title="Permalink to this headline">¶</a></h2>
 <p>A lot of the packages that are commonly used for data science are included in the environment, but there are always
 things that need to be added further. You can install them easily with <code class="docutils literal notranslate"><span class="pre">pip</span></code> as outlined at <a class="reference internal" href="installation.html#dependency-install"><span class="std std-ref">Dependencies</span></a>.</p>
 <p>You are now ready to start working!</p>
@@ -139,7 +137,7 @@ things that need to be added further. You can install them easily with <code cla
     </form>
     </div>
 </div>
-<script>document.getElementById('searchbox').style.display = "block"</script>
+<script>$('#searchbox').show(0);</script>
 
 
 
@@ -156,7 +154,7 @@ things that need to be added further. You can install them easily with <code cla
       &copy;2021, Natural Resources Canada.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.2.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.5.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

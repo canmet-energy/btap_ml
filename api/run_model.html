@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
 
-<html lang="en">
+<html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
     <title>Run Model &#8212; BTAP: ML  documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
@@ -13,9 +13,7 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Train Model Pipeline" href="train_model_pipeline.html" />
@@ -36,42 +34,8 @@
 
           <div class="body" role="main">
             
-  <section id="module-run_model">
-<span id="run-model"></span><h1>Run Model<a class="headerlink" href="#module-run_model" title="Permalink to this heading">¶</a></h1>
-<p>Given a specific model and files, output the model’s predictions for the files.</p>
-<p>CLI arguments match those defined by <code class="docutils literal notranslate"><span class="pre">main()</span></code>.</p>
-<dl class="py function">
-<dt class="sig sig-object py" id="run_model.main">
-<span class="sig-prename descclassname"><span class="pre">run_model.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_file=&lt;typer.models.ArgumentInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_file=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ohe_file=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cleaned_columns_file=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaler_X_file=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaler_y_file=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">building_params_folder=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_date=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_date=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selected_features_file=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#run_model.main" title="Permalink to this definition">¶</a></dt>
-<dd><p>Preprocess a set of input building files and a weather file to obtain a dataset to obtain daily energy predictions for.
-The feature selection file that has been used with the trained model must be included to appropriately preprocess the data.
-The start/end dates to be spanned are specified within the provided config_file or through the CLI, but it is assumed that
-each day within an arbitrary year will receive predictions.
-A trained Keras model must be provided as input to perform the predictions on the data. These predictions will be output into a
-.csv file which follows the format of the energy files which are used to train the models. The outputs will be for daily energy
-values rather than hourly energy values, where outputs represent the total energy output observed from generated energy files
-from rows without the Electricity:Facility Name.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>config_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location of the .yml config file (default name is input_config.yml).</p></li>
-<li><p><strong>model_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location and name of a .h5 trained keras model to be used for training.</p></li>
-<li><p><strong>ohe_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location and name of a ohe.pkl OneHotEncoder file which was generated in the root of a training output folder.</p></li>
-<li><p><strong>cleaned_columns_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location and name of a cleaned_columns.json file which was generated in the root of a training output folder.</p></li>
-<li><p><strong>scaler_X_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location and name of a scaler_X.pkl fit scaler file which was generated with the trained model_file.</p></li>
-<li><p><strong>scaler_y_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location and name of a scaler_y.pkl fit scaler file which was generated with the trained model_file.</p></li>
-<li><p><strong>building_params_folder</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – The folder location containing all building parameter files which will have predictions made on by the provided model.</p></li>
-<li><p><strong>start_date</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – The start date to specify the start of which weather data is attached to the building data. Expects the input to be in the form Month_number-Day_number.</p></li>
-<li><p><strong>end_date</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – The end date to specify the end of which weather data is attached to the building data. Expects the input to be in the form Month_number-Day_number.</p></li>
-<li><p><strong>selected_features_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location and name of a .json feature selection file to be used if the feature selection is skipped.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
-</dd>
-</dl>
-</dd></dl>
-
+  <section id="run-model">
+<h1>Run Model<a class="headerlink" href="#run-model" title="Permalink to this headline">¶</a></h1>
 </section>
 
 
@@ -133,7 +97,7 @@ from rows without the Electricity:Facility Name.</p>
     </form>
     </div>
 </div>
-<script>document.getElementById('searchbox').style.display = "block"</script>
+<script>$('#searchbox').show(0);</script>
 
 
 
@@ -150,7 +114,7 @@ from rows without the Electricity:Facility Name.</p>
       &copy;2021, Natural Resources Canada.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.2.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.5.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

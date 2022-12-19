@@ -34,8 +34,71 @@
 
           <div class="body" role="main">
             
-  <section id="run-model">
-<h1>Run Model<a class="headerlink" href="#run-model" title="Permalink to this headline">¶</a></h1>
+  <section id="module-run_model">
+<span id="run-model"></span><h1>Run Model<a class="headerlink" href="#module-run_model" title="Permalink to this headline">¶</a></h1>
+<p>For both the energy and costing training outputs, use the specified models and files to output the model predictions
+for the specified batch of building files.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="run_model.initialize_run_process">
+<span class="sig-prename descclassname"><span class="pre">run_model.</span></span><span class="sig-name descname"><span class="pre">initialize_run_process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">docker_input_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ohe_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cleaned_columns_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaler_X_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaler_y_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">building_params_folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selected_features_file</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#run_model.initialize_run_process" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes the running model for either costing or energy runs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>docker_input_path</strong> – The input prefix to be used for all files provided.</p></li>
+<li><p><strong>config_file</strong> – Location of the .yml config file (default name is input_config.yml).</p></li>
+<li><p><strong>model_file</strong> – Location and name of a .h5 trained keras model to be used for training.</p></li>
+<li><p><strong>ohe_file</strong> – Location and name of a ohe.pkl OneHotEncoder file which was generated in the root of a training output folder.</p></li>
+<li><p><strong>cleaned_columns_file</strong> – Location and name of a cleaned_columns.json file which was generated in the root of a training output folder.</p></li>
+<li><p><strong>scaler_X_file</strong> – Location and name of a scaler_X.pkl fit scaler file which was generated with the trained model_file.</p></li>
+<li><p><strong>scaler_y_file</strong> – Location and name of a scaler_y.pkl fit scaler file which was generated with the trained model_file.</p></li>
+<li><p><strong>building_params_folder</strong> – The folder location containing all building parameter files which will have predictions made on by the provided model.</p></li>
+<li><p><strong>start_date</strong> – The start date to specify the start of which weather data is attached to the building data. Expects the input to be in the form Month_number-Day_number.</p></li>
+<li><p><strong>end_date</strong> – The end date to specify the end of which weather data is attached to the building data. Expects the input to be in the form Month_number-Day_number.</p></li>
+<li><p><strong>selected_features_file</strong> – Location and name of a .json feature selection file to be used if the feature selection is skipped.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="run_model.main">
+<span class="sig-prename descclassname"><span class="pre">run_model.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_file=&lt;typer.models.ArgumentInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">energy_model_file=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">energy_ohe_file=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">energy_cleaned_columns_file=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">energy_scaler_X_file=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">energy_scaler_y_file=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">energy_selected_features_file=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">costing_model_file=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">costing_ohe_file=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">costing_cleaned_columns_file=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">costing_scaler_X_file=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">costing_scaler_y_file=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">costing_selected_features_file=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">building_params_folder=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_date=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_date=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#run_model.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Preprocess a set of input building files to obtain a dataset to obtain daily energy and total costing predictions for.
+The feature selection file that has been used with the trained model must be included to appropriately preprocess the data.
+The start/end dates to be spanned are specified within the provided config_file or through the CLI, but it is assumed that
+each day within an arbitrary year will receive predictions.
+A trained Keras model must be provided as input to perform the predictions on the data. These predictions will be output into a
+.csv file which follows the format of the input files which are used to train the models. The energy outputs will be for daily energy
+values rather than hourly energy values, where outputs represent the total energy output observed from generated energy files
+from rows without the Electricity:Facility Name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location of the .yml config file (default name is input_config.yml).</p></li>
+<li><p><strong>energy_model_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location and name of a .h5 trained keras model to be used for training. From the energy training.</p></li>
+<li><p><strong>energy_ohe_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location and name of a ohe.pkl OneHotEncoder file which was generated in the root of a training output folder. From the energy training.</p></li>
+<li><p><strong>energy_cleaned_columns_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location and name of a cleaned_columns.json file which was generated in the root of a training output folder. From the energy training.</p></li>
+<li><p><strong>energy_scaler_X_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location and name of a scaler_X.pkl fit scaler file which was generated with the trained model_file. From the energy training.</p></li>
+<li><p><strong>energy_scaler_y_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location and name of a scaler_y.pkl fit scaler file which was generated with the trained model_file. From the energy training.</p></li>
+<li><p><strong>energy_selected_features_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location and name of a .json feature selection file to be used if the feature selection is skipped. From the energy training.</p></li>
+<li><p><strong>costing_model_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location and name of a .h5 trained keras model to be used for training. From the costing training.</p></li>
+<li><p><strong>costing_ohe_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location and name of a ohe.pkl OneHotEncoder file which was generated in the root of a training output folder. From the costing training.</p></li>
+<li><p><strong>costing_cleaned_columns_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location and name of a cleaned_columns.json file which was generated in the root of a training output folder. From the costing training.</p></li>
+<li><p><strong>costing_scaler_X_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location and name of a scaler_X.pkl fit scaler file which was generated with the trained model_file. From the costing training.</p></li>
+<li><p><strong>costing_scaler_y_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location and name of a scaler_y.pkl fit scaler file which was generated with the trained model_file. From the costing training.</p></li>
+<li><p><strong>costing_selected_features_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location and name of a .json feature selection file to be used if the feature selection is skipped. From the costing training.</p></li>
+<li><p><strong>building_params_folder</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – The folder location containing all building parameter files which will have predictions made on by the provided model.</p></li>
+<li><p><strong>start_date</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – The start date to specify the start of which weather data is attached to the building data. Expects the input to be in the form Month_number-Day_number.</p></li>
+<li><p><strong>end_date</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – The end date to specify the end of which weather data is attached to the building data. Expects the input to be in the form Month_number-Day_number.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 
 

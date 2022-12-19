@@ -42,8 +42,10 @@
  | <a href="#E"><strong>E</strong></a>
  | <a href="#F"><strong>F</strong></a>
  | <a href="#G"><strong>G</strong></a>
+ | <a href="#I"><strong>I</strong></a>
  | <a href="#J"><strong>J</strong></a>
  | <a href="#M"><strong>M</strong></a>
+ | <a href="#N"><strong>N</strong></a>
  | <a href="#O"><strong>O</strong></a>
  | <a href="#P"><strong>P</strong></a>
  | <a href="#R"><strong>R</strong></a>
@@ -57,6 +59,8 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/prepare_weather.html#prepare_weather.adjust_hour">adjust_hour() (in module prepare_weather)</a>
+</li>
+      <li><a href="api/plot.html#plot.annual_plot">annual_plot() (in module plot)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -82,6 +86,10 @@
 <h2 id="C">C</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/preprocessing.html#preprocessing.categorical_encode">categorical_encode() (in module preprocessing)</a>
+</li>
+      <li><a href="api/preprocessing.html#preprocessing.clean_data">clean_data() (in module preprocessing)</a>
+</li>
       <li><a href="api/config.html#config.AppConfig.CLEANED_COLUMNS_FILE">CLEANED_COLUMNS_FILE (config.AppConfig attribute)</a>
 </li>
       <li><a href="api/config.html#config.AppConfig.CLEANED_COLUMNS_FILENAME">CLEANED_COLUMNS_FILENAME (config.AppConfig attribute)</a>
@@ -93,6 +101,8 @@
         <li><a href="api/config.html#module-config">module</a>
 </li>
       </ul></li>
+      <li><a href="api/plot.html#plot.corr_plot">corr_plot() (in module plot)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/config.html#config.AppConfig.COSTING">COSTING (config.AppConfig attribute)</a>
@@ -101,7 +111,13 @@
 </li>
       <li><a href="api/config.html#config.AppConfig.COSTING_PREFIX">COSTING_PREFIX (config.AppConfig attribute)</a>
 </li>
+      <li><a href="api/preprocessing.html#preprocessing.create_costing_dataset">create_costing_dataset() (in module preprocessing)</a>
+</li>
+      <li><a href="api/preprocessing.html#preprocessing.create_dataset">create_dataset() (in module preprocessing)</a>
+</li>
       <li><a href="api/config.html#config.create_directory">create_directory() (in module config)</a>
+</li>
+      <li><a href="api/predict.html#predict.create_model">create_model() (in module predict)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -109,10 +125,12 @@
 <h2 id="D">D</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/config.html#config.AppConfig.DOCKER_INPUT_PATH">DOCKER_INPUT_PATH (config.AppConfig attribute)</a>
+      <li><a href="api/plot.html#plot.daily_plot">daily_plot() (in module plot)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/config.html#config.AppConfig.DOCKER_INPUT_PATH">DOCKER_INPUT_PATH (config.AppConfig attribute)</a>
+</li>
       <li><a href="api/config.html#config.AppConfig.DOCKER_OUTPUT_PATH">DOCKER_OUTPUT_PATH (config.AppConfig attribute)</a>
 </li>
   </ul></td>
@@ -133,6 +151,8 @@
 </li>
       <li><a href="api/config.html#config.AppConfig.ESTIMATOR_TYPE">ESTIMATOR_TYPE (config.AppConfig attribute)</a>
 </li>
+      <li><a href="api/predict.html#predict.evaluate">evaluate() (in module predict)</a>
+</li>
       <li><a href="api/config.html#config.Settings.Config.extra">extra (config.Settings.Config attribute)</a>
 </li>
   </ul></td>
@@ -148,13 +168,15 @@
         <li><a href="api/feature_selection.html#module-feature_selection">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/config.html#config.AppConfig.FEATURE_SELECTION_BUCKET_NAME">FEATURE_SELECTION_BUCKET_NAME (config.AppConfig attribute)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/config.html#config.AppConfig.FEATURE_SELECTION_FILENAME">FEATURE_SELECTION_FILENAME (config.AppConfig attribute)</a>
 </li>
       <li><a href="api/config.html#config.AppConfig.FEATURES_FILE">FEATURES_FILE (config.AppConfig attribute)</a>
+</li>
+      <li><a href="api/predict.html#predict.fit_evaluate">fit_evaluate() (in module predict)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -167,6 +189,16 @@
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/prepare_weather.html#prepare_weather.get_weather_df">get_weather_df() (in module prepare_weather)</a>
+</li>
+      <li><a href="api/preprocessing.html#preprocessing.groupsplit">groupsplit() (in module preprocessing)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="I">I</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/run_model.html#run_model.initialize_run_process">initialize_run_process() (in module run_model)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -185,9 +217,19 @@
       <li><a href="api/feature_selection.html#feature_selection.main">main() (in module feature_selection)</a>
 
       <ul>
+        <li><a href="api/predict.html#predict.main">(in module predict)</a>
+</li>
         <li><a href="api/prepare_weather.html#prepare_weather.main">(in module prepare_weather)</a>
 </li>
+        <li><a href="api/preprocessing.html#preprocessing.main">(in module preprocessing)</a>
+</li>
+        <li><a href="api/run_model.html#run_model.main">(in module run_model)</a>
+</li>
+        <li><a href="api/train_model_pipeline.html#train_model_pipeline.main">(in module train_model_pipeline)</a>
+</li>
       </ul></li>
+      <li><a href="api/predict.html#predict.model_builder">model_builder() (in module predict)</a>
+</li>
       <li>
     module
 
@@ -196,9 +238,31 @@
 </li>
         <li><a href="api/feature_selection.html#module-feature_selection">feature_selection</a>
 </li>
+        <li><a href="api/plot.html#module-plot">plot</a>
+</li>
+        <li><a href="api/predict.html#module-predict">predict</a>
+</li>
         <li><a href="api/prepare_weather.html#module-prepare_weather">prepare_weather</a>
 </li>
+        <li><a href="api/preprocessing.html#module-preprocessing">preprocessing</a>
+</li>
+        <li><a href="api/run_model.html#module-run_model">run_model</a>
+</li>
+        <li><a href="api/train_model_pipeline.html#module-train_model_pipeline">train_model_pipeline</a>
+</li>
       </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="N">N</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/plot.html#plot.norm_res">norm_res() (in module plot)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/plot.html#plot.norm_res_plot">norm_res_plot() (in module plot)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -220,6 +284,24 @@
       <li><a href="api/config.html#config.AppConfig.PARAM_SEARCH">PARAM_SEARCH (config.AppConfig attribute)</a>
 </li>
       <li>
+    plot
+
+      <ul>
+        <li><a href="api/plot.html#module-plot">module</a>
+</li>
+      </ul></li>
+      <li><a href="api/plot.html#plot.plot_metric">plot_metric() (in module plot)</a>
+</li>
+      <li>
+    predict
+
+      <ul>
+        <li><a href="api/predict.html#module-predict">module</a>
+</li>
+      </ul></li>
+      <li><a href="api/predict.html#predict.predicts_hp">predicts_hp() (in module predict)</a>
+</li>
+      <li>
     prepare_weather
 
       <ul>
@@ -228,9 +310,24 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li>
+    preprocessing
+
+      <ul>
+        <li><a href="api/preprocessing.html#module-preprocessing">module</a>
+</li>
+      </ul></li>
       <li><a href="api/config.html#config.AppConfig.PREPROCESSING_BUCKET_NAME">PREPROCESSING_BUCKET_NAME (config.AppConfig attribute)</a>
 </li>
       <li><a href="api/config.html#config.AppConfig.PREPROCESSING_FILENAME">PREPROCESSING_FILENAME (config.AppConfig attribute)</a>
+</li>
+      <li><a href="api/preprocessing.html#preprocessing.process_building_files">process_building_files() (in module preprocessing)</a>
+</li>
+      <li><a href="api/preprocessing.html#preprocessing.process_building_files_batch">process_building_files_batch() (in module preprocessing)</a>
+</li>
+      <li><a href="api/preprocessing.html#preprocessing.process_costing_building_files">process_costing_building_files() (in module preprocessing)</a>
+</li>
+      <li><a href="api/preprocessing.html#preprocessing.process_hourly_energy">process_hourly_energy() (in module preprocessing)</a>
 </li>
       <li><a href="api/prepare_weather.html#prepare_weather.process_weather_file">process_weather_file() (in module prepare_weather)</a>
 </li>
@@ -244,10 +341,21 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/config.html#config.AppConfig.RANDOM_SEED">RANDOM_SEED (config.AppConfig attribute)</a>
 </li>
+      <li><a href="api/preprocessing.html#preprocessing.read_weather">read_weather() (in module preprocessing)</a>
+</li>
+      <li><a href="api/predict.html#predict.rmse_loss">rmse_loss() (in module predict)</a>
+</li>
       <li><a href="api/config.html#config.AppConfig.RUN_BUCKET_NAME">RUN_BUCKET_NAME (config.AppConfig attribute)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li>
+    run_model
+
+      <ul>
+        <li><a href="api/run_model.html#module-run_model">module</a>
+</li>
+      </ul></li>
       <li><a href="api/config.html#config.AppConfig.RUNNING_AGGREGATED_RESULTS_FILENAME">RUNNING_AGGREGATED_RESULTS_FILENAME (config.AppConfig attribute)</a>
 </li>
       <li><a href="api/config.html#config.AppConfig.RUNNING_COSTING_RESULTS_FILENAME">RUNNING_COSTING_RESULTS_FILENAME (config.AppConfig attribute)</a>
@@ -262,6 +370,8 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/prepare_weather.html#prepare_weather.save_epw">save_epw() (in module prepare_weather)</a>
 </li>
+      <li><a href="api/plot.html#plot.save_plot">save_plot() (in module plot)</a>
+</li>
       <li><a href="api/config.html#config.AppConfig.SCALER_X_FILE">SCALER_X_FILE (config.AppConfig attribute)</a>
 </li>
       <li><a href="api/config.html#config.AppConfig.SCALER_Y_FILE">SCALER_Y_FILE (config.AppConfig attribute)</a>
@@ -272,11 +382,15 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/predict.html#predict.score">score() (in module predict)</a>
+</li>
       <li><a href="api/feature_selection.html#feature_selection.select_features">select_features() (in module feature_selection)</a>
 </li>
       <li><a href="api/config.html#config.Settings">Settings (class in config)</a>
 </li>
       <li><a href="api/config.html#config.Settings.Config">Settings.Config (class in config)</a>
+</li>
+      <li><a href="api/plot.html#plot.show_var">show_var() (in module plot)</a>
 </li>
       <li><a href="api/config.html#config.AppConfig.SIMULATION_END_DATE">SIMULATION_END_DATE (config.AppConfig attribute)</a>
 </li>
@@ -288,12 +402,21 @@
 <h2 id="T">T</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/plot.html#plot.target_plot">target_plot() (in module plot)</a>
+</li>
       <li><a href="api/config.html#config.AppConfig.TRAIN_BUCKET_NAME">TRAIN_BUCKET_NAME (config.AppConfig attribute)</a>
 </li>
-      <li><a href="api/config.html#config.AppConfig.TRAINED_MODEL_FILE">TRAINED_MODEL_FILE (config.AppConfig attribute)</a>
+      <li>
+    train_model_pipeline
+
+      <ul>
+        <li><a href="api/train_model_pipeline.html#module-train_model_pipeline">module</a>
 </li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/config.html#config.AppConfig.TRAINED_MODEL_FILE">TRAINED_MODEL_FILE (config.AppConfig attribute)</a>
+</li>
       <li><a href="api/config.html#config.AppConfig.TRAINED_MODEL_FILENAME">TRAINED_MODEL_FILENAME (config.AppConfig attribute)</a>
 </li>
       <li><a href="api/config.html#config.AppConfig.TRAINING_BUCKET_NAME">TRAINING_BUCKET_NAME (config.AppConfig attribute)</a>

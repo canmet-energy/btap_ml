@@ -471,9 +471,9 @@ def categorical_encode(x_train, x_test, x_validate, output_path, ohe_file=''):
     Note that the encoded data return creates additional columns equivalent to the unique categorical values in the each categorical column.
 
     Args:
-        X_train: X trainset
-        X_test:  X testset
-        X_validate: X validation set
+        x_train: X trainset
+        x_test:  X testset
+        x_validate: X validation set
         output_path: Where the output files should be placed.
         ohe_file: Location of an OHE file which has already been saved from training.
 

@@ -39,6 +39,7 @@ logger = logging.getLogger(__name__)
 def score(y_test, y_pred):
     """
     Used to compute the mse, rmse and mae scores
+
     Args:
         y_test: y testset
         y_pred: y predicted value from the model
@@ -59,8 +60,9 @@ def score(y_test, y_pred):
 def rmse_loss(y_true, y_pred):
     """
     A customized rmse score that takes a sum of y_pred and y_test before computing the rmse score
+
     Args:
-        y_test: y testset
+        y_true: y testset
         y_pred: y predicted value from the model
     Returns:
        rmse loss from comparing the y_test and y_pred values
@@ -76,6 +78,7 @@ def model_builder(hp):
     """
     Builds the model that would be used to search for hyperparameter.
     The hyperparameters search inclues activation, regularizers, dropout_rate, learning_rate, and optimizer
+
     Args:
         hp: hyperband object with different hyperparameters to be checked.
     Returns:
@@ -119,6 +122,7 @@ def model_builder(hp):
 def predicts_hp(X_train, y_train, X_test, y_test, selected_feature, output_path, random_seed):
     """
     Using the set of hyperparameter combined,the model built is used to make predictions
+
     Args:
         X_train: X train set
         y_train: y train set
@@ -199,6 +203,7 @@ def predicts_hp(X_train, y_train, X_test, y_test, selected_feature, output_path,
 def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type):
     """
     The model selected with the best hyperparameter is used to make predictions.
+
     Args:
         model: model built from training
         X_test: X testset
@@ -206,7 +211,8 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
         scalery: y scaler used to transform the y values to the original scale
         X_validate: X validationset
         y_validate: y validationset
-        validate: validation dataset
+        y_test_complete: test dataset
+        y_validate_complete: validation dataset
         path_elec: Filepath of the electricity building file which has been used
         path_gas: Filepath of the gas building file, if it has been used (pass nothing otherwise)
         val_building_path: Filepath of the validation building file, if it has been used (pass nothing otherwise).
@@ -336,6 +342,7 @@ def create_model(dense_layers, activation, optimizer, dropout_rate, length, lear
     """
     Creates a model with defaulted values without need to perform an hyperparameter search at all times.
     Its initutive to have run the hyperparameter search beforehand to know the hyperparameter value to set.
+
     Args:
         dense_layers: number of layers for the model architecture e.g for a model with 3 layers, values will be passed as [8,20,30]
         activation: activation function to be used e.g relu, tanh
@@ -344,6 +351,7 @@ def create_model(dense_layers, activation, optimizer, dropout_rate, length, lear
         length: length of the trainset
         learning_rate: learning rate determines how fast or how slow the model will converge to an optimal loss value. Value should be less or equal 0.1 e.g 0.001
         epochs: number of iterations the model should perform
+        batch_size: batch size to be used
         X_train: X trainset
         y_train: y trainset
         X_test: X testset
@@ -430,6 +438,7 @@ def create_model(dense_layers, activation, optimizer, dropout_rate, length, lear
 def fit_evaluate(preprocessed_data_file, selected_features_file, param_search, output_path, random_seed, path_elec, path_gas, val_building_path, process_type):
     """
     Downloads the output from preprocessing and feature selection from mino, builds the model and then evaluate the model.
+
     Args:
         preprocessed_data_file: Location and name of a .json preprocessing file to be used.
         selected_features_file: Location and name of a .json feature selection file to be used.

@@ -78,7 +78,6 @@ Once installation is complete, a good place to get an overview of the complete p
 
    api/config
    api/feature_selection
-   api/plot
    api/predict
    api/prepare_weather
    api/preprocessing

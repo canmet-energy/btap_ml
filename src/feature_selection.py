@@ -29,8 +29,7 @@ logger = logging.getLogger(__name__)
 def select_features(preprocessed_data_file, estimator_type, output_path):
     """
     Select the feature which contribute most to the prediction for the total energy consumed.
-    Default estimator_type used for feature selection is 'LassoCV'
-    Note that elasticnet and
+    Default estimator_type used for feature selection is 'LassoCV'.
 
     Args:
         preprocessed_data_file: Location and name of a .json preprocessing file to be used if the preprocessing is skipped.

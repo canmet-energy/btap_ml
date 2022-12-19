@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
 
-<html lang="en">
+<html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
     <title>Kubeflow pipeline &#8212; BTAP: ML  documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
@@ -13,9 +13,7 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
    
@@ -35,7 +33,7 @@
           <div class="body" role="main">
             
   <section id="kubeflow-pipeline">
-<h1>Kubeflow pipeline<a class="headerlink" href="#kubeflow-pipeline" title="Permalink to this heading">¶</a></h1>
+<h1>Kubeflow pipeline<a class="headerlink" href="#kubeflow-pipeline" title="Permalink to this headline">¶</a></h1>
 <p>A kubeflow pipeline exists to run the training and modelling steps automatically. To run the pipleline the docker
 image needs to be built.  Due to restrictions on which image registries are accepted on AAW, for this project images
 were built on <a class="reference external" href="https://github.com/StatCan/aaw-contrib-containers">STATCAN AAW contrib</a>. Other platforms may allow
@@ -111,7 +109,6 @@ image is rebuilt and a new reference is created.</p></li>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../api/config.html">Config</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/feature_selection.html">Feature selection</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/plot.html">Plot</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/predict.html">Predict</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/prepare_weather.html">Prepare weather</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../api/preprocessing.html">Preprocessing</a></li>
@@ -135,7 +132,7 @@ image is rebuilt and a new reference is created.</p></li>
     </form>
     </div>
 </div>
-<script>document.getElementById('searchbox').style.display = "block"</script>
+<script>$('#searchbox').show(0);</script>
 
 
 
@@ -152,7 +149,7 @@ image is rebuilt and a new reference is created.</p></li>
       &copy;2022, Natural Resources Canada.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.3.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.5.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

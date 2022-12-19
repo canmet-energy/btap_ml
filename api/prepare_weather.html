@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
     <title>Prepare weather &#8212; BTAP: ML  documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
@@ -13,7 +13,9 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Preprocessing" href="preprocessing.html" />
@@ -35,7 +37,7 @@
           <div class="body" role="main">
             
   <section id="module-prepare_weather">
-<span id="prepare-weather"></span><h1>Prepare weather<a class="headerlink" href="#module-prepare_weather" title="Permalink to this headline">¶</a></h1>
+<span id="prepare-weather"></span><h1>Prepare weather<a class="headerlink" href="#module-prepare_weather" title="Permalink to this heading">¶</a></h1>
 <p>Prepare the weather file(s) specified in the YAML configuration to be used by the pipeline.</p>
 <p>CLI arguments match those defined by <code class="docutils literal notranslate"><span class="pre">main()</span></code>.</p>
 <dl class="py function">
@@ -43,16 +45,16 @@
 <span class="sig-prename descclassname"><span class="pre">prepare_weather.</span></span><span class="sig-name descname"><span class="pre">adjust_hour</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'hour'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prepare_weather.adjust_hour" title="Permalink to this definition">¶</a></dt>
 <dd><p>Adjust all hourly values to align with Python representation.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>df</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code>) – Raw weather data, with hours from 1 to 24 hours.</p></li>
 <li><p><strong>colname</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – The name of the column with hour indicators.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A pd.DataFrame object where the hour column has been adjusted to 0 - 23 hours.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>df</p>
 </dd>
 </dl>
@@ -64,13 +66,13 @@
 <dd><p>Fetch weather data from the main storage location.
 Loads weather files from the NREL/openstudio-standards GitHub repository where they are managed.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>filename</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – The filename of a weather file (.epw)</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></p>
 </dd>
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>A dataframe of weather data summarized by day.</p>
 </dd>
 </dl>
@@ -83,14 +85,14 @@ Loads weather files from the NREL/openstudio-standards GitHub repository where t
 Uses the EnergyPlus configuration to identify and process weather data in EPW format. The weather data is then
 saved to blob storage for use in later processing stages.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>config_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Path to the configuration file used for EnergyPlus.</p></li>
 <li><p><strong>epw_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – The epw key to be used if the config file is not use.</p></li>
 <li><p><strong>output_path</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Where output data should be placed. Note that this value should be empty unless this file is called from a pipeline.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
 </dd>
 </dl>
@@ -101,10 +103,10 @@ saved to blob storage for use in later processing stages.</p>
 <span class="sig-prename descclassname"><span class="pre">prepare_weather.</span></span><span class="sig-name descname"><span class="pre">process_weather_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prepare_weather.process_weather_file" title="Permalink to this definition">¶</a></dt>
 <dd><p>Process a weather file and return the dataframe.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>filename</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – The name of the weather file to load.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A pd.DataFrame object with the ready to use weather information.</p>
 </dd>
 </dl>
@@ -115,10 +117,10 @@ saved to blob storage for use in later processing stages.</p>
 <span class="sig-prename descclassname"><span class="pre">prepare_weather.</span></span><span class="sig-name descname"><span class="pre">process_weather_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filenames</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#prepare_weather.process_weather_files" title="Permalink to this definition">¶</a></dt>
 <dd><p>Process a batch of weather files and return the dataframe</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>filenames</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>) – The names of the weather files to load.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A pd.DataFrame object with the ready to use weather information</p>
 </dd>
 </dl>
@@ -130,13 +132,13 @@ saved to blob storage for use in later processing stages.</p>
 <dd><p>Save preprared EPW data out to blob storage.
 The filename of the original file is used, with the extension replaced with .parquet.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>df</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code>) – Pandas DataFrame to be saved out.</p></li>
 <li><p><strong>filename</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Filename of the source file used to produce the DataFrame.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
@@ -203,7 +205,7 @@ The filename of the original file is used, with the extension replaced with .par
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
 
 
 
@@ -217,10 +219,10 @@ The filename of the original file is used, with the extension replaced with .par
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2021, Natural Resources Canada.
+      &copy;2022, Natural Resources Canada.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.5.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.3.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

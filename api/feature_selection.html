@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
     <title>Feature selection &#8212; BTAP: ML  documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
@@ -13,7 +13,9 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Plot" href="plot.html" />
@@ -35,7 +37,7 @@
           <div class="body" role="main">
             
   <section id="module-feature_selection">
-<span id="feature-selection"></span><h1>Feature selection<a class="headerlink" href="#module-feature_selection" title="Permalink to this headline">¶</a></h1>
+<span id="feature-selection"></span><h1>Feature selection<a class="headerlink" href="#module-feature_selection" title="Permalink to this heading">¶</a></h1>
 <p>Select features that are used to build the surrogate mode.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="feature_selection.main">
@@ -43,7 +45,7 @@
 <dd><p>Select the feature which contribute most to the prediction for the total energy or costing consumed.
 Default estimator_type used for feature selection is ‘LassoCV’</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>config_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location of the .yml config file (default name is input_config.yml).</p></li>
 <li><p><strong>preprocessed_data_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location and name of a .json preprocessing file to be used.</p></li>
@@ -52,7 +54,7 @@ The other options are ‘linear’, ‘elasticnet’, and ‘xgb’.</p></li>
 <li><p><strong>output_path</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Where output data should be placed. Note that this value should be empty unless this file is called from a pipeline.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
 </dd>
 </dl>
@@ -65,7 +67,7 @@ The other options are ‘linear’, ‘elasticnet’, and ‘xgb’.</p></li>
 Default estimator_type used for feature selection is ‘LassoCV’
 Note that elasticnet and</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>preprocessed_data_file</strong> – Location and name of a .json preprocessing file to be used if the preprocessing is skipped.</p></li>
 <li><p><strong>estimator_type</strong> – The type of feature selection to be performed. The default is lasso, which will be used if nothing is passed.
@@ -137,7 +139,7 @@ The other options are ‘linear’, ‘elasticnet’, and ‘xgb’.</p></li>
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
 
 
 
@@ -151,10 +153,10 @@ The other options are ‘linear’, ‘elasticnet’, and ‘xgb’.</p></li>
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2021, Natural Resources Canada.
+      &copy;2022, Natural Resources Canada.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.5.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.3.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
     <title>What this does &#8212; BTAP: ML  documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
@@ -13,7 +13,9 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
    
@@ -65,7 +67,7 @@ will match the input name found in the YAML file, but with a <code class="docuti
 needing to be loaded again.</p>
 </div>
 <section id="what-this-does">
-<h1>What this does<a class="headerlink" href="#what-this-does" title="Permalink to this headline">¶</a></h1>
+<h1>What this does<a class="headerlink" href="#what-this-does" title="Permalink to this heading">¶</a></h1>
 <p>EPW files contain several lines of data that is irrelevant to the model. This data is all in the first several lines
 of the file. For example, everything before the line starting with <code class="docutils literal notranslate"><span class="pre">1966</span></code> can be ignored:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">LOCATION</span><span class="p">,</span><span class="n">Montreal</span> <span class="n">Int</span><span class="s1">&#39;l,PQ,CAN,WYEC2-B-94792,716270,45.47,-73.75,-5.0,36.0</span>
@@ -83,7 +85,7 @@ of the file. For example, everything before the line starting with <code class="
 </div>
 <p>Column names for the tabular data can be found in the Auxiliary Programs documentation.</p>
 <section id="remove-unused-columns">
-<h2>Remove unused columns<a class="headerlink" href="#remove-unused-columns" title="Permalink to this headline">¶</a></h2>
+<h2>Remove unused columns<a class="headerlink" href="#remove-unused-columns" title="Permalink to this heading">¶</a></h2>
 <p>In the Auxiliary Programs documentation for the EPW file format it lists which columns in the file are actually used
 for predicting building energy use. Columns marked as not used by EnergyPlus are removed from the dataset.</p>
 <div class="admonition note">
@@ -93,7 +95,7 @@ of the data. Only the month and day values are used when merging with building a
 </div>
 </section>
 <section id="summarize-by-day">
-<h2>Summarize by day<a class="headerlink" href="#summarize-by-day" title="Permalink to this headline">¶</a></h2>
+<h2>Summarize by day<a class="headerlink" href="#summarize-by-day" title="Permalink to this heading">¶</a></h2>
 <p>Weather data in the file is provided for every hour for all 365 days of the year. Due to the way the data is combined
 in later steps, this becomes millions of records that need to be processed despite the fact that there is no intent to
 predict energy use to the hourly level. To make working with the data more manageable, weather values are summarized to
@@ -158,7 +160,7 @@ daily intervals.</p>
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
 
 
 
@@ -172,10 +174,10 @@ daily intervals.</p>
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2021, Natural Resources Canada.
+      &copy;2022, Natural Resources Canada.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.5.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.3.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

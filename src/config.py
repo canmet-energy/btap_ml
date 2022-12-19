@@ -21,11 +21,11 @@ class AppConfig(BaseModel):
     TRAIN_BUCKET_NAME: str = 'training_model_'
     RUN_BUCKET_NAME: str = 'running_model_'
     # Shared parameters to denote the type of training or running being performed
-    ENERGY = 'energy'
-    COSTING = 'costing'
+    ENERGY: str = 'energy'
+    COSTING: str = 'costing'
     # Prefix names used for costing and energy
-    ENERGY_PREFIX = 'energy_'
-    COSTING_PREFIX = 'costing_'
+    ENERGY_PREFIX: str = 'energy_'
+    COSTING_PREFIX: str = 'costing_'
     # Bucket used to store weather data
     WEATHER_BUCKET_NAME: str = 'weather'
     # Bucket used to store building/energy preprocessing data

@@ -4,7 +4,6 @@ Contains helper functions used to create chart. The plots created are stored in 
 
 import numpy as np
 import pandas as pd
-import plotly
 import seaborn as sns
 from matplotlib import pyplot as plt
 

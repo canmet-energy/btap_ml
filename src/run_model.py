@@ -14,7 +14,6 @@ import typer
 from tensorflow import keras
 
 import config
-import prepare_weather
 import preprocessing
 from models.running_model import RunningModel
 

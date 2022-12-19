@@ -7,7 +7,6 @@ minio==5.0.10
 numpy==1.21.0
 pandas==1.4.2
 plotly==5.10.0
-s3fs
 scikit_learn==1.1.1
 seaborn==0.11.2
 tensorboard==2.8.0

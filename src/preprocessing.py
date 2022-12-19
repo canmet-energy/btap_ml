@@ -6,15 +6,12 @@ or costing predictions are being done.
 import json
 import logging
 import os
-import sys
 from datetime import datetime
 from pathlib import Path
 
 import joblib
-import matplotlib
 import numpy as np
 import pandas as pd
-import pyarrow
 import typer
 from sklearn.compose import ColumnTransformer
 from sklearn.model_selection import GroupShuffleSplit

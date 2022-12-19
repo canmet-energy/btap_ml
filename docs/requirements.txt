@@ -2,4 +2,4 @@ myst-parser==0.15.2
 sphinx-autodoc-typehints==1.12.0
 markupsafe==2.1.1
 -r ../requirements.txt
--U numpy
+numpy==1.23.0

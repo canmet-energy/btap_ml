@@ -8,12 +8,10 @@ from datetime import datetime
 from pathlib import Path
 
 import typer
-import yaml
 
 import config
 import feature_selection
 import predict
-import prepare_weather
 import preprocessing
 from models.training_model import TrainingModel
 

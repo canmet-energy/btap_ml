@@ -391,7 +391,8 @@ def create_model(dense_layers, activation, optimizer, dropout_rate, length, lear
                         bias_regularizer=regularizers.l2(1e-2),
                         activity_regularizer=regularizers.l2(1e-2)
                         ))
-        model.add(Dropout(dropout_rate))
+        if dropout_rate > 0 and dropout_rate <= 1:
+            model.add(Dropout(dropout_rate))
     model.add(Dense(1, activation='linear'))
 
     if optimizer == "adam":
@@ -435,7 +436,7 @@ def create_model(dense_layers, activation, optimizer, dropout_rate, length, lear
     return result, model
 
 
-def fit_evaluate(preprocessed_data_file, selected_features_file, param_search, output_path, random_seed, path_elec, path_gas, val_building_path, process_type):
+def fit_evaluate(preprocessed_data_file, selected_features_file, param_search, output_path, random_seed, path_elec, path_gas, val_building_path, process_type, use_updated_model, use_dropout):
     """
     Downloads the output from preprocessing and feature selection from mino, builds the model and then evaluate the model.
 
@@ -449,6 +450,8 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, param_search, o
         path_gas: Filepath of the gas building file, if it has been used (pass nothing otherwise).
         val_building_path: Filepath of the validation building file, if it has been used (pass nothing otherwise).
         process_type: Either 'energy' or 'costing' to specify the operations to be performed.
+        use_updated_model: True if the larger model architecture should be used for training. Should be False if a costing model is being trained.
+        use_dropout: True if the regularization technique should be used (on by default). False if tests are desired without dropout. Note that not using dropout may cause bias to learned when training.
     Returns:
         the results from the model prediction is uploaded to minio
     """
@@ -513,15 +516,29 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, param_search, o
         results_pred = evaluate(hypermodel, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
     # Otherwise use a default model design and train with that model
     else:
+        DROPOUT_RATE = 0.1
+        LEARNING_RATE = 0.0001
+        EPOCHS = 100
+        BATCH_SIZE = 90
+        NUMBER_OF_NODES = 10000
+        ACTIVATION = 'relu'
+        OPTIMIZER = 'adam'
+
+        if not use_updated_model:
+            LEARNING_RATE = 0.001
+            NUMBER_OF_NODES = 56
+        if not use_dropout:
+            DROPOUT_RATE = -1
+
         results_pred, hypermodel = create_model(
-                                    dense_layers=[56],
-                                    activation='relu',
-                                    optimizer='adam',
-                                    dropout_rate=0.1,
+                                    dense_layers=[NUMBER_OF_NODES],
+                                    activation=ACTIVATION,
+                                    optimizer=OPTIMIZER,
+                                    dropout_rate=DROPOUT_RATE,
                                     length=col_length,
-                                    learning_rate=0.001,
-                                    epochs=20,
-                                    batch_size=90,
+                                    learning_rate=LEARNING_RATE,
+                                    epochs=EPOCHS,
+                                    batch_size=BATCH_SIZE,
                                     X_train=X_train,
                                     y_train=y_train,
                                     X_test=X_test,
@@ -584,6 +601,8 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
          path_elec: str = typer.Argument(..., help="Filepath of the electricity building file which has been used."),
          path_gas: str = typer.Option("", help="Filepath of the gas building file, if it has been used (pass nothing otherwise)."),
          val_building_path: str = typer.Option("", help="Filepath of the validation building file, if it has been used (pass nothing otherwise)."),
+         use_updated_model: bool = typer.Option(True, help="True if the larger model architecture should be used for training. Should be False if a costing model is being trained."),
+         use_dropout: bool = typer.Option(True, help="True if the regularization technique should be used (on by default). False if tests are desired without dropout. Note that not using dropout may cause bias to learned when training.")
          ):
     """
     Using all preprocessed data, build and train a Machine Learning model to predict the total energy or costing values.
@@ -601,6 +620,8 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
         path_elec: Filepath of the electricity building file which has been used.
         path_gas: Filepath of the gas building file, if it has been used (pass nothing otherwise).
         val_building_path: Filepath of the validation building file, if it has been used (pass nothing otherwise).
+        use_updated_model: True if the larger model architecture should be used for training. Should be False if a costing model is being trained.
+        use_dropout: True if the regularization technique should be used (on by default). False if tests are desired without dropout. Note that not using dropout may cause bias to learned when training.
     """
     DOCKER_INPUT_PATH = config.Settings().APP_CONFIG.DOCKER_INPUT_PATH
     # Load all content stored from the config file, if provided
@@ -622,7 +643,8 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
     if len(output_path) < 1:
         output_path = config.Settings().APP_CONFIG.DOCKER_OUTPUT_PATH
     return fit_evaluate(input_model.preprocessed_data_file, input_model.selected_features_file, input_model.perform_param_search, output_path, input_model.random_seed,
-                        input_model.building_param_files[0], input_model.building_param_files[1], input_model.val_building_params_file, process_type)
+                        input_model.building_param_files[0], input_model.building_param_files[1], input_model.val_building_params_file, process_type, use_updated_model,
+                        use_dropout)
 
 if __name__ == '__main__':
     # Load settings from the environment

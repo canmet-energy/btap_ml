@@ -17,6 +17,7 @@ class AppConfig(BaseModel):
     # Paths to all BTAP calls within the docker container
     DOCKER_INPUT_PATH: str = '/home/btap_ml/input/'
     DOCKER_OUTPUT_PATH: str = '/home/btap_ml/output/'
+    DOCKER_SRC_PATH: str = 'src/'
     # Bucket prefix to be used as part of the run folder being created for training and running
     TRAIN_BUCKET_NAME: str = 'training_model_'
     RUN_BUCKET_NAME: str = 'running_model_'
@@ -55,6 +56,8 @@ class AppConfig(BaseModel):
     BUILDING_BATCH_PATH: str = 'batch_building_inputs'
     SIMULATION_START_DATE: str = 'simulation_start_date'
     SIMULATION_END_DATE: str = 'simulation_end_date'
+    USE_UPDATED_MODEL: str = 'use_updated_model'
+    USE_DROPOUT: str = 'use_dropout'
     # Specify any static filename keys
     PREPROCESSING_FILENAME: str = 'preprocessing'
     FEATURE_SELECTION_FILENAME: str = 'feature_selection'

@@ -39,8 +39,9 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
          skip_feature_selection: bool = typer.Option(False, help="True if the .json feature selection file generation should be skipped, where the selected_features_file input is used, False if the feature selection file generation should be performed."),
         # Training
          selected_features_file: str = typer.Option("", help="Location and name of a .json feature selection file to be used if the feature selection is skipped."),
-         perform_param_search: str = typer.Option("", help="'yes' if hyperparameter tuning should be performed (increases runtime), 'no' if the default hyperparameters should be used."),
          skip_model_training: bool = typer.Option(False, help="True if the model training should be skipped. Useful if only the preprocessing steps should be performed."),
+         use_updated_model: bool = typer.Option(True, help="True if the larger model architecture should be used for energy training."),
+         use_dropout: bool = typer.Option(True, help="True if the regularization technique should be used (on by default). False if tests are desired without dropout. Note that not using dropout may cause bias to learned when training.")
          ) -> None:
     """
     Run through the entire training pipeline to train two surrogate Machine Learning models, one to predict energy and one to predict costing.
@@ -76,12 +77,17 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
         selected_features_file: Location and name of a .json feature selection file to be used if the feature selection is skipped.
         perform_param_search: 'yes' if hyperparameter tuning should be performed (increases runtime), 'no' if the default hyperparameters should be used.
         skip_model_training: True if the model training should be skipped. Useful if only the preprocessing steps should be performed.
+        use_updated_model: True if the larger model architecture should be used for training for energy training.
+        use_dropout: True if the regularization technique should be used (on by default). False if tests are desired without dropout. Note that not using dropout may cause bias to learned when training.
     """
     logger.info("Beginning the training process.")
     DOCKER_INPUT_PATH = config.Settings().APP_CONFIG.DOCKER_INPUT_PATH
     INPUT_CONFIG_FILENAME = "input_config.yml"
     # Load the settings
     settings = config.Settings()
+    # Set the perform_param_search parameter to 'no', this is hard-coded since we
+    # want to leave the infrastructure for it in, but remove the ability to use it for now
+    perform_param_search = 'no'
     # Begin by loading the config file, if passed, to overwrite
     # blank argument values
     if len(config_file) > 0:
@@ -99,9 +105,10 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
         if estimator_type == "": estimator_type = cfg.get(config.Settings().APP_CONFIG.ESTIMATOR_TYPE)
         if perform_param_search == "": perform_param_search = cfg.get(config.Settings().APP_CONFIG.PARAM_SEARCH)
 
-    # Identify the training processes to be taken (energy and/or costing)
-    TRAINING_PROCESSES = [config.Settings().APP_CONFIG.ENERGY,
-                          config.Settings().APP_CONFIG.COSTING]
+    # Identify the training processes to be taken and whether the updated model should
+    # be used for the specified training (energy and/or costing)
+    TRAINING_PROCESSES = [[config.Settings().APP_CONFIG.ENERGY, use_updated_model],
+                          [config.Settings().APP_CONFIG.COSTING, False]]
 
     # Create directory to hold all data for the run (datetime/...)
     # If used, copy the config file within the directory to log the input values
@@ -120,7 +127,9 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
         shutil.copy(DOCKER_INPUT_PATH + config_file, str(output_path_root.joinpath(INPUT_CONFIG_FILENAME)))
 
     # Perform all specified training processes
-    for training_process in TRAINING_PROCESSES:
+    for training_process_params in TRAINING_PROCESSES:
+        training_process = training_process_params[0]
+        train_with_updated_model = training_process_params[1]
         # Validate all input arguments before continuing
         # Program will output an error if validation fails
         input_model = TrainingModel(input_prefix=DOCKER_INPUT_PATH,
@@ -182,7 +191,9 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
                                                      input_model.random_seed,
                                                      input_model.building_param_files[0],
                                                      input_model.building_param_files[1],
-                                                     input_model.val_building_params_file)
+                                                     input_model.val_building_params_file,
+                                                     train_with_updated_model,
+                                                     use_dropout)
 
         # If requested, delete the preprocessing file after completion
         if delete_preprocessing_file:

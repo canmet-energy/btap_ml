@@ -72,17 +72,6 @@ estimator_type: ''
 
 ###################################
 ##
-## FOR MODEL TRAINING AFTER PREPROCESSING (ONLY USED FOR TRAINING)
-##
-###################################
-# Determine whether the training should perform a hyperparameter search
-# Selecting yes will increase the training time
-# Either 'yes' or 'no'
-# Default value='no'
-param_search: 'no'
-
-###################################
-##
 ## EACH VALUE BELOW IS USED FOR RUNNING A TRAINED MODEL
 ##
 ## NOTE: The weather key to be used is the value used by the :epw_file key.

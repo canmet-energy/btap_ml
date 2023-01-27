@@ -109,7 +109,7 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
     # Define the output column names to be used
     COL_NAME_DAILY_MEGAJOULES = "Predicted Daily Energy Total (Megajoules per square meter)"
     COL_NAME_AGGREGATED_GIGAJOULES = "Predicted Energy Total (Gigajoules per square meter)"
-    COL_NAME_TOTAL_COSTING = "Predicted Total Costing"
+    COL_NAME_TOTAL_COSTING = "Predicted Total Costing (per square meter)"
 
     if len(config_file) > 0:
         #load_and_validate_config(config_file)

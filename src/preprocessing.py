@@ -61,7 +61,11 @@ def process_costing_building_files(path_elec, path_gas, clean_dataframe=True):
     # Dynamic list of columns to remove
     output_drop_list = costing_value_names
     # Populate the drop list from the file containing all columns to ignore
-    # TODO: Populate paths in config
+    costing_filepath = config.Settings().APP_CONFIG.COSTING_COLUMNS_FILE
+    # Assuming that the user must be running from the src or home directory, ensure that either
+    # will be able to read the column exceptions file
+    if not os.path.isfile(costing_filepath):
+        costing_filepath = config.Settings().APP_CONFIG.DOCKER_SRC_PATH + costing_filepath
     with open(config.Settings().APP_CONFIG.COSTING_COLUMNS_FILE, 'r', encoding='UTF-8') as cols:
         output_drop_list += cols.read().split("\n")
     # Drop the specified columns
@@ -170,7 +174,9 @@ def process_building_files(path_elec, path_gas, clean_dataframe=True):
                  'energy_eui_natural_gas_gj_per_m_sq',
                  'net_site_eui_gj_per_m_sq',
                  ':analysis_id',
-                 ':analysis_name']
+                 ':analysis_name',
+                 ':os_standards_branch',
+                 ':btap_costing_branch']
     # Drop any remaining fields which exist, ignoring raised errors
     btap_df = btap_df.drop(drop_list, axis=1, errors='ignore')
 

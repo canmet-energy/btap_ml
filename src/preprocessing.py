@@ -66,7 +66,7 @@ def process_costing_building_files(path_elec, path_gas, clean_dataframe=True):
     # will be able to read the column exceptions file
     if not os.path.isfile(costing_filepath):
         costing_filepath = config.Settings().APP_CONFIG.DOCKER_SRC_PATH + costing_filepath
-    with open(config.Settings().APP_CONFIG.COSTING_COLUMNS_FILE, 'r', encoding='UTF-8') as cols:
+    with open(costing_filepath, 'r', encoding='UTF-8') as cols:
         output_drop_list += cols.read().split("\n")
     # Drop the specified columns
     btap_df = btap_df.drop(output_drop_list, axis=1, errors='ignore')

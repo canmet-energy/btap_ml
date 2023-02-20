@@ -6,6 +6,7 @@ import logging
 import os
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import typer
 import xgboost as xgb
@@ -49,7 +50,9 @@ def select_features(preprocessed_data_file, estimator_type, output_path):
     # Scale the inputs before selecting the featueres
     scalerx = RobustScaler()
     X_train = scalerx.fit_transform(preprocessed_dataset["X_train"])
-    y_train = pd.read_json(preprocessed_dataset["y_train"], orient='values').values.ravel()
+    y_train = pd.read_json(preprocessed_dataset["y_train"], orient='values').values#.ravel()
+    # Ignore the total value within the loaded file, just use the individual outputs
+    y_train = y_train[:, 1:]
 
     logger.info("Run estimator: %s", estimator_type)
     if estimator_type.lower() == "linear":
@@ -74,11 +77,13 @@ def select_features(preprocessed_data_file, estimator_type, output_path):
         selected_features = rank_features_nun.loc[rank_features_nun["rank"] == 1].index.tolist()
     else:
         # Use LassoCV
-        reg = linear_model.LassoCV(cv=10, n_jobs=-1, n_alphas=100, tol=600)
+        reg = linear_model.MultiTaskLassoCV(cv=10, n_jobs=-1, n_alphas=100, tol=600)
         fit = reg.fit(X_train,y_train)
         score = reg.score(X_train,y_train)
-        rank_features_nun = pd.DataFrame(reg.coef_, columns=["rank"], index = preprocessed_dataset["features"])
-        selected_features = rank_features_nun.loc[abs(rank_features_nun["rank"])>0].index.tolist()
+        #rank_features_nun = pd.DataFrame(reg.coef_, columns=["rank"], index = preprocessed_dataset["features"])
+        #selected_features = rank_features_nun.loc[abs(rank_features_nun["rank"])>0].index.tolist()
+        selected_features = np.array(features)[np.abs((reg.coef_[0] + reg.coef_[1]) / 2)  > 0]
+
         print(score)
         print(len(selected_features))
         print(selected_features)
@@ -93,7 +98,7 @@ def select_features(preprocessed_data_file, estimator_type, output_path):
     logger.info("Creating directory %s.", str(features_bucket_path))
     config.create_directory(str(features_bucket_path))
 
-    features_json = {'features': selected_features}
+    features_json = {'features': selected_features.tolist()}
 
     with open(str(file_path), 'w', encoding='utf8') as json_output:
         json.dump(features_json, json_output)

@@ -229,6 +229,34 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
         output_val_df_average_predictions_buildings: The mean energy predictions and actual energy values per building type in the validation set
         output_val_df_average_predictions_climates:  The mean energy predictions and actual energy values per climate zone in the validation set
     """
+    test_predictions = model.predict(X_test)
+    y_test['y_pred_elec'] = [elem[0] for elem in test_predictions]
+    y_test['y_pred_gas'] = [elem[1] for elem in test_predictions]
+    test_predictions_transformed = scalery.inverse_transform(test_predictions)
+    y_test['y_pred_elec_transformed'] = [elem[0] for elem in test_predictions_transformed]
+    y_test['y_pred_gas_transformed'] = [elem[1] for elem in test_predictions_transformed]
+
+    validate_predictions = model.predict(X_validate)
+    y_validate['y_pred_elec'] = [elem[0] for elem in validate_predictions]
+    y_validate['y_pred_gas'] = [elem[1] for elem in validate_predictions]
+    validate_predictions_transformed = scalery.inverse_transform(validate_predictions)
+    y_validate['y_pred_elec_transformed'] = [elem[0] for elem in validate_predictions_transformed]
+    y_validate['y_pred_gas_transformed'] = [elem[1] for elem in validate_predictions_transformed]
+
+    # Specify whether energy or costing is being predicted
+    y_label = "energy"
+    #if process_type.lower() == config.Settings().APP_CONFIG.COSTING:
+    #    y_label = "cost_equipment_total_cost_per_m_sq"
+    test_score_elec = score(y_test["energy_elec"], y_test['y_pred_elec_transformed'])
+    test_score_gas = score(y_test["energy_gas"], y_test['y_pred_gas_transformed'])
+    val_score_elec = score(y_validate["energy_elec"], y_validate['y_pred_elec_transformed'])
+    val_score_gas = score(y_validate["energy_gas"], y_validate['y_pred_gas_transformed'])
+
+    print("[Score test loss, test mae, test mse]:", test_score_elec)
+    print("[Score test loss, test mae, test mse]:", test_score_gas)
+    print("[Score val loss, val mae, val mse]:", val_score_elec)
+    print("[Score val loss, val mae, val mse]:", val_score_gas)
+    """
     # evaluate the hypermodel on the test data.
     y_test['y_pred'] = model.predict(X_test)
     y_validate['y_pred'] = model.predict(X_validate)
@@ -244,8 +272,10 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
 
     print("[Score test loss, test mae, test mse]:", test_score)
     print("[Score val loss, val mae, val mse]:", val_score)
+    """
 
     if process_type.lower() == config.Settings().APP_CONFIG.ENERGY:
+        """
         y_test_complete = y_test_complete.groupby(['datapoint_id']).sum()
         y_test_complete['Total Energy'] = y_test_complete['Total Energy'].apply(lambda r: float(r / 365))
         output_df = ''
@@ -259,6 +289,26 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
         y_validate = y_validate.groupby(['datapoint_id']).sum()
         y_validate['energy'] = y_validate['energy'].apply(lambda r: float((r*1.0)/1000))
         y_validate['y_pred_transformed'] = y_validate['y_pred_transformed'].apply(lambda r: float((r*1.0)/1000))
+        """
+        y_test_complete = y_test_complete.groupby(['datapoint_id']).sum()
+        y_test_complete['Total Energy'] = y_test_complete['Total Energy'].apply(lambda r: float(r / 365))
+        output_df = ''
+
+        y_test = y_test.groupby(['datapoint_id']).sum()
+        y_test['energy_elec'] = y_test['energy_elec'].apply(lambda r : float((r*1.0)/1000))
+        y_test['energy_gas'] = y_test['energy_gas'].apply(lambda r : float((r*1.0)/1000))
+        y_test['y_pred_elec_transformed'] = y_test['y_pred_elec_transformed'].apply(lambda r : float((r*1.0)/1000))
+        y_test['y_pred_gas_transformed'] = y_test['y_pred_gas_transformed'].apply(lambda r : float((r*1.0)/1000))
+
+        y_validate_complete = y_validate_complete.groupby(['datapoint_id']).sum()
+        y_validate_complete['Total Energy'] = y_validate_complete['Total Energy'].apply(lambda r: float(r / 365))
+        output_val_df = ''
+
+        y_validate = y_validate.groupby(['datapoint_id']).sum()
+        y_validate['energy_elec'] = y_validate['energy_elec'].apply(lambda r: float((r*1.0)/1000))
+        y_validate['energy_gas'] = y_validate['energy_gas'].apply(lambda r: float((r*1.0)/1000))
+        y_validate['y_pred_elec_transformed'] = y_validate['y_pred_elec_transformed'].apply(lambda r: float((r*1.0)/1000))
+        y_validate['y_pred_gas_transformed'] = y_validate['y_pred_gas_transformed'].apply(lambda r: float((r*1.0)/1000))
     else:
         # Drop the duplicate datapoint_id entry
         y_test_complete = y_test_complete.drop(['datapoint_id'], axis=1)
@@ -268,6 +318,14 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
     y_label = "Total Energy"
     if process_type.lower() == config.Settings().APP_CONFIG.COSTING:
         y_label = "cost_equipment_total_cost_per_m_sq_x"
+    annual_metric_elec = score(y_test['energy_elec'], y_test['y_pred_elec_transformed'])
+    annual_metric_gas = score(y_test['energy_gas'], y_test['y_pred_gas_transformed'])
+    annual_metric_val_elec = score(y_validate['energy_elec'], y_validate['y_pred_elec_transformed'])
+    annual_metric_val_gas = score(y_validate['energy_gas'], y_validate['y_pred_gas_transformed'])
+    output_df = y_test
+    output_val_df = y_validate
+
+    """
     # Merge the results with the datapoint ids
     output_df = pd.merge(y_test, y_test_complete, left_index=True, right_index=True, how='left')
     annual_metric = score(output_df[y_label], output_df['y_pred_transformed'])
@@ -276,6 +334,7 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
 
     output_df = output_df.drop(['y_pred', 'energy_y', 'energy_x'], axis=1, errors='ignore')
     output_val_df = output_val_df.drop(['y_pred', 'energy_y', 'energy_x'], axis=1, errors='ignore')
+    """
 #     pl.daily_plot(y_test,'test_set')
 #     pl.daily_plot(y_validate,'validation_set')
 
@@ -297,6 +356,32 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
     y_label = "Total Energy_x"
     if process_type.lower() == config.Settings().APP_CONFIG.COSTING:
         y_label = "cost_equipment_total_cost_per_m_sq_x"
+
+    output_df = output_df.drop(['y_pred_elec', 'y_pred_gas'], axis=1, errors='ignore')
+    output_val_df = output_val_df.drop(['y_pred_elec', 'y_pred_gas'], axis=1, errors='ignore')
+
+    # Get the absolute difference and squared difference between the predicted and actual energy/costing use
+    output_df['abs_difference_elec'] = abs(output_df['energy_elec'] - output_df["y_pred_elec_transformed"])
+    output_df['mse_difference_elec'] = (output_df['energy_elec'] - output_df["y_pred_elec_transformed"]) ** 2
+    output_val_df['abs_difference_elec'] = abs(output_val_df['energy_elec'] - output_val_df["y_pred_elec_transformed"])
+    output_val_df['mse_difference_elec'] = (output_val_df['energy_elec'] - output_val_df["y_pred_elec_transformed"]) ** 2
+    # 2. Group by building type and epw file, then compute the means for BOTH the actual and predicted energy
+    avg_energy_buildings_elec = output_df[[":building_type", 'energy_elec', "y_pred_elec_transformed", "abs_difference_elec", "mse_difference_elec"]].groupby([':building_type'], sort=False, as_index=False).mean()
+    avg_energy_climates_elec = output_df[[":epw_file", 'energy_elec', "y_pred_elec_transformed", "abs_difference_elec", "mse_difference_elec"]].groupby([':epw_file'], sort=False, as_index=False).mean()
+    avg_energy_buildings_val_elec = output_val_df[[":building_type", 'energy_elec', "y_pred_elec_transformed", "abs_difference_elec", "mse_difference_elec"]].groupby([':building_type'], sort=False, as_index=False).mean()
+    avg_energy_climates_val_elec = output_val_df[[":epw_file", 'energy_elec', "y_pred_elec_transformed", "abs_difference_elec", "mse_difference_elec"]].groupby([':epw_file'], sort=False, as_index=False).mean()
+    # Get the absolute difference and squared difference between the predicted and actual energy/costing use
+    output_df['abs_difference_gas'] = abs(output_df['energy_gas'] - output_df["y_pred_gas_transformed"])
+    output_df['mse_difference_gas'] = (output_df['energy_gas'] - output_df["y_pred_gas_transformed"]) ** 2
+    output_val_df['abs_difference_gas'] = abs(output_val_df['energy_gas'] - output_val_df["y_pred_gas_transformed"])
+    output_val_df['mse_difference_gas'] = (output_val_df['energy_gas'] - output_val_df["y_pred_gas_transformed"]) ** 2
+    # 2. Group by building type and epw file, then compute the means for BOTH the actual and predicted energy
+    avg_energy_buildings_gas = output_df[[":building_type", 'energy_gas', "y_pred_gas_transformed", "abs_difference_gas", "mse_difference_gas"]].groupby([':building_type'], sort=False, as_index=False).mean()
+    avg_energy_climates_gas = output_df[[":epw_file", 'energy_gas', "y_pred_gas_transformed", "abs_difference_gas", "mse_difference_gas"]].groupby([':epw_file'], sort=False, as_index=False).mean()
+    avg_energy_buildings_val_gas = output_val_df[[":building_type", 'energy_gas', "y_pred_gas_transformed", "abs_difference_gas", "mse_difference_gas"]].groupby([':building_type'], sort=False, as_index=False).mean()
+    avg_energy_climates_val_gas = output_val_df[[":epw_file", 'energy_gas', "y_pred_gas_transformed", "abs_difference_gas", "mse_difference_gas"]].groupby([':epw_file'], sort=False, as_index=False).mean()
+
+    """
     # Get the absolute difference and squared difference between the predicted and actual energy/costing use
     output_df['abs_difference'] = abs(output_df[y_label] - output_df["y_pred_transformed"])
     output_df['mse_difference'] = (output_df[y_label] - output_df["y_pred_transformed"]) ** 2
@@ -307,38 +392,46 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
     avg_energy_climates = output_df[[":epw_file", y_label, "y_pred_transformed", "abs_difference", "mse_difference"]].groupby([':epw_file'], sort=False, as_index=False).mean()
     avg_energy_buildings_val = output_val_df[[":building_type", y_label, "y_pred_transformed", "abs_difference", "mse_difference"]].groupby([':building_type'], sort=False, as_index=False).mean()
     avg_energy_climates_val = output_val_df[[":epw_file", y_label, "y_pred_transformed", "abs_difference", "mse_difference"]].groupby([':epw_file'], sort=False, as_index=False).mean()
-
+    """
 
     print('****************TEST SET****************************')
     print(output_df.head(50))
-    print(annual_metric)
+    #print(annual_metric)
 
     print('****************VALIDATION SET****************************')
     print(output_val_df.head(50))
-    print(annual_metric_val)
+    #print(annual_metric_val)
 
     output_label = '(mean actual energy, mean predicted energy, MAE, MSE)'
     if process_type.lower() == config.Settings().APP_CONFIG.COSTING:
         output_label = '(mean actual costing, mean predicted costing, MAE, MSE)'
 
     results = {
-            'test_daily_metric': test_score,
-            'test_annual_metric': annual_metric,
+            'test_daily_metric (elec)': test_score_elec,
+            'test_daily_metric (gas)': test_score_gas,
+            'test_annual_metric (elec)': annual_metric_elec,
+            'test_annual_metric (gas)': annual_metric_gas,
             'output_df': output_df.values.tolist(),
-            'val_daily_metric': val_score,
-            'val_annual_metric': annual_metric_val,
+            'val_daily_metric (elec)': val_score_elec,
+            'val_daily_metric (gas)': val_score_gas,
+            'val_annual_metric (elec)': annual_metric_val_elec,
+            'val_annual_metric (gas)': annual_metric_val_gas,
             'output_val_df': output_val_df.values.tolist(),
-            'output_df_average_predictions_buildings ' + output_label: avg_energy_buildings.values.tolist(),
-            'output_df_average_predictions_climates ' + output_label: avg_energy_climates.values.tolist(),
-            'output_val_df_average_predictions_buildings ' + output_label: avg_energy_buildings_val.values.tolist(),
-            'output_val_df_average_predictions_climates ' + output_label: avg_energy_climates_val.values.tolist(),
+            'output_df_average_predictions_buildings (elec) ' + output_label: avg_energy_buildings_elec.values.tolist(),
+            'output_df_average_predictions_buildings (gas) ' + output_label: avg_energy_buildings_gas.values.tolist(),
+            'output_df_average_predictions_climates (elec) ' + output_label: avg_energy_climates_elec.values.tolist(),
+            'output_df_average_predictions_climates (gas) ' + output_label: avg_energy_climates_gas.values.tolist(),
+            'output_val_df_average_predictions_buildings (elec) ' + output_label: avg_energy_buildings_val_elec.values.tolist(),
+            'output_val_df_average_predictions_buildings (gas) ' + output_label: avg_energy_buildings_val_gas.values.tolist(),
+            'output_val_df_average_predictions_climates (elec) ' + output_label: avg_energy_climates_val_elec.values.tolist(),
+            'output_val_df_average_predictions_climates (gas) ' + output_label: avg_energy_climates_val_gas.values.tolist(),
             }
 
     return results
 
 
 def create_model(dense_layers, activation, optimizer, dropout_rate, length, learning_rate, epochs, batch_size, X_train, y_train, X_test, y_test, y_test_complete, scalery,
-                 X_validate, y_validate, y_validate_complete, output_path, path_elec, path_gas, val_building_path, process_type):
+                 X_validate, y_validate, y_validate_complete, output_path, path_elec, path_gas, val_building_path, process_type, output_nodes):
     """
     Creates a model with defaulted values without need to perform an hyperparameter search at all times.
     Its initutive to have run the hyperparameter search beforehand to know the hyperparameter value to set.
@@ -366,6 +459,7 @@ def create_model(dense_layers, activation, optimizer, dropout_rate, length, lear
         path_gas: Filepath of the gas building file, if it has been used (pass nothing otherwise)
         val_building_path: Filepath of the validation building file, if it has been used (pass nothing otherwise).
         process_type: Either 'energy' or 'costing' to specify the operations to be performed.
+        output_nodes: The number of outputs which the model needs to predict.
     Returns:
         metric: evaluation results containing the loss value from the testset prediction,
         annual_metric: predicted value for each datapooint_id is summed to calculate the annual energy consumed and the loss value from the testset prediction,
@@ -393,7 +487,7 @@ def create_model(dense_layers, activation, optimizer, dropout_rate, length, lear
                         ))
         if dropout_rate > 0 and dropout_rate <= 1:
             model.add(Dropout(dropout_rate))
-    model.add(Dense(1, activation='linear'))
+    model.add(Dense(output_nodes, activation='linear'))
 
     if optimizer == "adam":
         optimizer = tf.optimizers.Adam(learning_rate=learning_rate)
@@ -475,7 +569,9 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, param_search, o
     X_train = pd.DataFrame(preprocessing_json["X_train"], columns=features)
     X_test = pd.DataFrame(preprocessing_json["X_test"], columns=features)
     X_validate = pd.DataFrame(preprocessing_json["X_validate"], columns=features)
-    y_train = pd.read_json(preprocessing_json["y_train"], orient='values').values.ravel()
+    y_train = pd.read_json(preprocessing_json["y_train"], orient='values').values#.ravel()
+    # Remove the total from the loaded json
+    y_train = y_train[:, 1:]
 
     # Extract the selected features from feature engineering
     X_train = X_train[selected_features]
@@ -483,7 +579,7 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, param_search, o
     X_validate = X_validate[selected_features]
     col_length = X_train.shape[1]
 
-    json_columns = ['energy', 'datapoint_id', 'Total Energy']
+    json_columns = ['energy', 'datapoint_id', 'Total Energy', 'energy_elec', 'energy_gas']
     if process_type.lower() == config.Settings().APP_CONFIG.COSTING:
         json_columns = ['cost_equipment_total_cost_per_m_sq',
                         'cost_equipment_envelope_total_cost_per_m_sq',
@@ -497,8 +593,11 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, param_search, o
     y_test_complete = pd.DataFrame(preprocessing_json["y_test_complete"], columns=json_columns)
     y_validate_complete = pd.DataFrame(preprocessing_json["y_validate_complete"], columns=json_columns)
     # Remove "Total Energy" from json_columns if the energy predictions are being performed
+    output_nodes = 1
     if process_type.lower() == config.Settings().APP_CONFIG.ENERGY:
-        json_columns = json_columns[:-1]
+        #json_columns = json_columns[:-1]
+        json_columns.remove('Total Energy')
+        output_nodes = 2
     y_test = pd.DataFrame(preprocessing_json["y_test"], columns=json_columns)
     y_validate= pd.DataFrame(preprocessing_json["y_validate"], columns=json_columns)
 
@@ -508,9 +607,10 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, param_search, o
     X_train = scalerx.fit_transform(X_train)
     X_test = scalerx.transform(X_test)
     X_validate = scalerx.transform(X_validate)
-    y_train = scalery.fit_transform(y_train.reshape(-1, 1))
+    y_train = scalery.fit_transform(y_train)#.reshape(-1, 1))
 
     # If set to "yes", search for best hyperparameters before training
+    # "YES" HAS BEEN DECOMMISSIONED AS OF THE RELEASE OF TASKS 5/6 OF PHASE 3
     if param_search.lower() == "yes":
         hypermodel = predicts_hp(X_train, y_train, X_test, y_test, features, output_path, random_seed)
         results_pred = evaluate(hypermodel, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
@@ -552,7 +652,8 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, param_search, o
                                     path_elec=path_elec,
                                     path_gas=path_gas,
                                     val_building_path=val_building_path,
-                                    process_type=process_type
+                                    process_type=process_type,
+                                    output_nodes=output_nodes
                                    )
     # Calculate the time spent training in minutes
     time_taken = ((time.time() - start_time) / 60)
@@ -565,7 +666,7 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, param_search, o
     output_filename_json = str(model_path) + "/" + config.Settings().APP_CONFIG.TRAINING_RESULTS_FILENAME + ".json"
     output_filename_csv = str(model_path) + "/" + config.Settings().APP_CONFIG.TRAINING_RESULTS_FILENAME + ".csv"
     # Specify the indices where the target outputs are
-    output_indices = [0, 1]
+    output_indices = [1, 2, 3, 4]
     output_label = config.Settings().APP_CONFIG.ENERGY
     if process_type.lower() == config.Settings().APP_CONFIG.COSTING:
         output_indices = [8, 9]
@@ -573,11 +674,11 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, param_search, o
     # Output the results within a csv for each prediction
     with open(output_filename_csv, 'a', encoding='utf-8') as csv_output:
         writer = csv.writer(csv_output)
-        writer.writerow(['ID', 'Predicted ' + output_label, 'Actual ' + output_label])
+        writer.writerow(['ID', 'Actual Electricity ' + output_label, 'Predicted Electricity ' + output_label, 'Actual Gas ' + output_label, 'Predicted Gas ' + output_label])
         for i, pair in enumerate(results_pred['output_df']):
-            writer.writerow(['Test_' + str(i), pair[output_indices[0]], pair[output_indices[1]]])
+            writer.writerow(['Test_' + str(i), pair[output_indices[0]], pair[output_indices[2]], pair[output_indices[1]], pair[output_indices[3]]])
         for i, pair in enumerate(results_pred['output_val_df']):
-            writer.writerow(['Validation_' + str(i), pair[output_indices[0]], pair[output_indices[1]]])
+            writer.writerow(['Validation_' + str(i), pair[output_indices[0]], pair[output_indices[2]], pair[output_indices[1]], pair[output_indices[3]]])
     # Also output all training information within one json file
     with open(output_filename_json, 'w', encoding='utf8') as json_output:
         json.dump(results_pred, json_output)

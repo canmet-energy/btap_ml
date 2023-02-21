@@ -107,8 +107,10 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
     # This value does not need to be adjusted for the current year
     TEMP_YEAR = "2022-"
     # Define the output column names to be used
-    COL_NAME_DAILY_MEGAJOULES = "Predicted Daily Energy Total (Megajoules per square meter)"
-    COL_NAME_AGGREGATED_GIGAJOULES = "Predicted Energy Total (Gigajoules per square meter)"
+    COL_NAME_DAILY_MEGAJOULES_ELEC = "Predicted Daily Electricity Energy Total (Megajoules per square meter)"
+    COL_NAME_DAILY_MEGAJOULES_GAS = "Predicted Daily Gas Energy Total (Megajoules per square meter)"
+    COL_NAME_AGGREGATED_GIGAJOULES_ELEC = "Predicted Electricity Energy Total (Gigajoules per square meter)"
+    COL_NAME_AGGREGATED_GIGAJOULES_GAS = "Predicted Gas Energy Total (Gigajoules per square meter)"
     COL_NAME_TOTAL_COSTING = "Predicted Total Costing (per square meter)"
 
     if len(config_file) > 0:
@@ -208,7 +210,8 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
 
         predictions = scaler_y.inverse_transform(model.predict(X))
         if running_process.lower() == config.Settings().APP_CONFIG.ENERGY:
-            X_ids[COL_NAME_DAILY_MEGAJOULES] = predictions
+            X_ids[COL_NAME_DAILY_MEGAJOULES_ELEC] = [elem[0] for elem in predictions]
+            X_ids[COL_NAME_DAILY_MEGAJOULES_GAS] = [elem[1] for elem in predictions]
         elif running_process.lower() == config.Settings().APP_CONFIG.COSTING:
             X_ids[COL_NAME_TOTAL_COSTING] = predictions
         """
@@ -234,8 +237,9 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
             total_days = len(pd.date_range(TEMP_YEAR + start_date, TEMP_YEAR + end_date))
             # If the averaged energy use is needed, the line below can be used
             # ... = X_aggregated[COL_NAME_DAILY_MEGAJOULES].apply(lambda r: float(r / total_days))
-            X_aggregated[COL_NAME_AGGREGATED_GIGAJOULES] = X_aggregated[COL_NAME_DAILY_MEGAJOULES].apply(lambda r: float((r*1.0)/1000))
-            X_aggregated = X_aggregated.drop(COL_NAME_DAILY_MEGAJOULES, axis=1)
+            X_aggregated[COL_NAME_AGGREGATED_GIGAJOULES_ELEC] = X_aggregated[COL_NAME_DAILY_MEGAJOULES_ELEC].apply(lambda r: float((r*1.0)/1000))
+            X_aggregated[COL_NAME_AGGREGATED_GIGAJOULES_GAS] = X_aggregated[COL_NAME_DAILY_MEGAJOULES_GAS].apply(lambda r: float((r*1.0)/1000))
+            X_aggregated = X_aggregated.drop([COL_NAME_DAILY_MEGAJOULES_ELEC, COL_NAME_DAILY_MEGAJOULES_GAS], axis=1)
         # Merge the processed building data used for training with the preprocessed building data
         if buildings_df is None:
             buildings_df, _ = preprocessing.process_building_files_batch(input_model.building_params_folder, "", "", running_process.lower() == config.Settings().APP_CONFIG.ENERGY)

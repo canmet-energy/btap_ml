@@ -82,7 +82,8 @@ def select_features(preprocessed_data_file, estimator_type, output_path):
         score = reg.score(X_train,y_train)
         #rank_features_nun = pd.DataFrame(reg.coef_, columns=["rank"], index = preprocessed_dataset["features"])
         #selected_features = rank_features_nun.loc[abs(rank_features_nun["rank"])>0].index.tolist()
-        selected_features = np.array(features)[np.abs((reg.coef_[0] + reg.coef_[1]) / 2)  > 0]
+        selected_features = np.array(features)[np.abs(sum(reg.coef_) / len(reg.coef_))  > 0]
+        #selected_features = np.array(features)[np.abs((reg.coef_[0] + reg.coef_[1]) / 2)  > 0]
 
         print(score)
         print(len(selected_features))

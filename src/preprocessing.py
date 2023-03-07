@@ -393,6 +393,7 @@ def create_dataset(energy_daily_df, val_df, valsplit, random_seed):
         y_validate: y validate set
         y_validate_complete: Dataframe containing the target variable with corresponding datapointid for the validation set
     """
+    logger.info("train_test_split with valsplit: %s", valsplit)
     drop_list = ['index', ':datapoint_id', 'level_0', 'index', 'date_int', ':datapoint_id']
 
     #split to train and test datasets
@@ -480,7 +481,7 @@ def create_costing_dataset(energy_daily_df, val_df, costing_df, costing_df_val, 
 
     X_train = X_train.drop(drop_list, axis=1, errors='ignore')
     X_test = X_test.drop(drop_list, axis=1, errors='ignore')
-    y_train = y_train['cost_equipment_total_cost_per_m_sq']#y_train['energy']
+    y_train = y_train.drop(['datapoint_id'], axis=1, errors='ignore')
     X_train = X_train.drop(['datapoint_id'], axis=1, errors='ignore')
     X_test = X_test.drop(['datapoint_id'], axis=1, errors='ignore')
 

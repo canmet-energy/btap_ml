@@ -213,7 +213,12 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
             X_ids[COL_NAME_DAILY_MEGAJOULES_ELEC] = [elem[0] for elem in predictions]
             X_ids[COL_NAME_DAILY_MEGAJOULES_GAS] = [elem[1] for elem in predictions]
         elif running_process.lower() == config.Settings().APP_CONFIG.COSTING:
-            X_ids[COL_NAME_TOTAL_COSTING] = predictions
+            X_ids["Predicted cost_equipment_envelope_total_cost_per_m_sq"] = [elem[0] for elem in predictions]
+            X_ids["Predicted cost_equipment_heating_and_cooling_total_cost_per_m_sq"] = [elem[1] for elem in predictions]
+            X_ids["Predicted cost_equipment_lighting_total_cost_per_m_sq"] = [elem[2] for elem in predictions]
+            X_ids["Predicted cost_equipment_ventilation_total_cost_per_m_sq"] = [elem[3] for elem in predictions]
+            X_ids["Predicted cost_equipment_renewables_total_cost_per_m_sq"] = [elem[4] for elem in predictions]
+            X_ids["Predicted cost_equipment_shw_total_cost_per_m_sq"] = [elem[5] for elem in predictions]
         """
         # Get the megajoule predictions (or call the predict.evaluate function!)
         X_ids[COL_NAME_DAILY_MEGAJOULES] = model.predict(X)

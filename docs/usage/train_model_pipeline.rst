@@ -13,10 +13,16 @@ Following additional data cleaning, the data is split into train/test/validation
 where the validation set is either split from the regular input data or
 is loaded from an explicitly provided file to be used for validation.
 
+.. note::
+
+    All input data will be used 'as is', where transformations using specific calculations should be done
+    before the data is used for processing.
+
 Before training the Machine Learning model, the optimal features will be selected by calling
 ``feature_selection.py``. This process will use one of several avilable tools for feature selection
 to derive a list of features which will be used for training. This omits any feature which will not be
-useful in the training process.
+useful in the training process. The availability of each feature selection tool will vary depending on
+whether the total energy/costing is predicted or whether the energy/costing breakdowns are predicted.
 
 Using the selected features and preprocessed datasets, ``predict.py`` will be called to train the model.
 Hyperparameter tuning can be performed at the cost of additional time complexity or the default

@@ -6,6 +6,7 @@ import logging
 import os
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import typer
 import xgboost as xgb
@@ -28,8 +29,7 @@ logger = logging.getLogger(__name__)
 
 def select_features(preprocessed_data_file, estimator_type, output_path):
     """
-    Select the feature which contribute most to the prediction for the total energy consumed.
-    Default estimator_type used for feature selection is 'LassoCV'.
+    Select the feature which contribute most to the prediction for the energy and costing values.
 
     Args:
         preprocessed_data_file: Location and name of a .json preprocessing file to be used if the preprocessing is skipped.
@@ -49,8 +49,13 @@ def select_features(preprocessed_data_file, estimator_type, output_path):
     # Scale the inputs before selecting the featueres
     scalerx = RobustScaler()
     X_train = scalerx.fit_transform(preprocessed_dataset["X_train"])
-    y_train = pd.read_json(preprocessed_dataset["y_train"], orient='values').values.ravel()
+    y_train = pd.read_json(preprocessed_dataset["y_train"], orient='values').values#.ravel()
+    # Ignore the total value within the loaded file, just use the individual outputs
+    y_train = y_train[:, 1:]
 
+    # For multiple outputs, only the MultiTaskLassoCV is used, this can be adjusted if more time
+    # is available to test other approaches.
+    """
     logger.info("Run estimator: %s", estimator_type)
     if estimator_type.lower() == "linear":
         estimator = LinearRegression()
@@ -73,15 +78,16 @@ def select_features(preprocessed_data_file, estimator_type, output_path):
         rank_features_nun = pd.DataFrame(rfecv.ranking_, columns=["rank"], index=preprocessed_dataset["features"])
         selected_features = rank_features_nun.loc[rank_features_nun["rank"] == 1].index.tolist()
     else:
-        # Use LassoCV
-        reg = linear_model.LassoCV(cv=10, n_jobs=-1, n_alphas=100, tol=600)
-        fit = reg.fit(X_train,y_train)
-        score = reg.score(X_train,y_train)
-        rank_features_nun = pd.DataFrame(reg.coef_, columns=["rank"], index = preprocessed_dataset["features"])
-        selected_features = rank_features_nun.loc[abs(rank_features_nun["rank"])>0].index.tolist()
-        print(score)
-        print(len(selected_features))
-        print(selected_features)
+    """
+    # Use LassoCV
+    reg = linear_model.MultiTaskLassoCV(cv=10, n_jobs=-1, n_alphas=100, tol=600)
+    fit = reg.fit(X_train,y_train)
+    score = reg.score(X_train,y_train)
+    selected_features = np.array(features)[np.abs(sum(reg.coef_) / len(reg.coef_))  > 0]
+
+    print(score)
+    print(len(selected_features))
+    print(selected_features)
 
     # Create the root directory in the mounted drive
     features_bucket_path = Path(output_path).joinpath(config.Settings().APP_CONFIG.FEATURE_SELECTION_BUCKET_NAME)
@@ -93,7 +99,7 @@ def select_features(preprocessed_data_file, estimator_type, output_path):
     logger.info("Creating directory %s.", str(features_bucket_path))
     config.create_directory(str(features_bucket_path))
 
-    features_json = {'features': selected_features}
+    features_json = {'features': selected_features.tolist()}
 
     with open(str(file_path), 'w', encoding='utf8') as json_output:
         json.dump(features_json, json_output)
@@ -106,8 +112,7 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
          output_path: str = typer.Option("", help="The output path to be used. Note that this value should be empty unless this file is called from a pipeline."),
          ) -> str:
     """
-    Select the feature which contribute most to the prediction for the total energy or costing consumed.
-    Default estimator_type used for feature selection is 'LassoCV'
+    Select the feature which contribute most to the prediction for the energy or costing values.
 
     Args:
         config_file: Location of the .yml config file (default name is input_config.yml).

@@ -108,7 +108,7 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
     # Identify the training processes to be taken and whether the updated model should
     # be used for the specified training (energy and/or costing)
     TRAINING_PROCESSES = [[config.Settings().APP_CONFIG.ENERGY, use_updated_model],
-                          [config.Settings().APP_CONFIG.COSTING, False]]
+                          [config.Settings().APP_CONFIG.COSTING, use_updated_model]]
 
     # Create directory to hold all data for the run (datetime/...)
     # If used, copy the config file within the directory to log the input values

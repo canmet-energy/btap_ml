@@ -107,7 +107,8 @@ def clean_data(df) -> pd.DataFrame:
                          'energy_eui_natural_gas_gj_per_m_sq',
                          ':building_type',
                          ':epw_file',
-                         'bldg_conditioned_floor_area_m_sq']
+                         'bldg_conditioned_floor_area_m_sq',
+                         'Name']
 
     # Again, there may be some columns with more than one unique value, but one
     # value that has insignificant frequency in the data set.
@@ -294,27 +295,44 @@ def process_hourly_energy(path_elec, path_gas, floor_sq):
     if path_gas:
         energy_df = pd.concat([energy_df, pd.read_csv(path_gas)], ignore_index=True)
     # Adds all except Electricity:Facility
-    energy_df.loc[(energy_df['Name'] != "ElectricityNet:Facility") & (energy_df['Name'] != "NaturalGas:Facility"), ['Name']] = "Electricity:Facility"
+    #energy_df.loc[(energy_df['Name'] != "ElectricityNet:Facility") & (energy_df['Name'] != "NaturalGas:Facility"), ['Name']] = "Electricity:Facility"
+    energy_df = energy_df.loc[(energy_df['Name'] == "ElectricityNet:Facility") | (energy_df['Name'] == "NaturalGas:Facility")]
     #print(energy_df[energy_df['Name'] == "ElectricityNet:Facility" or energy_df['Name'] == 'NaturalGas:Facility'])
-    energy_df = energy_df[energy_df['Name'] != "Electricity:Facility"].groupby(['datapoint_id']).sum()
+    #energy_df = energy_df[energy_df['Name'] != "Electricity:Facility"].groupby(['datapoint_id']).sum()
     # TODO: REMOVE
     #energy_df = energy_df.agg(lambda x: x / (floor_sq * 1000000))
     energy_df = energy_df.drop(['KeyValue'], axis=1)
     # Clean the energy data
     energy_df = clean_data(energy_df)
 
-    energy_df = energy_df.reset_index()
+    energy_df = energy_df.reset_index(drop=True)
     # Change the dataframe from having all dates as columns to having
     # each current row contain an entry for each date
     # Note that this takes a long time to process
-    energy_df = energy_df.melt(id_vars=['datapoint_id'], var_name='Timestamp', value_name='energy')
+    energy_df = energy_df.melt(id_vars=['datapoint_id', 'Name'], var_name='Timestamp', value_name='energy')
     energy_df["date_int"] = energy_df['Timestamp'].apply(lambda r : datetime.strptime(r, '%Y-%m-%d %H:%M'))
     # Since the year is ignored, change the date to an int of the form:
     # <month_number><day_number>
     # where <day_number always has two digits AND <month_number> may only have one
     energy_df["date_int"] = energy_df["date_int"].apply(lambda r: r.strftime("%m%d"))
     energy_df["date_int"] = energy_df["date_int"].apply(lambda r: int(r))
-    energy_df = energy_df.groupby(['datapoint_id', 'date_int'])['energy'].agg(lambda x: x.sum()).reset_index()
+    energy_df = energy_df.groupby(['datapoint_id', 'date_int', 'Name'])['energy'].agg(lambda x: x.sum()).reset_index()
+
+    # Merge gas and electricity rows together
+    energy_df = pd.merge(energy_df.loc[(energy_df['Name'] == "ElectricityNet:Facility")],
+                         energy_df.loc[(energy_df['Name'] == "NaturalGas:Facility")],
+                         on=['datapoint_id', 'date_int'],
+                         how='outer',
+                         suffixes=['_elec', '_gas'])
+
+    # Remove unused column names
+    energy_df = energy_df.drop(["Name_elec", "Name_gas"], axis='columns', errors='ignore')
+
+    # Replace blank values with 0 (ex: when there is electricity but no gas)
+    energy_df = energy_df.replace(np.nan, 0.0)
+
+    # Also track the total energy usage
+    energy_df['energy'] = energy_df['energy_elec'] + energy_df['energy_gas']
 
     return energy_df
 
@@ -379,36 +397,37 @@ def create_dataset(energy_daily_df, val_df, valsplit, random_seed):
     drop_list = ['index', ':datapoint_id', 'level_0', 'index', 'date_int', ':datapoint_id']
 
     #split to train and test datasets
-    y = energy_daily_df[['energy', 'datapoint_id', 'Total Energy']]
-    X = energy_daily_df.drop(['energy', ':epw_file', 'bldg_conditioned_floor_area_m_sq'], axis=1)
+    y = energy_daily_df[['energy', 'datapoint_id', 'Total Energy', 'energy_elec', 'energy_gas']]
+    X = energy_daily_df.drop(['energy', 'energy_elec', 'energy_gas', ':epw_file', 'bldg_conditioned_floor_area_m_sq'], axis=1)
     X_train, y_train, X_test, y_test_complete = groupsplit(X, y, valsplit, random_seed)
-    y_test = y_test_complete[['energy', 'datapoint_id']]
+    y_test = y_test_complete[['energy', 'datapoint_id', 'energy_elec', 'energy_gas']]
 
     if valsplit.lower() == 'yes':
-        y_validate_complete = val_df[['energy', 'datapoint_id', 'Total Energy']]
-        X_val = val_df.drop(['energy'], axis=1)
-        y_validate = y_validate_complete[['energy', 'datapoint_id']]
+        y_validate_complete = val_df[['energy', 'datapoint_id', 'Total Energy', 'energy_elec', 'energy_gas']]
+        X_val = val_df.drop(['energy', 'energy_elec', 'energy_gas'], axis=1)
+        y_validate = y_validate_complete[['energy', 'datapoint_id', 'energy_elec', 'energy_gas']]
         X_validate = X_val.drop(drop_list, axis=1)
-        X_validate = X_validate.drop(['datapoint_id', 'Total Energy'], axis=1)
+        X_validate = X_validate.drop(['datapoint_id', 'Total Energy', 'energy_elec', 'energy_gas'], axis=1, errors='ignore')
     else:
         y_test = y_test_complete
         X_test = X_test.reset_index(drop=True)
         y_test = y_test.reset_index(drop=True)
         X_test, y_test, X_validate, y_validate_complete = groupsplit(X_test, y_test, valsplit, random_seed)
         y_test_complete = y_test
-        y_validate = y_validate_complete[['energy', 'datapoint_id']]
-        y_test = y_test[['energy', 'datapoint_id']]
+        y_validate = y_validate_complete[['energy', 'datapoint_id', 'energy_elec', 'energy_gas']]
+        y_test = y_test[['energy', 'datapoint_id', 'energy_elec', 'energy_gas']]
         # TODO: Move to central call since many duplicate/uneeded lines
-        X_validate = X_validate.drop(drop_list, axis=1)
-        X_validate = X_validate.drop(['datapoint_id', 'Total Energy'], axis=1)
+        X_validate = X_validate.drop(drop_list, axis=1, errors='ignore')
+        X_validate = X_validate.drop(['datapoint_id', 'Total Energy', 'energy_elec', 'energy_gas'], axis=1, errors='ignore')
     # TODO: Remove since not needed
-    energy_daily_df = energy_daily_df.drop(drop_list, axis=1)
+    energy_daily_df = energy_daily_df.drop(drop_list, axis=1, errors='ignore')
 
-    X_train = X_train.drop(drop_list, axis=1)
-    X_test = X_test.drop(drop_list, axis=1)
-    y_train = y_train['energy']
-    X_train = X_train.drop(['datapoint_id', 'Total Energy'], axis=1)
-    X_test = X_test.drop(['datapoint_id', 'Total Energy'], axis=1)
+    X_train = X_train.drop(drop_list, axis=1, errors='ignore')
+    X_test = X_test.drop(drop_list, axis=1, errors='ignore')
+    # UPDATE TO BE LIST
+    y_train = y_train[['energy', 'energy_elec', 'energy_gas']]
+    X_train = X_train.drop(['datapoint_id', 'Total Energy', 'energy_elec', 'energy_gas'], axis=1, errors='ignore')
+    X_test = X_test.drop(['datapoint_id', 'Total Energy', 'energy_elec', 'energy_gas'], axis=1, errors='ignore')
 
     return X_train, X_test, y_train, y_test, y_test_complete, X_validate, y_validate, y_validate_complete
 
@@ -462,7 +481,7 @@ def create_costing_dataset(energy_daily_df, val_df, costing_df, costing_df_val, 
 
     X_train = X_train.drop(drop_list, axis=1, errors='ignore')
     X_test = X_test.drop(drop_list, axis=1, errors='ignore')
-    y_train = y_train['cost_equipment_total_cost_per_m_sq']#y_train['energy']
+    y_train = y_train.drop(['datapoint_id'], axis=1, errors='ignore')
     X_train = X_train.drop(['datapoint_id'], axis=1, errors='ignore')
     X_test = X_test.drop(['datapoint_id'], axis=1, errors='ignore')
 
@@ -647,6 +666,10 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
                            how='left').reset_index()
         # Adjust the energy values based on the floor area in meters squared
         btap_df['energy'] = btap_df['energy'] / (btap_df['bldg_conditioned_floor_area_m_sq'] * 1000000)
+        # Adjust the energy values based on the floor area in meters squared
+        btap_df['energy_elec'] = btap_df['energy_elec'] / (btap_df['bldg_conditioned_floor_area_m_sq'] * 1000000)
+        # Adjust the energy values based on the floor area in meters squared
+        btap_df['energy_gas'] = btap_df['energy_gas'] / (btap_df['bldg_conditioned_floor_area_m_sq'] * 1000000)
 
         logger.info("NA values in btap_df after merging with energy:\n%s", btap_df.isna().any())
 
@@ -669,6 +692,13 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
                                    left_on=['datapoint_id'],
                                    right_on=[':datapoint_id'],
                                    how='left').reset_index()
+            # Adjust the energy values based on the floor area in meters squared
+            btap_df_val['energy'] = btap_df_val['energy'] / (btap_df_val['bldg_conditioned_floor_area_m_sq'] * 1000000)
+            # Adjust the energy values based on the floor area in meters squared
+            btap_df_val['energy_elec'] = btap_df_val['energy_elec'] / (btap_df_val['bldg_conditioned_floor_area_m_sq'] * 1000000)
+            # Adjust the energy values based on the floor area in meters squared
+            btap_df_val['energy_gas'] = btap_df_val['energy_gas'] / (btap_df_val['bldg_conditioned_floor_area_m_sq'] * 1000000)
+
             logger.info("NA values in btap_df_val after merging with energy:\n%s", btap_df_val.isna().any())
             weather_df = read_weather(epw_keys)
             btap_df = pd.merge(btap_df, weather_df, on=['date_int', ':epw_file'], how='left').reset_index()

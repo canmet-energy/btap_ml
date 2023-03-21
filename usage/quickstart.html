@@ -55,7 +55,7 @@ by calling the python file with <code class="docutils literal notranslate"><span
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>Depending on the size of the input files, the amount of RAM needed can be exceedingly high. Thus, the inputs should be split
-as needed if the RAM usage is too high.</p>
+as needed if the RAM usage is too high. Further works can add the functionality to further train a model.</p>
 </div>
 <section id="training-a-model">
 <h2>Training a model<a class="headerlink" href="#training-a-model" title="Permalink to this headline">¶</a></h2>
@@ -73,7 +73,8 @@ steps are performed appropriately for both energy and costing in sequence.</p>
 <h2>Getting model predictions<a class="headerlink" href="#getting-model-predictions" title="Permalink to this headline">¶</a></h2>
 <p>With a trained Machine Learning model in the form of a .h5 file, the model will be used to obtain the predicted daily Megajoules per meter squared
 and the predicted aggregated Gigajoules per meter squared for energy predictions (for a specified timeframe) for a batch of specified building files
-within a specified directory. Costing predictions will then be output.
+within a specified directory. Costing predictions will then be output. The ouputs can be provided as the total energy/costing values or the
+brekdowns of those totals depending on which Docker image available is used.
 Obtaining the predictions from a model can be performed by calling the <code class="docutils literal notranslate"><span class="pre">run_model.py</span></code> file and passing the appropriate arguements.
 Assuming that only the <code class="docutils literal notranslate"><span class="pre">input_config.yml</span></code> file is used and located inside of the current directory, the arguement to pass is:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">run_model</span><span class="o">.</span><span class="n">py</span> <span class="n">input_config</span><span class="o">.</span><span class="n">yml</span>

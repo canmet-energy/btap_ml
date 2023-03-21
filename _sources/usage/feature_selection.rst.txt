@@ -12,7 +12,11 @@ to search for the most optimal features from the preprocessed data.
 
     Feature selection is performed using the X_train and the y_train set.
 
-Feature selection can be perfomed using any of the following estimator types:
+To determine which features are useful for predicting the total energy and total costing we use:
+
+* MultiTaskLassoCV
+
+Feature selection can be perfomed using any of the following estimator types when predicting the total energy or total costing:
 
 * Linear Regression
 * XGBRegressor

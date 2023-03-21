@@ -22,7 +22,7 @@ config files can also be used.
 .. warning::
 
    Depending on the size of the input files, the amount of RAM needed can be exceedingly high. Thus, the inputs should be split
-   as needed if the RAM usage is too high.
+   as needed if the RAM usage is too high. Further works can add the functionality to further train a model.
 
 Training a model
 ----------------
@@ -42,7 +42,8 @@ Getting model predictions
 
 With a trained Machine Learning model in the form of a .h5 file, the model will be used to obtain the predicted daily Megajoules per meter squared
 and the predicted aggregated Gigajoules per meter squared for energy predictions (for a specified timeframe) for a batch of specified building files
-within a specified directory. Costing predictions will then be output.
+within a specified directory. Costing predictions will then be output. The ouputs can be provided as the total energy/costing values or the
+brekdowns of those totals depending on which Docker image available is used.
 Obtaining the predictions from a model can be performed by calling the ``run_model.py`` file and passing the appropriate arguements.
 Assuming that only the ``input_config.yml`` file is used and located inside of the current directory, the arguement to pass is::
 

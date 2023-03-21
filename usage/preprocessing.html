@@ -47,7 +47,8 @@ need to be manually combined before passing them as input.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The system will not work with columns containing strings and floats together. A mix of default values which
-require conversion and regular numbers must be updated to be only numbers.</p>
+require conversion and regular numbers must be updated to be only numbers. All data should be fully prepared before
+being passed into the program.</p>
 </div>
 <section id="what-this-does">
 <h1>What this does<a class="headerlink" href="#what-this-does" title="Permalink to this headline">¶</a></h1>
@@ -59,6 +60,11 @@ the weather information is loaded based on which climate zones are used within t
 aggregated from hourly to daily, so that it can be merged with the hourly energy file.
 In essence, the simulation I/O file(s), weather data from the specified climate zones and the hourly energy consumption file(s) are all merged to one
 dataframe which is then split for training and testing purposes (training set, testing set, validation set).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>There are two versions of the program, one which preprocesses to only include the total energy and costing values, and one which
+keeps all types of energy and costing to work with later.</p>
+</div>
 <p>For costing, the only preprocessing performed is on the building input files, with the weather and energy preprocessing being skipped.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>

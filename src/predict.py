@@ -121,7 +121,8 @@ def model_builder(hp):
 
 def predicts_hp(X_train, y_train, X_test, y_test, selected_feature, output_path, random_seed):
     """
-    Using the set of hyperparameter combined,the model built is used to make predictions
+    DECOMMISIONED: May need updates for multi-outputs
+    Using the set of hyperparameter combined,the model built is used to make predictions.
 
     Args:
         X_train: X train set
@@ -517,7 +518,7 @@ def create_model(dense_layers, activation, optimizer, dropout_rate, length, lear
 
 def fit_evaluate(preprocessed_data_file, selected_features_file, param_search, output_path, random_seed, path_elec, path_gas, val_building_path, process_type, use_updated_model, use_dropout):
     """
-    Downloads the output from preprocessing and feature selection from mino, builds the model and then evaluate the model.
+    Loads the output from preprocessing and feature selection, builds the model, then evaluates the model.
 
     Args:
         preprocessed_data_file: Location and name of a .json preprocessing file to be used.
@@ -600,6 +601,7 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, param_search, o
         results_pred = evaluate(hypermodel, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
     # Otherwise use a default model design and train with that model
     else:
+        # Default parameters for the MLP used
         DROPOUT_RATE = 0.1
         LEARNING_RATE = 0.0001
         EPOCHS = 100

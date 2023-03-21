@@ -15,7 +15,8 @@ is processed.
 .. note::
 
     The weather data is only loaded for energy preprocessing and if there are connection issues, the code may
-    return an error when retrieving the weather from the repo.
+    return an error when retrieving the weather from the repo. You can try running the program again if this
+    arises.
 
 .. code::
 

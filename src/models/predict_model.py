@@ -19,6 +19,7 @@ class PredictModel(pydantic.BaseModel):
     input_prefix: str
     preprocessed_data_file: str
     selected_features_file: str
+    selected_model_type: str
     perform_param_search: str
     random_seed: int
     building_param_files: Optional[list]

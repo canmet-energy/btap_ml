@@ -30,9 +30,6 @@
 # Default value=7
 random_seed: 7
 
-# Selected model type
-selected_model_type: 'rf'
-
 ###################################
 ##
 ## FOR INPUT PREPROCESSING (ONLY USED FOR TRAINING)
@@ -43,14 +40,14 @@ building_param_files: [
   # Electricity file (mandatory)
   'calgary_toronto_elec.xlsx',
   # Gas file (optional, leave as an empty string if unused)
-  "" # 'calgary_toronto_gas.xlsx'
+  ''
 ]
 # Specify the inputs for the energy file(s) to be used for training
 energy_param_files: [
   # Electricity file (mandatory)
   'calgary_toronto_elec_energy.csv',
   # Gas file (optional, leave as an empty string if unused)
-  "" # 'calgary_toronto_gas_energy.csv'
+  ''
 ]
 # Specify the input for the building file to be used for train validation (optional)
 # Default value=''
@@ -83,7 +80,7 @@ estimator_type: ''
 # Folder path containing one or more .xlsx building paramter files
 # All .xlsx files within the specified folder must be valid building files
 # No final '/' is needed in the provided directory
-batch_building_inputs: ''
+batch_building_inputs: 'test'
 # Start and end dates to be used when preprocessing data to receive energy predictions for
 # Typically will remain as 1-1 to 12-31
 # Expected format: Month_number-Day_number
@@ -93,27 +90,27 @@ simulation_end_date: '12-31'
 ## REQUIRED ENERGY FILES
 ###################################
 # Filepath and filename of the trained ML model to be used (output from the training step)
-energy_trained_model_file: ''
+energy_trained_model_file: 'outputs\training_model_2023-03-07 16-42-47.324909\energy\model_training\trained_model.h5'
 # Filepath and filename of the ohe.pkl file generated from the preprocessing step when training a model
-energy_ohe_file: ''
+energy_ohe_file: 'outputs\training_model_2023-03-07 16-42-47.324909\energy\ohe.pkl'
 # Filepath and filename of the cleaned_columns.json file generated from the preprocessing step when training a model
-energy_cleaned_columns_file: ''
+energy_cleaned_columns_file: 'outputs\training_model_2023-03-07 16-42-47.324909\energy\cleaned_columns.json'
 # Filepath and filename of the scaler_X.pkl and scaler_y.pkl files to be used (located within the trained model output)
-energy_scaler_X_file: ''
-energy_scaler_y_file: ''
+energy_scaler_X_file: 'outputs\training_model_2023-03-07 16-42-47.324909\energy\model_training\scaler_X.pkl'
+energy_scaler_y_file: 'outputs\training_model_2023-03-07 16-42-47.324909\energy\model_training\scaler_y.pkl'
 # Filepath and filename of the feature selection file to be used for training (located in training output)
-energy_features_file: ''
+energy_features_file: 'outputs\training_model_2023-03-07 16-42-47.324909\energy\feature_selection\feature_selection.json'
 ###################################
 ## REQUIRED COSTING FILES
 ###################################
 # Filepath and filename of the trained ML model to be used (output from the training step)
-costing_trained_model_file: ''
+costing_trained_model_file: 'outputs\training_model_2023-03-07 16-42-47.324909\costing\model_training\trained_model.h5'
 # Filepath and filename of the ohe.pkl file generated from the preprocessing step when training a model
-costing_ohe_file: ''
+costing_ohe_file: 'outputs\training_model_2023-03-07 16-42-47.324909\costing\ohe.pkl'
 # Filepath and filename of the cleaned_columns.json file generated from the preprocessing step when training a model
-costing_cleaned_columns_file: ''
+costing_cleaned_columns_file: 'outputs\training_model_2023-03-07 16-42-47.324909\costing\cleaned_columns.json'
 # Filepath and filename of the scaler_X.pkl and scaler_y.pkl files to be used (located within the trained model output)
-costing_scaler_X_file: ''
-costing_scaler_y_file: ''
+costing_scaler_X_file: 'outputs\training_model_2023-03-07 16-42-47.324909\costing\model_training\scaler_X.pkl'
+costing_scaler_y_file: 'outputs\training_model_2023-03-07 16-42-47.324909\costing\model_training\scaler_y.pkl'
 # Filepath and filename of the feature selection file to be used for training (located in training output)
-costing_features_file: ''
+costing_features_file: 'outputs\training_model_2023-03-07 16-42-47.324909\costing\feature_selection\feature_selection.json'

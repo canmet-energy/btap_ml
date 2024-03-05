@@ -15,8 +15,17 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.feature_selection import RFECV
 from sklearn.linear_model import ElasticNetCV, Lasso, LassoCV, LinearRegression
 from sklearn.model_selection import KFold
-from sklearn.preprocessing import MinMaxScaler, RobustScaler, StandardScaler
-
+from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import (
+    MaxAbsScaler,
+    MinMaxScaler,
+    Normalizer,
+    PowerTransformer,
+    QuantileTransformer,
+    RobustScaler,
+    StandardScaler,
+    minmax_scale,
+)
 import config
 from models.feature_selection_model import FeatureSelectionModel
 
@@ -47,7 +56,8 @@ def select_features(preprocessed_data_file, estimator_type, output_path):
     print(X_train.head(10))
 
     # Scale the inputs before selecting the featueres
-    scalerx = RobustScaler()
+    scalerx = StandardScaler()
+    #scalerx = QuantileTransformer(output_distribution="normal", random_state=42)#RobustScaler()#QuantileTransformer(output_distribution="normal", random_state=42)#StandardScaler()#MinMaxScaler()#RobustScaler()
     X_train = scalerx.fit_transform(preprocessed_dataset["X_train"])
     y_train = pd.read_json(preprocessed_dataset["y_train"], orient='values').values#.ravel()
     # Ignore the total value within the loaded file, just use the individual outputs

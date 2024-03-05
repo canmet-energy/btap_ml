@@ -15,12 +15,18 @@ logger = logging.getLogger(__name__)
 class AppConfig(BaseModel):
     """Application configuration."""
     # Paths to all BTAP calls within the docker container
-    DOCKER_INPUT_PATH: str = '/home/btap_ml/input/'
-    DOCKER_OUTPUT_PATH: str = '/home/btap_ml/output/'
-    DOCKER_SRC_PATH: str = 'src/'
+    #DOCKER_INPUT_PATH: str = 'H:\\btap_ml\\input\\' # '/home/btap_ml/input/'
+    DOCKER_INPUT_PATH: str = 'C:\\Users\\duttsap\\Documents\\btap_ml_costing\\input\\' # '/home/btap_ml/input/'
+
+    #C:\\Users\\duttsap\\Documents\\btap_ml_dayo_copy
+    DOCKER_OUTPUT_PATH: str ='C:\\Users\\duttsap\\Documents\\btap_ml_costing\\output\\' #'/home/btap_ml/output/'
+    DOCKER_OUTPUT_PATH: str ='H:\\btap_ml\\output\\' #'/home/btap_ml/output/'
+    DOCKER_SRC_PATH: str = 'src/' #'../src/' # switch to 'src/' for energy
     # Bucket prefix to be used as part of the run folder being created for training and running
     TRAIN_BUCKET_NAME: str = 'training_model_'
     RUN_BUCKET_NAME: str = 'running_model_'
+    # Select the type of model either 'mlp' for Multilayer Perceptron or 'rf' for Random Forest Regressor
+    SELECTED_MODEL_TYPE: str = 'selected_model_type'
     # Shared parameters to denote the type of training or running being performed
     ENERGY: str = 'energy'
     COSTING: str = 'costing'

@@ -264,6 +264,9 @@ def read_weather(epw_keys: list) -> pd.DataFrame:
     """
     # Load the weather data from the specified path
     logger.info("Loading and preparing the weather files.")
+    weather_df = pd.read_csv("C:\\data\\BTAP Results\\BTAP_Share\\input\\calgary_toronto_weather.csv")
+
+    return weather_df
     weather_df = prepare_weather.process_weather_files(epw_keys)
     # Remove spurious columns.
     # NOTE: The clean call will remove the :epw_key column if only one is used

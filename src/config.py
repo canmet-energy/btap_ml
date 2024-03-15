@@ -16,11 +16,11 @@ class AppConfig(BaseModel):
     """Application configuration."""
     # Paths to all BTAP calls within the docker container
     #DOCKER_INPUT_PATH: str = 'H:\\btap_ml\\input\\' # '/home/btap_ml/input/'
-    DOCKER_INPUT_PATH: str = 'C:\\Users\\duttsap\\Documents\\btap_ml_costing\\input\\' # '/home/btap_ml/input/'
+    DOCKER_INPUT_PATH: str = 'C:\\Users\\duttsap\\Documents\\btap_ml_updated_mlp_rf\\input\\' # '/home/btap_ml/input/'
 
     #C:\\Users\\duttsap\\Documents\\btap_ml_dayo_copy
-    DOCKER_OUTPUT_PATH: str ='C:\\Users\\duttsap\\Documents\\btap_ml_costing\\output\\' #'/home/btap_ml/output/'
-    DOCKER_OUTPUT_PATH: str ='H:\\btap_ml\\output\\' #'/home/btap_ml/output/'
+    DOCKER_OUTPUT_PATH: str ='C:\\Users\\duttsap\\Documents\\btap_ml_updated_mlp_rf\\output\\' #'/home/btap_ml/output/'
+    #DOCKER_OUTPUT_PATH: str ='H:\\btap_ml\\output\\' #'/home/btap_ml/output/'
     DOCKER_SRC_PATH: str = 'src/' #'../src/' # switch to 'src/' for energy
     # Bucket prefix to be used as part of the run folder being created for training and running
     TRAIN_BUCKET_NAME: str = 'training_model_'
@@ -136,5 +136,5 @@ def create_directory(path: str) -> None:
     Args:
         path: directory to be created
     """
-    if not os.path.isdir(path):
-        os.mkdir(path)
+    path = Path(path)
+    path.mkdir(parents=True, exist_ok=True)

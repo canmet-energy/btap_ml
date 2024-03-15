@@ -39,6 +39,7 @@ from sklearn.ensemble import RandomForestRegressor
 from tensorboard.plugins.hparams import api as hp
 from tensorflow.keras import layers
 
+import joblib
 import config
 import plot as pl
 import preprocessing
@@ -656,6 +657,10 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, selected_model_
     X_validate = scalerx.transform(X_validate)
     y_train = scalery.fit_transform(y_train)
 
+    # Define the path where the output files should be placed
+    model_path = Path(output_path).joinpath(config.Settings().APP_CONFIG.TRAINING_BUCKET_NAME)
+    config.create_directory(str(model_path))
+
     # If set to "yes", search for best hyperparameters before training
     # "YES" HAS BEEN DECOMMISSIONED AS OF THE RELEASE OF TASKS 5/6 OF PHASE 3
     if param_search.lower() == "yes":
@@ -703,6 +708,10 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, selected_model_
                                     val_building_path=val_building_path,
                                     process_type=process_type,
                                     output_nodes=output_nodes)
+            # Output the trained model architecture
+            model_output_path = str(model_path.joinpath(config.Settings().APP_CONFIG.TRAINED_MODEL_FILENAME_MLP))
+            hypermodel.save(model_output_path)
+            
         elif selected_model_type == 'rf':
             # Default parameters for the Random forest regressor
             N_ESTIMATORS = 150
@@ -737,15 +746,13 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, selected_model_
                                         process_type=process_type,
                                         output_nodes=output_nodes
                                        )
+            model_output_path = str(model_path.joinpath(config.Settings().APP_CONFIG.TRAINED_MODEL_FILENAME_RF))
+            joblib.dump(hypermodel, model_output_path)
 
         
     # Calculate the time spent training in minutes
     time_taken = ((time.time() - start_time) / 60)
     print("********* Total time spent is " + str(time_taken) + " minutes ***********" )
-
-    # Define the path where the output files should be placed
-    model_path = Path(output_path).joinpath(config.Settings().APP_CONFIG.TRAINING_BUCKET_NAME)
-    config.create_directory(str(model_path))
 
     # write processing time
     processing_time_file_path = str(model_path) + "/" + 'processing_time.txt'
@@ -803,9 +810,6 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, selected_model_
     with open(output_filename_json, 'w', encoding='utf8') as json_output:
         json.dump(results_pred, json_output)
 
-    # Output the trained model architecture
-    model_output_path = str(model_path.joinpath(config.Settings().APP_CONFIG.TRAINED_MODEL_FILENAME))
-    hypermodel.save(model_output_path)
     # Output the scalers used to scale the X and y data
     joblib.dump(scalerx, str(model_path.joinpath(config.Settings().APP_CONFIG.SCALERX_FILENAME)))
     joblib.dump(scalery, str(model_path.joinpath(config.Settings().APP_CONFIG.SCALERY_FILENAME)))

@@ -67,7 +67,8 @@ class AppConfig(BaseModel):
     # Specify any static filename keys
     PREPROCESSING_FILENAME: str = 'preprocessing'
     FEATURE_SELECTION_FILENAME: str = 'feature_selection'
-    TRAINED_MODEL_FILENAME: str = 'trained_model.h5'
+    TRAINED_MODEL_FILENAME_MLP: str = 'trained_model_mlp.h5'
+    TRAINED_MODEL_FILENAME_RF: str = 'trained_model_rf.joblib'
     SCALERX_FILENAME: str = 'scaler_X.pkl'
     SCALERY_FILENAME: str = 'scaler_y.pkl'
     OHE_FILENAME: str = 'ohe.pkl'

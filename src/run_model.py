@@ -72,6 +72,7 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
          building_params_folder: str = typer.Option("", help="The folder location containing all building parameter files which will have predictions made on by the provided model."),
          start_date: str = typer.Option("", help="The start date to specify the start of which weather data is attached to the building data. Expects the input to be in the form Month_number-Day_number (ex: 1-1)."),
          end_date: str = typer.Option("", help="The end date to specify the end of which weather data is attached to the building data. Expects the input to be in the form Month_number-Day_number (ex: 12-31)."),
+         selected_model_type: str = typer.Option("", help="Type of model selected. can either be 'mlp' or 'rf'")
          ) -> None:
     """
     Preprocess a set of input building files to obtain a dataset to obtain daily energy and total costing predictions for.
@@ -100,6 +101,7 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
         building_params_folder: The folder location containing all building parameter files which will have predictions made on by the provided model.
         start_date: The start date to specify the start of which weather data is attached to the building data. Expects the input to be in the form Month_number-Day_number.
         end_date: The end date to specify the end of which weather data is attached to the building data. Expects the input to be in the form Month_number-Day_number.
+        selected_model_type: Type of model selected. can either be 'mlp' for Multilayer Perceptron or 'rf' for Random Forest
     """
     settings = config.Settings()
     DOCKER_INPUT_PATH = config.Settings().APP_CONFIG.DOCKER_INPUT_PATH
@@ -134,6 +136,7 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
         if building_params_folder == "": building_params_folder = cfg.get(config.Settings().APP_CONFIG.BUILDING_BATCH_PATH)
         if start_date == "": start_date = cfg.get(config.Settings().APP_CONFIG.SIMULATION_START_DATE)
         if end_date == "": end_date = cfg.get(config.Settings().APP_CONFIG.SIMULATION_END_DATE)
+        if selected_model_type == "": selected_model_type = cfg.get(config.Settings().APP_CONFIG.SELECTED_MODEL_TYPE)
 
     # Identify the training processes to be taken (energy and/or costing)
     RUNNING_PROCESSES = [config.Settings().APP_CONFIG.ENERGY,
@@ -142,7 +145,7 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
     # Create directory to hold all data for the run (datetime/...)
     # If used, copy the config file within the directory to log the input values
     output_path = config.Settings().APP_CONFIG.DOCKER_OUTPUT_PATH
-    output_path = Path(output_path).joinpath(settings.APP_CONFIG.RUN_BUCKET_NAME + str(datetime.now()).replace(":", "-"))
+    output_path = Path(output_path).joinpath(settings.APP_CONFIG.RUN_BUCKET_NAME + str(datetime.now()).replace(":", "-")).joinpath(cfg.get(config.Settings().APP_CONFIG.SELECTED_MODEL_TYPE))
     # Create the root directory in the mounted drive
     logger.info("Creating output directory %s.", str(output_path))
     config.create_directory(str(output_path))
@@ -205,7 +208,11 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
         X = scaler_X.transform(X_df)
         logger.info("Loading the specified keras model.")
         # Load the keras model
-        model = keras.models.load_model(input_model.model_file, compile=False)
+        if selected_model_type.lower() == config.Settings().APP_CONFIG.MULTILAYER_PERCEPTRON:
+            model = keras.models.load_model(input_model.model_file, compile=False)
+        elif selected_model_type.lower() == config.Settings().APP_CONFIG.RANDOM_FOREST:
+            model = joblib.load(input_model.model_file)
+            
         logger.info("Getting the predictions for the input data.")
 
         predictions = scaler_y.inverse_transform(model.predict(X))

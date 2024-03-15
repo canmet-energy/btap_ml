@@ -33,6 +33,9 @@ class AppConfig(BaseModel):
     # Prefix names used for costing and energy
     ENERGY_PREFIX: str = 'energy_'
     COSTING_PREFIX: str = 'costing_'
+    # Shared parameters to denote the type of model
+    MULTILAYER_PERCEPTRON: str = 'mlp'
+    RANDOM_FOREST: str = 'rf'
     # Bucket used to store weather data
     WEATHER_BUCKET_NAME: str = 'weather'
     # Bucket used to store building/energy preprocessing data

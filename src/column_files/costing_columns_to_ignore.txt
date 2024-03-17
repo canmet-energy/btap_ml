@@ -88,3 +88,6 @@ success
 simulation_time
 container_output
 location_necb_climate_zone
+cloud_job_name
+cloud_job_id
+:job_id

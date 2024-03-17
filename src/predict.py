@@ -24,22 +24,13 @@ from keras.models import Sequential
 from keras_tuner import Hyperband
 from matplotlib import pyplot as plt
 from sklearn import metrics
-from sklearn.preprocessing import RobustScaler
-from sklearn.preprocessing import (
-    MaxAbsScaler,
-    MinMaxScaler,
-    Normalizer,
-    PowerTransformer,
-    QuantileTransformer,
-    RobustScaler,
-    StandardScaler,
-    minmax_scale,
-)
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.preprocessing import (MaxAbsScaler, MinMaxScaler, Normalizer,
+                                   PowerTransformer, QuantileTransformer,
+                                   RobustScaler, StandardScaler, minmax_scale)
 from tensorboard.plugins.hparams import api as hp
 from tensorflow.keras import layers
 
-import joblib
 import config
 import plot as pl
 import preprocessing
@@ -471,7 +462,7 @@ def create_model_mlp(dense_layers, activation, optimizer, dropout_rate, length, 
     # Create the output directories if they do not exist
     config.create_directory(parameter_search_path)
     config.create_directory(btap_log_path)
-    
+
     model = Sequential()
     model.add(Flatten())
     # model.add(Dropout(dropout_rate, input_shape=(length,)))
@@ -534,7 +525,7 @@ def create_model_rf(n_estimators, max_depth, min_samples_split, min_samples_leaf
         n_estimators: the number of trees in the random forest
         max_depth: the maximum depth of the tree.
         min_samples_split: The minimum number of samples required to split an internal node:
-        min_samples_leaf: The minimum number of samples required to be at a leaf node. 
+        min_samples_leaf: The minimum number of samples required to be at a leaf node.
         X_train: X trainset
         y_train: y trainset
         X_test: X testset
@@ -563,7 +554,7 @@ def create_model_rf(n_estimators, max_depth, min_samples_split, min_samples_leaf
     # Create the output directories if they do not exist
     config.create_directory(parameter_search_path)
     config.create_directory(btap_log_path)
-    
+
     model = RandomForestRegressor(n_estimators=n_estimators,
                                   max_depth=max_depth,
                                   min_samples_split=min_samples_split,
@@ -651,7 +642,7 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, selected_model_
     # Scale the data to be used for training and testing
     scalerx = StandardScaler()
     scalery = StandardScaler()
-    
+
     X_train = scalerx.fit_transform(X_train)
     X_test = scalerx.transform(X_test)
     X_validate = scalerx.transform(X_validate)
@@ -677,7 +668,7 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, selected_model_
             NUMBER_OF_NODES = 5000
             ACTIVATION = 'selu'
             OPTIMIZER = 'adam'
-    
+
             if not use_updated_model:
                 LEARNING_RATE = 0.001
                 NUMBER_OF_NODES = 56
@@ -711,20 +702,20 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, selected_model_
             # Output the trained model architecture
             model_output_path = str(model_path.joinpath(config.Settings().APP_CONFIG.TRAINED_MODEL_FILENAME_MLP))
             hypermodel.save(model_output_path)
-            
+
         elif selected_model_type == 'rf':
             # Default parameters for the Random forest regressor
             N_ESTIMATORS = 150
             MAX_DEPTH = None
             MIN_SAMPLES_SPLIT = 2
             MIN_SAMPLES_LEAF = 1
-    
+
             if not use_updated_model:
                 LEARNING_RATE = 0.001
                 NUMBER_OF_NODES = 56
             if not use_dropout:
                 DROPOUT_RATE = -1
-    
+
             results_pred, hypermodel = create_model_rf(
                                         n_estimators = N_ESTIMATORS,
                                         max_depth=MAX_DEPTH,
@@ -749,7 +740,7 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, selected_model_
             model_output_path = str(model_path.joinpath(config.Settings().APP_CONFIG.TRAINED_MODEL_FILENAME_RF))
             joblib.dump(hypermodel, model_output_path)
 
-        
+
     # Calculate the time spent training in minutes
     time_taken = ((time.time() - start_time) / 60)
     print("********* Total time spent is " + str(time_taken) + " minutes ***********" )
@@ -758,7 +749,7 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, selected_model_
     processing_time_file_path = str(model_path) + "/" + 'processing_time.txt'
     processing_time_file = open(processing_time_file_path, 'w')
     processing_time_file.write(str(time_taken))
-    
+
     # Define the output files
     output_filename_json = str(model_path) + "/" + config.Settings().APP_CONFIG.TRAINING_RESULTS_FILENAME + ".json"
     output_filename_csv = str(model_path) + "/" + config.Settings().APP_CONFIG.TRAINING_RESULTS_FILENAME + ".csv"
@@ -862,7 +853,7 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
     input_model = PredictModel(input_prefix=DOCKER_INPUT_PATH,
                                preprocessed_data_file=preprocessed_data_file,
                                selected_features_file=selected_features_file,
-                               selected_model_type = selected_model_type,
+                               selected_model_type=selected_model_type,
                                perform_param_search=perform_param_search,
                                random_seed=random_seed,
                                building_param_files=[path_elec, path_gas],

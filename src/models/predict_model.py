@@ -11,6 +11,7 @@ class PredictModel(pydantic.BaseModel):
         input_prefix: The input prefix to be used for all files provided.
         preprocessed_data_file: Location and name of a .json preprocessing file to be used.
         selected_features_file: Location and name of a .json feature selection file to be used.
+        selected_model_type: Type of model selected. can either be 'mlp' for Multilayer Perceptron or 'rf' for Random Forest.
         perform_param_search: 'yes' if hyperparameter tuning should be performed (increases runtime), 'no' if the default hyperparameters should be used.
         random_seed: Random seed to be used when training. Should not be -1 when used through the CLI.
         building_param_files: List of two building files [electricity, gas (optional)].

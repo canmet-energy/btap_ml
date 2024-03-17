@@ -26,7 +26,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def process_costing_building_files(path_elec, path_gas, clean_dataframe=True):
+def process_costing_building_files(path_elec, path_gas, clean_dataframe=True, cleaned_columns_list=[]):
     """
     Used to read the building simulation I/O file in preparation for costing
     predictions/training
@@ -35,6 +35,7 @@ def process_costing_building_files(path_elec, path_gas, clean_dataframe=True):
         path_elec: file path where data is to be read. This is a mandatory parameter and in the case where only one simulation I/O file is provided, the path to this file should be indicated here.
         path_gas: This would be path to the gas output file. This is optional, if there is no gas output file to the loaded, then a value of path_gas ='' should be used
         clean_dataframe: True if the loaded data should be cleaned, False if cleaning should be skipped
+        cleaned_columns_list: A list of columns to filter if skipping the cleaning (to handle nulls in different columns appropriately)
 
     Returns:
         btap_df: Dataframe containing the clean building parameters file.
@@ -43,6 +44,7 @@ def process_costing_building_files(path_elec, path_gas, clean_dataframe=True):
     btap_df = pd.read_excel(path_elec)
     if path_gas:
         btap_df = pd.concat([btap_df, pd.read_excel(path_gas)], ignore_index=True)
+
     # List of all costing values
     costing_value_names = ['cost_equipment_total_cost_per_m_sq',
                            'cost_equipment_envelope_total_cost_per_m_sq',
@@ -51,13 +53,24 @@ def process_costing_building_files(path_elec, path_gas, clean_dataframe=True):
                            'cost_equipment_ventilation_total_cost_per_m_sq',
                            'cost_equipment_renewables_total_cost_per_m_sq',
                            'cost_equipment_shw_total_cost_per_m_sq']
+
+    # Since :srr_set contains string and float values, we replace it with
+    # TODO: Remove when the inputs handle default values
+    btap_df[':srr_set'] = btap_df['bldg_srr'] / 100
+
+    # If a list of columns to use is provided, set the df to use these + the costing output names
+    # Since the code currently mixes the use of a semicolon for datapoint_id, this is handled
+    if len(cleaned_columns_list) > 0:
+        btap_df = btap_df[[elem for elem in cleaned_columns_list if elem != 'datapoint_id'] + costing_value_names + [':datapoint_id']]
+
+    # If specified, clean the data using the generic cleaning call
+    if clean_dataframe:
+        btap_df = clean_data(btap_df, costing_value_names)
+
     # Extract the costing columns
     costing_df = btap_df[costing_value_names]
     btap_df['datapoint_id'] = btap_df[':datapoint_id']
     costing_df['datapoint_id'] = btap_df[':datapoint_id']
-    # Since :srr_set contains string and float values, we replace it with
-    # TODO: Remove when the inputs handle default values
-    btap_df[':srr_set'] = btap_df['bldg_srr'] / 100
     # Dynamic list of columns to remove
     output_drop_list = costing_value_names
     # Populate the drop list from the file containing all columns to ignore
@@ -70,18 +83,27 @@ def process_costing_building_files(path_elec, path_gas, clean_dataframe=True):
         output_drop_list += cols.read().split("\n")
     # Drop the specified columns
     btap_df = btap_df.drop(output_drop_list, axis=1, errors='ignore')
-    # If specified, clean the data using the generic cleaning call
-    if clean_dataframe:
-        btap_df = clean_data(btap_df)
     # Columns with nan values are removed to ensure compatability with each potential feature selection algorithm
-    return btap_df.dropna(axis="columns"), costing_df
+    return btap_df, costing_df
 
-def clean_data(df) -> pd.DataFrame:
+def is_df_col_mixed_type(col) -> bool:
+    """
+    Returns True if the col has multiple dtypes and False otherwise.
+
+    Args:
+        col: dataframe column to check
+
+    Returns:
+        True if the col has multiple dtypes and False otherwise
+    """
+    return pd.api.types.infer_dtype(col) in ['mixed', 'mixed-integer', 'mixed-integer-float']
+
+def clean_data(df, additional_exemptions=[]) -> pd.DataFrame:
     """
     Basic cleaning of the data using the following criterion:
 
-    - dropping any column with more than 50% missing values
-      The 50% threshold is a way to eliminate columns with too much missing values in the dataset.
+    - dropping any column with more than 25% missing values
+      The 25% threshold is a way to eliminate columns with too much missing values in the dataset.
       We cant use N/A as it will elimnate the entire row /datapoint_id. Giving the number of features we have to work it its better we eliminate
       columns with features that have too much missing values than to eliminate by rows, which is what N/A will do .
     - dropping columns with 1 unique value
@@ -90,15 +112,17 @@ def clean_data(df) -> pd.DataFrame:
 
     Args:
         df: dataset to be cleaned
+        additional_exemptions: list of columns to not be dropped in addition to any in this function
 
     Returns:
         df: cleaned dataframe
     """
     # Needed to avoid SettingWithCopyWarning from pandas
     df = df.copy()
-    # Drop any column with more than 50% missing values
-    half_count = len(df) / 2
-    df = df.dropna(thresh=half_count, axis=1)
+    # Drop any column with more than 25% missing values
+    quarter_count = len(df) / 4
+    df = df.dropna(thresh=quarter_count, axis=1)
+    df = df.dropna()
 
     # Lists of columns which ignore the one unique value restraint since
     # they may be needed later on
@@ -108,12 +132,15 @@ def clean_data(df) -> pd.DataFrame:
                          ':building_type',
                          ':epw_file',
                          'bldg_conditioned_floor_area_m_sq',
-                         'Name']
+                         'Name'] + additional_exemptions
 
     # Again, there may be some columns with more than one unique value, but one
     # value that has insignificant frequency in the data set.
     for col in df.columns:
-        num = len(df[col].unique())
+        # If a column contains a mix of NECB_DEFAULT and ints, convert it to
+        # a discrete set of columns
+        if is_df_col_mixed_type(df[col]):
+            df[col] = df[col].astype(str)
         # Remove any columns with only one unique value and which are not exceptions
         if ((len(df[col].unique()) == 1) and (col not in column_exceptions)):
             df.drop(col, inplace=True, axis=1)
@@ -160,7 +187,7 @@ def process_building_files(path_elec, path_gas, clean_dataframe=True):
 
     # Remove columns without a ':' and which are not exceptions
     for col in btap_df.columns:
-        if ((':' not in col) and (col not in output_drop_list_exceptions)):
+        if ((':' not in col) and (col not in output_drop_list_exceptions)):# or is_df_col_mixed_type(btap_df[col]):
             output_drop_list.append(col)
     btap_df = btap_df.drop(output_drop_list, axis=1)
     # If specified, clean the data using the generic cleaning call
@@ -177,7 +204,8 @@ def process_building_files(path_elec, path_gas, clean_dataframe=True):
                  ':analysis_id',
                  ':analysis_name',
                  ':os_standards_branch',
-                 ':btap_costing_branch']
+                 ':btap_costing_branch',
+                 ':job_id']
     # Drop any remaining fields which exist, ignoring raised errors
     btap_df = btap_df.drop(drop_list, axis=1, errors='ignore')
 
@@ -264,9 +292,6 @@ def read_weather(epw_keys: list) -> pd.DataFrame:
     """
     # Load the weather data from the specified path
     logger.info("Loading and preparing the weather files.")
-    weather_df = pd.read_csv("C:\\data\\BTAP Results\\BTAP_Share\\input\\calgary_toronto_weather.csv")
-
-    return weather_df
     weather_df = prepare_weather.process_weather_files(epw_keys)
     # Remove spurious columns.
     # NOTE: The clean call will remove the :epw_key column if only one is used
@@ -294,9 +319,9 @@ def process_hourly_energy(path_elec, path_gas, floor_sq):
         energy_df: Dataframe containing the clean and transposed hourly energy file.
     """
     # Read in the energy file(s)
-    energy_df = pd.read_csv(path_elec)
+    energy_df = pd.read_csv(path_elec, low_memory=False)
     if path_gas:
-        energy_df = pd.concat([energy_df, pd.read_csv(path_gas)], ignore_index=True)
+        energy_df = pd.concat([energy_df, pd.read_csv(path_gas, low_memory=False)], ignore_index=True)
     # Adds all except Electricity:Facility
     #energy_df.loc[(energy_df['Name'] != "ElectricityNet:Facility") & (energy_df['Name'] != "NaturalGas:Facility"), ['Name']] = "Electricity:Facility"
     energy_df = energy_df.loc[(energy_df['Name'] == "ElectricityNet:Facility") | (energy_df['Name'] == "NaturalGas:Facility")]
@@ -667,6 +692,8 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
                            left_on=['datapoint_id'],
                            right_on=[':datapoint_id'],
                            how='left').reset_index()
+        # Drop any row containing any missing values
+        btap_df = clean_data(btap_df, ['energy', 'energy_elec', 'energy_gas'])
         # Adjust the energy values based on the floor area in meters squared
         btap_df['energy'] = btap_df['energy'] / (btap_df['bldg_conditioned_floor_area_m_sq'] * 1000000)
         # Adjust the energy values based on the floor area in meters squared
@@ -695,6 +722,15 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
                                    left_on=['datapoint_id'],
                                    right_on=[':datapoint_id'],
                                    how='left').reset_index()
+
+            # Drop any row containing any missing values
+            for col in btap_df_val.columns:
+                # If a column contains a mix of NECB_DEFAULT and ints, convert it to
+                # a discrete set of columns
+                if is_df_col_mixed_type(btap_df_val[col]):
+                    btap_df_val[col] = btap_df_val[col].astype(str)
+            btap_df_val = btap_df_val.dropna()
+
             # Adjust the energy values based on the floor area in meters squared
             btap_df_val['energy'] = btap_df_val['energy'] / (btap_df_val['bldg_conditioned_floor_area_m_sq'] * 1000000)
             # Adjust the energy values based on the floor area in meters squared
@@ -710,7 +746,7 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
             # Generate the dataset
             X_train, X_test, y_train, y_test, y_test_complete, X_validate, y_validate, y_validate_complete = create_dataset(btap_df, btap_df_val, 'yes', input_model.random_seed)
         elif process_type.lower() == config.Settings().APP_CONFIG.COSTING:
-            btap_df_val, costing_df_val = process_costing_building_files(input_model.val_building_params_file, '', False)
+            btap_df_val, costing_df_val = process_costing_building_files(input_model.val_building_params_file, '', False, btap_df.columns)
             # Generate the dataset
             X_train, X_test, y_train, y_test, y_test_complete, X_validate, y_validate, y_validate_complete = create_costing_dataset(btap_df, btap_df_val, costing_df, costing_df_val, 'yes', input_model.random_seed)
     else:

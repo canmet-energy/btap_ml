@@ -49,9 +49,10 @@ and identify/load the weather data from present climate zones. An input director
 building output files are passed to <code class="docutils literal notranslate"><span class="pre">preprocessing.py</span></code> to be preprocessed into a single
 dataset which will then be passed through the trained model to obtain the predictions.</p>
 <p>The dataset will be adjusted with the selected features .json file which is generated
-when training the specified .h5 trained model. The input data is also scaled with the
-same scalers used when training. This ensures that all input data is of the same format
-as what has been used for the training.</p>
+when training the specified .h5 trained model in the case of Multilyaer Perceptron or .joblib
+for the Random Forest model.
+The input data is also scaled with the same scalers used when training. This ensures that all input
+data is of the same format as what has been used for the training.</p>
 <p>The predictions are then made by the model, with the output values placed within three csv files,
 which link the predictions to the specific buildings within the specific building files.
 The <code class="docutils literal notranslate"><span class="pre">daily_energy_predictions.csv</span></code> file outputs the predicted daily energy for a building on

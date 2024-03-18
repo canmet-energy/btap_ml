@@ -117,7 +117,7 @@ def add_input_prefix_for_batch_input(input_prefix, path):
     if os.path.isdir(input_prefix + path):
         path = input_prefix + path
     elif not os.path.isdir(path):
-        raise InvalidInputException(value=value, message="The specified building directory does not exist or cannot be accessed.")
+        raise InvalidInputException(value=input_prefix + path, message="The specified building directory does not exist or cannot be accessed.")
     contains_xlsx_files = False
     for filename in os.listdir(path):
         # Verify that there is at least one .xlsx file to be used
@@ -125,5 +125,5 @@ def add_input_prefix_for_batch_input(input_prefix, path):
         if filename.endswith(".xlsx"):
             contains_xlsx_files = True
     if not contains_xlsx_files:
-        raise InvalidInputException(value=value, message="The specified building directory contains no .xlsx files.")
+        raise InvalidInputException(value=input_prefix + path, message="The specified building directory contains no .xlsx files.")
     return path

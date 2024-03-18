@@ -62,6 +62,8 @@ def process_costing_building_files(path_elec, path_gas, clean_dataframe=True, cl
     # Since the code currently mixes the use of a semicolon for datapoint_id, this is handled
     if len(cleaned_columns_list) > 0:
         btap_df = btap_df[[elem for elem in cleaned_columns_list if elem != 'datapoint_id'] + costing_value_names + [':datapoint_id']]
+        btap_df = btap_df.dropna()
+        btap_df.reset_index(drop=True, inplace=True)
 
     # If specified, clean the data using the generic cleaning call
     if clean_dataframe:
@@ -102,8 +104,7 @@ def clean_data(df, additional_exemptions=[]) -> pd.DataFrame:
     """
     Basic cleaning of the data using the following criterion:
 
-    - dropping any column with more than 25% missing values
-      The 25% threshold is a way to eliminate columns with too much missing values in the dataset.
+    - dropping any column with more than 10% missing values
       We cant use N/A as it will elimnate the entire row /datapoint_id. Giving the number of features we have to work it its better we eliminate
       columns with features that have too much missing values than to eliminate by rows, which is what N/A will do .
     - dropping columns with 1 unique value
@@ -119,10 +120,11 @@ def clean_data(df, additional_exemptions=[]) -> pd.DataFrame:
     """
     # Needed to avoid SettingWithCopyWarning from pandas
     df = df.copy()
-    # Drop any column with more than 25% missing values
-    quarter_count = len(df) / 4
-    df = df.dropna(thresh=quarter_count, axis=1)
+    # Drop any column with more than 10% missing values
+    threshold = len(df) * 0.9
+    df = df.dropna(thresh=threshold, axis=1)
     df = df.dropna()
+    df.reset_index(drop=True, inplace=True)
 
     # Lists of columns which ignore the one unique value restraint since
     # they may be needed later on

@@ -25,7 +25,7 @@ useful in the training process. The availability of each feature selection tool 
 whether the total energy/costing is predicted or whether the energy/costing breakdowns are predicted.
 
 There are options from selecting between two models: Either a Multilayer Perceptron (MLP) or a Random Forest (RF)
-model. User can specify the type of being model that needs to be trained by sepcifying 'mlp' for MultiLayer Perceptron 
+model. User can specify the type of being model that needs to be trained by sepcifying 'mlp' for MultiLayer Perceptron
 or 'rf' for Random Forest Model in the selected_model_type parameter in input_config.yml.
 
 Using the selected features and preprocessed datasets, ``predict.py`` will be called to train the model.

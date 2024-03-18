@@ -8,6 +8,8 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import typer
+import xgboost as xgb
 from sklearn import linear_model
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.feature_selection import RFECV
@@ -18,8 +20,6 @@ from sklearn.preprocessing import (MaxAbsScaler, MinMaxScaler, Normalizer,
                                    RobustScaler, StandardScaler, minmax_scale)
 
 import config
-import typer
-import xgboost as xgb
 from models.feature_selection_model import FeatureSelectionModel
 
 ############################################################

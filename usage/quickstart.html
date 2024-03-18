@@ -1,19 +1,17 @@
-
 <!DOCTYPE html>
 
-<html>
+<html lang="en" data-content_root="../">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>Quickstart &#8212; BTAP: ML  documentation</title>
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/doctools.js"></script>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d1102ebc" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=12dfc556" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=eafc0fe6" />
+    <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Train the model" href="retrain.html" />
@@ -21,8 +19,9 @@
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
+
   
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+  
 
   </head><body>
   
@@ -35,7 +34,7 @@
           <div class="body" role="main">
             
   <section id="quickstart">
-<h1>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">¶</a></h1>
+<h1>Quickstart<a class="headerlink" href="#quickstart" title="Link to this heading">¶</a></h1>
 <p>If you just want to run all of the steps from training a model to using the model to obtain predictions, here are the steps to run. You may be able to skip some
 of these depending on if the data has already been processed.</p>
 <p>Each of the Python files can use an input configuration .yml file which contains all inputs to be used alongside descriptions of the inputs.
@@ -58,7 +57,7 @@ by calling the python file with <code class="docutils literal notranslate"><span
 as needed if the RAM usage is too high. Further works can add the functionality to further train a model.</p>
 </div>
 <section id="training-a-model">
-<h2>Training a model<a class="headerlink" href="#training-a-model" title="Permalink to this headline">¶</a></h2>
+<h2>Training a model<a class="headerlink" href="#training-a-model" title="Link to this heading">¶</a></h2>
 <p>The first step to perform is to generate a trained Machine Learning model to later be used for obtaining predictions on energy or costing values.
 Obtaining a trained model can be performed by calling the <code class="docutils literal notranslate"><span class="pre">train_model_pipeline.py</span></code> file and passing the appropriate arguements.
 Assuming that only the <code class="docutils literal notranslate"><span class="pre">input_config.yml</span></code> file is used and located inside of the current directory, the arguement to pass is:</p>
@@ -70,7 +69,7 @@ perform feature selection (outputting a .json file), and train the model (output
 steps are performed appropriately for both energy and costing in sequence.</p>
 </section>
 <section id="getting-model-predictions">
-<h2>Getting model predictions<a class="headerlink" href="#getting-model-predictions" title="Permalink to this headline">¶</a></h2>
+<h2>Getting model predictions<a class="headerlink" href="#getting-model-predictions" title="Link to this heading">¶</a></h2>
 <p>With a trained Machine Learning model in the form of a .h5 file, the model will be used to obtain the predicted daily Megajoules per meter squared
 and the predicted aggregated Gigajoules per meter squared for energy predictions (for a specified timeframe) for a batch of specified building files
 within a specified directory. Costing predictions will then be output. The ouputs can be provided as the total energy/costing values or the
@@ -85,7 +84,7 @@ Assuming that only the <code class="docutils literal notranslate"><span class="p
 for each building in the form building_file_name/building_index).</p>
 </section>
 <section id="input-configuration-file-input-config-yml">
-<h2>Input configuration file (input_config.yml)<a class="headerlink" href="#input-configuration-file-input-config-yml" title="Permalink to this headline">¶</a></h2>
+<h2>Input configuration file (input_config.yml)<a class="headerlink" href="#input-configuration-file-input-config-yml" title="Link to this heading">¶</a></h2>
 <p>When providing an input to one of the pipelines above, the command line arguements can be used or the input configuration can be used (or a combination of the two).
 The template for the <code class="docutils literal notranslate"><span class="pre">input_config.yml</span></code> file can be found <a class="reference external" href="https://github.com/canmet-energy/btap_ml/blob/main/src/input_config.yml">here</a>.
 Within this configuration file are different fields which are required for training and/or running. Each section is clearly labelled with
@@ -165,7 +164,7 @@ the Docker image is available <a class="reference external" href="https://hub.do
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
 
 
 
@@ -179,11 +178,11 @@ the Docker image is available <a class="reference external" href="https://hub.do
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2022, Natural Resources Canada.
+      &#169;2022, Natural Resources Canada.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.5.0</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
       
       |
       <a href="../_sources/usage/quickstart.rst.txt"

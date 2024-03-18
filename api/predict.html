@@ -1,19 +1,17 @@
-
 <!DOCTYPE html>
 
-<html>
+<html lang="en" data-content_root="../">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>Predict &#8212; BTAP: ML  documentation</title>
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/doctools.js"></script>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d1102ebc" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=12dfc556" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=eafc0fe6" />
+    <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Prepare weather" href="prepare_weather.html" />
@@ -21,8 +19,9 @@
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
+
   
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+  
 
   </head><body>
   
@@ -35,27 +34,27 @@
           <div class="body" role="main">
             
   <section id="module-predict">
-<span id="predict"></span><h1>Predict<a class="headerlink" href="#module-predict" title="Permalink to this headline">¶</a></h1>
+<span id="predict"></span><h1>Predict<a class="headerlink" href="#module-predict" title="Link to this heading">¶</a></h1>
 <p>Uses the output from preprocessing and feature selection to build, train, and evaluate the model.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="predict.compute_building_weather_errors">
-<span class="sig-prename descclassname"><span class="pre">predict.</span></span><span class="sig-name descname"><span class="pre">compute_building_weather_errors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">actual_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prediction_label</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#predict.compute_building_weather_errors" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">predict.</span></span><span class="sig-name descname"><span class="pre">compute_building_weather_errors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">actual_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prediction_label</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#predict.compute_building_weather_errors" title="Link to this definition">¶</a></dt>
 <dd><p>Calculate the absolute difference and squared difference between the predicted and actual energy/costing use, and
 group by the building type and epw file to compute the means for BOTH the actual and predicted energy/costing</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>df</strong> – The dataframe being manipulated.</p></li>
 <li><p><strong>actual_label</strong> – The string used to describe the class being predicted (i.e. electricity, gas, …).</p></li>
 <li><p><strong>prediction_label</strong> – The string used to describe the prediction which a model outputs (i.e. predicted_electricity, …).</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The updated dataframe.
 building_errors: The errors for each building type.
 climate_errors: The errors for each climate zone.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>df</p>
 </dd>
 </dl>
@@ -63,28 +62,28 @@ climate_errors: The errors for each climate zone.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="predict.convert_dataframe_to_annual">
-<span class="sig-prename descclassname"><span class="pre">predict.</span></span><span class="sig-name descname"><span class="pre">convert_dataframe_to_annual</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#predict.convert_dataframe_to_annual" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">predict.</span></span><span class="sig-name descname"><span class="pre">convert_dataframe_to_annual</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#predict.convert_dataframe_to_annual" title="Link to this definition">¶</a></dt>
 <dd><p>Converts a dataframe of daily predictions into one with annual predictions (energy only).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>df</strong> – The dataframe being transformed.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The updated dataframe.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>updated_df</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="predict.create_model">
-<span class="sig-prename descclassname"><span class="pre">predict.</span></span><span class="sig-name descname"><span class="pre">create_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dense_layers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_train</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_train</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test_complete</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scalery</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_validate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_validate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_validate_complete</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_elec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_gas</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_building_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">process_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_nodes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#predict.create_model" title="Permalink to this definition">¶</a></dt>
-<dd><p>Creates a model with defaulted values without need to perform an hyperparameter search at all times.
+<dt class="sig sig-object py" id="predict.create_model_mlp">
+<span class="sig-prename descclassname"><span class="pre">predict.</span></span><span class="sig-name descname"><span class="pre">create_model_mlp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dense_layers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_train</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_train</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test_complete</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scalery</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_validate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_validate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_validate_complete</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_elec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_gas</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_building_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">process_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_nodes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#predict.create_model_mlp" title="Link to this definition">¶</a></dt>
+<dd><p>Creates a MLP model with defaulted values without need to perform an hyperparameter search at all times.
 Its initutive to have run the hyperparameter search beforehand to know the hyperparameter value to set.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>dense_layers</strong> – number of layers for the model architecture e.g for a model with 3 layers, values will be passed as [8,20,30]</p></li>
 <li><p><strong>activation</strong> – activation function to be used e.g relu, tanh</p></li>
@@ -111,7 +110,7 @@ Its initutive to have run the hyperparameter search beforehand to know the hyper
 <li><p><strong>output_nodes</strong> – The number of outputs which the model needs to predict.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>evaluation results containing the loss value from the testset prediction,
 annual_metric: predicted value for each datapooint_id is summed to calculate the annual energy consumed and the loss value from the testset prediction,
 output_df: merge of y_pred, y_test, datapoint_id, the final dataframe showing the model output using the testset
@@ -119,7 +118,50 @@ val_metric:evaluation results containing the loss value from the validationset p
 val_annual_metric:predicted value for each datapooint_id is summed to calculate the annual energy consumed and the loss value from the validationset prediction,,
 output_val_df: merge of y_pred, y_validate, datapoint_id, the final dataframe showing the model output using the validation set</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>metric</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="predict.create_model_rf">
+<span class="sig-prename descclassname"><span class="pre">predict.</span></span><span class="sig-name descname"><span class="pre">create_model_rf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_estimators</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_depth</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_samples_split</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_samples_leaf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_train</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_train</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test_complete</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scalery</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_validate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_validate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_validate_complete</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_elec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_gas</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_building_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">process_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_nodes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#predict.create_model_rf" title="Link to this definition">¶</a></dt>
+<dd><p>Creates a model with defaulted values without need to perform an hyperparameter search at all times.
+Its initutive to have run the hyperparameter search beforehand to know the hyperparameter value to set.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n_estimators</strong> – the number of trees in the random forest</p></li>
+<li><p><strong>max_depth</strong> – the maximum depth of the tree.</p></li>
+<li><p><strong>min_samples_split</strong> – The minimum number of samples required to split an internal node:</p></li>
+<li><p><strong>min_samples_leaf</strong> – The minimum number of samples required to be at a leaf node.</p></li>
+<li><p><strong>X_train</strong> – X trainset</p></li>
+<li><p><strong>y_train</strong> – y trainset</p></li>
+<li><p><strong>X_test</strong> – X testset</p></li>
+<li><p><strong>y_test</strong> – y testset</p></li>
+<li><p><strong>y_test_complete</strong> – dataframe containing the target variable with corresponding datapointid for the test set</p></li>
+<li><p><strong>scalery</strong> – y scaler used to transform the y values to the original scale</p></li>
+<li><p><strong>X_validate</strong> – X validation set</p></li>
+<li><p><strong>y_validate</strong> – y validation set</p></li>
+<li><p><strong>y_validate_complete</strong> – dataframe containing the target variable with corresponding datapointid for the validation set</p></li>
+<li><p><strong>output_path</strong> – Where the outputs will be placed</p></li>
+<li><p><strong>path_elec</strong> – Filepath of the electricity building file which has been used</p></li>
+<li><p><strong>path_gas</strong> – Filepath of the gas building file, if it has been used (pass nothing otherwise)</p></li>
+<li><p><strong>val_building_path</strong> – Filepath of the validation building file, if it has been used (pass nothing otherwise).</p></li>
+<li><p><strong>process_type</strong> – Either ‘energy’ or ‘costing’ to specify the operations to be performed.</p></li>
+<li><p><strong>output_nodes</strong> – The number of outputs which the model needs to predict.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>evaluation results containing the loss value from the testset prediction,
+annual_metric: predicted value for each datapooint_id is summed to calculate the annual energy consumed and the loss value from the testset prediction,
+output_df: merge of y_pred, y_test, datapoint_id, the final dataframe showing the model output using the testset
+val_metric:evaluation results containing the loss value from the validationset prediction,
+val_annual_metric:predicted value for each datapooint_id is summed to calculate the annual energy consumed and the loss value from the validationset prediction,,
+output_val_df: merge of y_pred, y_validate, datapoint_id, the final dataframe showing the model output using the validation set</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>metric</p>
 </dd>
 </dl>
@@ -127,10 +169,10 @@ output_val_df: merge of y_pred, y_validate, datapoint_id, the final dataframe sh
 
 <dl class="py function">
 <dt class="sig sig-object py" id="predict.evaluate">
-<span class="sig-prename descclassname"><span class="pre">predict.</span></span><span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scalery</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_validate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_validate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test_complete</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_validate_complete</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_elec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_gas</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_building_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">process_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#predict.evaluate" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">predict.</span></span><span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scalery</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_validate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_validate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test_complete</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_validate_complete</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_elec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_gas</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_building_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">process_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#predict.evaluate" title="Link to this definition">¶</a></dt>
 <dd><p>The model selected with the best hyperparameter is used to make predictions.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>model</strong> – model built from training</p></li>
 <li><p><strong>X_test</strong> – X testset</p></li>
@@ -146,7 +188,7 @@ output_val_df: merge of y_pred, y_validate, datapoint_id, the final dataframe sh
 <li><p><strong>process_type</strong> – Either ‘energy’ or ‘costing’ to specify the operations to be performed.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>evaluation results containing the loss value from the testset prediction,
 annual_metric: predicted value for each datapooint_id is summed to calculate the annual energy consumed and the loss value from the test set prediction,
 output_df: merge of y_pred, y_test, datapoint_id, the final dataframe showing the model output using the test set
@@ -158,7 +200,7 @@ output_df_average_predictions_climates: The mean energy predictions and actual e
 output_val_df_average_predictions_buildings: The mean energy predictions and actual energy values per building type in the validation set
 output_val_df_average_predictions_climates:  The mean energy predictions and actual energy values per climate zone in the validation set</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>metric</p>
 </dd>
 </dl>
@@ -166,13 +208,14 @@ output_val_df_average_predictions_climates:  The mean energy predictions and act
 
 <dl class="py function">
 <dt class="sig sig-object py" id="predict.fit_evaluate">
-<span class="sig-prename descclassname"><span class="pre">predict.</span></span><span class="sig-name descname"><span class="pre">fit_evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">preprocessed_data_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selected_features_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">param_search</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_elec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_gas</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_building_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">process_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_updated_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_dropout</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#predict.fit_evaluate" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">predict.</span></span><span class="sig-name descname"><span class="pre">fit_evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">preprocessed_data_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selected_features_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selected_model_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">param_search</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_elec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_gas</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_building_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">process_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_updated_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_dropout</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#predict.fit_evaluate" title="Link to this definition">¶</a></dt>
 <dd><p>Loads the output from preprocessing and feature selection, builds the model, then evaluates the model.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>preprocessed_data_file</strong> – Location and name of a .json preprocessing file to be used.</p></li>
 <li><p><strong>selected_features_file</strong> – Location and name of a .json feature selection file to be used.</p></li>
+<li><p><strong>selected_model_type</strong> – the type of model to be used. Can either be ‘mlp’ or ‘rf’</p></li>
 <li><p><strong>param_search</strong> – ‘yes’ if hyperparameter tuning should be performed (increases runtime), ‘no’ if the default hyperparameters should be used.</p></li>
 <li><p><strong>output_path</strong> – Where output data should be placed. Note that this value should be empty unless this file is called from a pipeline.</p></li>
 <li><p><strong>random_seed</strong> – Random seed to be used when training. Should not be -1 when used through the CLI.</p></li>
@@ -184,7 +227,7 @@ output_val_df_average_predictions_climates:  The mean energy predictions and act
 <li><p><strong>use_dropout</strong> – True if the regularization technique should be used (on by default). False if tests are desired without dropout. Note that not using dropout may cause bias to learned when training.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>the results from the model prediction is uploaded to minio</p>
 </dd>
 </dl>
@@ -192,17 +235,18 @@ output_val_df_average_predictions_climates:  The mean energy predictions and act
 
 <dl class="py function">
 <dt class="sig sig-object py" id="predict.main">
-<span class="sig-prename descclassname"><span class="pre">predict.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_file=&lt;typer.models.ArgumentInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">process_type=&lt;typer.models.ArgumentInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preprocessed_data_file=&lt;typer.models.ArgumentInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selected_features_file=&lt;typer.models.ArgumentInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perform_param_search=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_elec=&lt;typer.models.ArgumentInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_gas=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_building_path=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_updated_model=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_dropout=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#predict.main" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">predict.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_file=&lt;typer.models.ArgumentInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">process_type=&lt;typer.models.ArgumentInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preprocessed_data_file=&lt;typer.models.ArgumentInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selected_features_file=&lt;typer.models.ArgumentInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selected_model_type=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perform_param_search=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_elec=&lt;typer.models.ArgumentInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_gas=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_building_path=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_updated_model=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_dropout=&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#predict.main" title="Link to this definition">¶</a></dt>
 <dd><p>Using all preprocessed data, build and train a Machine Learning model to predict the total energy or costing values.
 All steps of this process are saved, and the model is evaluated to determine its effectiveness overall and on
 specific building types and climate zones.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>config_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location of the .yml config file (default name is input_config.yml).</p></li>
 <li><p><strong>process_type</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Either ‘energy’ or ‘costing’ to specify the operations to be performed.</p></li>
 <li><p><strong>preprocessed_data_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location and name of a .json preprocessing file to be used.</p></li>
 <li><p><strong>selected_features_file</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Location and name of a .json feature selection file to be used.</p></li>
+<li><p><strong>selected_model_type</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Type of model selected. can either be ‘mlp’ for Multilayer Perceptron or ‘rf’ for Random Forest</p></li>
 <li><p><strong>perform_param_search</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – ‘yes’ if hyperparameter tuning should be performed (increases runtime), ‘no’ if the default hyperparameters should be used.</p></li>
 <li><p><strong>output_path</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Where output data should be placed. Note that this value should be empty unless this file is called from a pipeline.</p></li>
 <li><p><strong>random_seed</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – Random seed to be used when training. Should not be -1 when used through the CLI.</p></li>
@@ -218,14 +262,14 @@ specific building types and climate zones.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="predict.model_builder">
-<span class="sig-prename descclassname"><span class="pre">predict.</span></span><span class="sig-name descname"><span class="pre">model_builder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hp</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#predict.model_builder" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">predict.</span></span><span class="sig-name descname"><span class="pre">model_builder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hp</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#predict.model_builder" title="Link to this definition">¶</a></dt>
 <dd><p>Builds the model that would be used to search for hyperparameter.
 The hyperparameters search inclues activation, regularizers, dropout_rate, learning_rate, and optimizer</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>hp</strong> – hyperband object with different hyperparameters to be checked.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>model will be built based on the different hyperparameter combinations.</p>
 </dd>
 </dl>
@@ -233,11 +277,11 @@ The hyperparameters search inclues activation, regularizers, dropout_rate, learn
 
 <dl class="py function">
 <dt class="sig sig-object py" id="predict.predicts_hp">
-<span class="sig-prename descclassname"><span class="pre">predict.</span></span><span class="sig-name descname"><span class="pre">predicts_hp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X_train</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_train</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selected_feature</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#predict.predicts_hp" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">predict.</span></span><span class="sig-name descname"><span class="pre">predicts_hp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X_train</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_train</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X_test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selected_feature</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#predict.predicts_hp" title="Link to this definition">¶</a></dt>
 <dd><p>DECOMMISIONED: May need updates for multi-outputs
 Using the set of hyperparameter combined,the model built is used to make predictions.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>X_train</strong> – X train set</p></li>
 <li><p><strong>y_train</strong> – y train set</p></li>
@@ -248,7 +292,7 @@ Using the set of hyperparameter combined,the model built is used to make predict
 <li><p><strong>random_seed</strong> – The random seed to be used</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Model built from the set of hyperparameters combined.</p>
 </dd>
 </dl>
@@ -256,16 +300,16 @@ Using the set of hyperparameter combined,the model built is used to make predict
 
 <dl class="py function">
 <dt class="sig sig-object py" id="predict.rmse_loss">
-<span class="sig-prename descclassname"><span class="pre">predict.</span></span><span class="sig-name descname"><span class="pre">rmse_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#predict.rmse_loss" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">predict.</span></span><span class="sig-name descname"><span class="pre">rmse_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#predict.rmse_loss" title="Link to this definition">¶</a></dt>
 <dd><p>A customized rmse score that takes a sum of y_pred and y_test before computing the rmse score</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>y_true</strong> – y testset</p></li>
 <li><p><strong>y_pred</strong> – y predicted value from the model</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>rmse loss from comparing the y_test and y_pred values</p>
 </dd>
 </dl>
@@ -273,16 +317,16 @@ Using the set of hyperparameter combined,the model built is used to make predict
 
 <dl class="py function">
 <dt class="sig sig-object py" id="predict.score">
-<span class="sig-prename descclassname"><span class="pre">predict.</span></span><span class="sig-name descname"><span class="pre">score</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#predict.score" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">predict.</span></span><span class="sig-name descname"><span class="pre">score</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#predict.score" title="Link to this definition">¶</a></dt>
 <dd><p>Used to compute the mse, rmse and mae scores</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>y_test</strong> – y testset</p></li>
 <li><p><strong>y_pred</strong> – y predicted value from the model</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>mse, rmse, mae and mape scores from comparing the y_test and y_pred values</p>
 </dd>
 </dl>
@@ -348,7 +392,7 @@ Using the set of hyperparameter combined,the model built is used to make predict
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
 
 
 
@@ -362,11 +406,11 @@ Using the set of hyperparameter combined,the model built is used to make predict
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2022, Natural Resources Canada.
+      &#169;2022, Natural Resources Canada.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.5.0</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
       
       |
       <a href="../_sources/api/predict.rst.txt"

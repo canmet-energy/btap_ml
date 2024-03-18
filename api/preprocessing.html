@@ -70,8 +70,7 @@ all_features: all features after encoding.</p>
 <span class="sig-prename descclassname"><span class="pre">preprocessing.</span></span><span class="sig-name descname"><span class="pre">clean_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_exemptions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#preprocessing.clean_data" title="Link to this definition">¶</a></dt>
 <dd><p>Basic cleaning of the data using the following criterion:</p>
 <ul class="simple">
-<li><p>dropping any column with more than 25% missing values
-The 25% threshold is a way to eliminate columns with too much missing values in the dataset.
+<li><p>dropping any column with more than 10% missing values
 We cant use N/A as it will elimnate the entire row /datapoint_id. Giving the number of features we have to work it its better we eliminate
 columns with features that have too much missing values than to eliminate by rows, which is what N/A will do .</p></li>
 <li><p>dropping columns with 1 unique value

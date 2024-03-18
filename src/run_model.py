@@ -212,7 +212,7 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
             model = keras.models.load_model(input_model.model_file, compile=False)
         elif selected_model_type.lower() == config.Settings().APP_CONFIG.RANDOM_FOREST:
             model = joblib.load(input_model.model_file)
-            
+
         logger.info("Getting the predictions for the input data.")
 
         predictions = scaler_y.inverse_transform(model.predict(X))

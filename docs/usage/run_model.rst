@@ -17,9 +17,9 @@ building output files are passed to ``preprocessing.py`` to be preprocessed into
 dataset which will then be passed through the trained model to obtain the predictions.
 
 The dataset will be adjusted with the selected features .json file which is generated
-when training the specified .h5 trained model. The input data is also scaled with the
-same scalers used when training. This ensures that all input data is of the same format
-as what has been used for the training.
+when training the specified .h5 trained model for Multilyaer Perceptron or .joblib for Random Forest.
+The input data is also scaled with the same scalers used when training. This ensures that all input
+data is of the same format as what has been used for the training.
 
 The predictions are then made by the model, with the output values placed within three csv files,
 which link the predictions to the specific buildings within the specific building files.

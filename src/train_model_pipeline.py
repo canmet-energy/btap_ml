@@ -93,7 +93,7 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
     # Begin by loading the config file, if passed, to overwrite
     # blank argument values
     if len(config_file) > 0:
-        
+
         cfg = config.get_config(DOCKER_INPUT_PATH + config_file)
         if random_seed < 0: random_seed = cfg.get(config.Settings().APP_CONFIG.RANDOM_SEED)
         # If the energy or building electricity files are not provided, load the files
@@ -125,8 +125,8 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
     # Create the root directory
     logger.info("Creating output directory %s.", str(output_path_root))
     config.create_directory(str(output_path_root))
-    
-    
+
+
 
     # If the config file is used, copy it into the output folder
     logger.info("Copying config file into %s.", str(output_path_root))

@@ -3,8 +3,8 @@ to derive a trained model for predicting the energy and costing::
 
     python predict.py input_config.yml
 
-This script will output the trained model as a .h5 file alongisde information on the training and testing
-performed for analysis. The outputs from this step will be used when obtaining predictions with the model.
+This script will output the trained model as a .h5 file for a Multilayer Perceptron model and .joblib for a Random Forest Model alongisde
+information on the training and testing performed for analysis. The outputs from this step will be used when obtaining predictions with the model.
 
 The parameters to the above script are documented at: :py:mod:`predict`.
 

@@ -659,7 +659,7 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, selected_model_
         results_pred = evaluate(hypermodel, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
     # Otherwise use a default model design and train with that model
     else:
-        if selected_model_type == 'mlp':
+        if selected_model_type.lower() == 'mlp':
             # Default parameters for the MLP used
             DROPOUT_RATE = 0.1
             LEARNING_RATE = 0.0001
@@ -703,7 +703,7 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, selected_model_
             model_output_path = str(model_path.joinpath(config.Settings().APP_CONFIG.TRAINED_MODEL_FILENAME_MLP))
             hypermodel.save(model_output_path)
 
-        elif selected_model_type == 'rf':
+        elif selected_model_type.lower() == 'rf':
             # Default parameters for the Random forest regressor
             N_ESTIMATORS = 150
             MAX_DEPTH = None

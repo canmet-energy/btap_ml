@@ -31,7 +31,9 @@
 random_seed: 7
 
 # Selected model type
-selected_model_type: 'rf'
+# 'rf' for Random Forest
+# 'mlp' for Multi-Layer Perceptron
+selected_model_type: "rf"
 
 ###################################
 ##
@@ -40,24 +42,24 @@ selected_model_type: 'rf'
 ###################################
 # Specify the inputs for the building file(s) to be used for training
 building_param_files: [
-  # Electricity file (mandatory)
-  'calgary_toronto_elec.xlsx',
-  # Gas file (optional, leave as an empty string if unused)
-  "" # 'calgary_toronto_gas.xlsx'
-]
+    # Electricity file (mandatory)
+    "",
+    # Gas file (optional, leave as an empty string if unused)
+    "",
+  ]
 # Specify the inputs for the energy file(s) to be used for training
 energy_param_files: [
-  # Electricity file (mandatory)
-  'calgary_toronto_elec_energy.csv',
-  # Gas file (optional, leave as an empty string if unused)
-  "" # 'calgary_toronto_gas_energy.csv'
-]
+    # Electricity file (mandatory)
+    "",
+    # Gas file (optional, leave as an empty string if unused)
+    "",
+  ]
 # Specify the input for the building file to be used for train validation (optional)
 # Default value=''
-val_building_param_file: ''
+val_building_param_file: ""
 # Specify the input for the energy file to be used for train validation (optional)
 # Default value=''
-val_energy_param_file: ''
+val_energy_param_file: ""
 
 ###################################
 ##
@@ -71,7 +73,7 @@ val_energy_param_file: ''
 #     xgb (can take a very long time to complete)
 #     lasso (DEFAULT if empty)
 # Default value=''
-estimator_type: ''
+estimator_type: ""
 
 ###################################
 ##
@@ -83,37 +85,37 @@ estimator_type: ''
 # Folder path containing one or more .xlsx building paramter files
 # All .xlsx files within the specified folder must be valid building files
 # No final '/' is needed in the provided directory
-batch_building_inputs: ''
+batch_building_inputs: ""
 # Start and end dates to be used when preprocessing data to receive energy predictions for
 # Typically will remain as 1-1 to 12-31
 # Expected format: Month_number-Day_number
-simulation_start_date: '1-1'
-simulation_end_date: '12-31'
+simulation_start_date: "1-1"
+simulation_end_date: "12-31"
 ###################################
 ## REQUIRED ENERGY FILES
 ###################################
 # Filepath and filename of the trained ML model to be used (output from the training step)
-energy_trained_model_file: ''
+energy_trained_model_file: ""
 # Filepath and filename of the ohe.pkl file generated from the preprocessing step when training a model
-energy_ohe_file: ''
+energy_ohe_file: ""
 # Filepath and filename of the cleaned_columns.json file generated from the preprocessing step when training a model
-energy_cleaned_columns_file: ''
+energy_cleaned_columns_file: ""
 # Filepath and filename of the scaler_X.pkl and scaler_y.pkl files to be used (located within the trained model output)
-energy_scaler_X_file: ''
-energy_scaler_y_file: ''
+energy_scaler_X_file: ""
+energy_scaler_y_file: ""
 # Filepath and filename of the feature selection file to be used for training (located in training output)
-energy_features_file: ''
+energy_features_file: ""
 ###################################
 ## REQUIRED COSTING FILES
 ###################################
 # Filepath and filename of the trained ML model to be used (output from the training step)
-costing_trained_model_file: ''
+costing_trained_model_file: ""
 # Filepath and filename of the ohe.pkl file generated from the preprocessing step when training a model
-costing_ohe_file: ''
+costing_ohe_file: ""
 # Filepath and filename of the cleaned_columns.json file generated from the preprocessing step when training a model
-costing_cleaned_columns_file: ''
+costing_cleaned_columns_file: ""
 # Filepath and filename of the scaler_X.pkl and scaler_y.pkl files to be used (located within the trained model output)
-costing_scaler_X_file: ''
-costing_scaler_y_file: ''
+costing_scaler_X_file: ""
+costing_scaler_y_file: ""
 # Filepath and filename of the feature selection file to be used for training (located in training output)
-costing_features_file: ''
+costing_features_file: ""

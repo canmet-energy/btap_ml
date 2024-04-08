@@ -17,10 +17,10 @@
 ##         python <filename>.py config/input_config.yml
 ##       This applies to any input path location specified in this file.
 ##
-## NOTE: 
+## NOTE:
 ##       Presently, mixed datatypes are supported only when all data utilized has mixed datatypes in the same
 ##       columns.
-##       
+##
 ###################################
 
 ###################################

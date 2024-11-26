@@ -33,25 +33,31 @@ random_seed: 7
 # Selected model type
 selected_model_type: 'mlp'
 
-###################################
+####################ss###############
 ##
 ## FOR INPUT PREPROCESSING (ONLY USED FOR TRAINING)
 ##
 ###################################
 # Specify the inputs for the building file(s) to be used for training
-building_param_files: [
-  # Electricity file (mandatory)
-  'calgary_toronto_elec.xlsx',
-  # Gas file (optional, leave as an empty string if unused)
-  "calgary_toronto_gas.xlsx" # 'calgary_toronto_gas.xlsx'
-]
-# Specify the inputs for the energy file(s) to be used for training
+
 energy_param_files: [
-  # Electricity file (mandatory)
-  'calgary_toronto_elec_energy.csv',
-  # Gas file (optional, leave as an empty string if unused)
-  "calgary_toronto_gas_energy.csv" # 'calgary_toronto_gas_energy.csv'
+  '/home/btap-admin/btap_ml/input/fc1745da-3c81-48b0-b262-adea9611f823.csv',
+  ""
 ]
+
+#building_param_files: [
+#  # Electricity file (mandatory)
+#  'calgary_toronto_elec.xlsx',
+#  # Gas file (optional, leave as an empty string if unused)
+#  "calgary_toronto_gas.xlsx" # 'calgary_toronto_gas.xlsx'
+#]
+## Specify the inputs for the energy file(s) to be used for training
+#energy_param_files: [
+#  # Electricity file (mandatory)
+#  'calgary_toronto_elec_energy.csv',
+#  # Gas file (optional, leave as an empty string if unused)
+#  "calgary_toronto_gas_energy.csv" # 'calgary_toronto_gas_energy.csv'
+#]
 # Specify the input for the building file to be used for train validation (optional)
 # Default value=''
 val_building_param_file: ''

@@ -29,10 +29,10 @@ class TrainingModel(pydantic.BaseModel):
     input_prefix: str
     config_file: Optional[str]
     random_seed: int
-    building_param_files: list
+    #building_param_files: list
     energy_param_files: list
     val_hourly_energy_file: Optional[str]
-    val_building_params_file: Optional[str]
+    #val_building_params_file: Optional[str]
     skip_file_preprocessing: bool
     preprocessed_data_file: Optional[str]
     estimator_type: Optional[str] = ""
@@ -40,8 +40,8 @@ class TrainingModel(pydantic.BaseModel):
     selected_features_file: Optional[str]
     perform_param_search: str
     skip_model_training: bool
-
-    @pydantic.validator("building_param_files", "energy_param_files", "val_hourly_energy_file", "val_building_params_file", "preprocessed_data_file", "selected_features_file")
+    '''
+    @pydantic.validator("energy_param_files", "val_hourly_energy_file", "val_building_params_file", "preprocessed_data_file", "selected_features_file")
     @classmethod
     def validate_files_exist(cls, value, values):
         """
@@ -75,5 +75,6 @@ class TrainingModel(pydantic.BaseModel):
 
         Returns:
             value: The validated energy file paths.
-        """
+        
         return shared_functions.validate_building_energy_files(value, values)
+    '''

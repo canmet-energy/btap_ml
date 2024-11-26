@@ -25,21 +25,21 @@ class PreprocessingModel(pydantic.BaseModel):
         cleaned_columns_file: Location and name of a cleaned_columns.json file which was generated in the root of a training output folder. To be used when generating a dataset to obtain predictions for.
     """
     input_prefix: str
-    building_param_files: Optional[list]
+    #building_param_files: Optional[list]
     energy_param_files: Optional[list]
     val_hourly_energy_file: Optional[str]
-    val_building_params_file: Optional[str]
-    hourly_energy_gas_file: Optional[str]
-    building_params_gas_file: Optional[str]
+    #val_building_params_file: Optional[str]
+    #hourly_energy_gas_file: Optional[str]
+    #building_params_gas_file: Optional[str]
     output_path: str
     preprocess_only_for_predictions: bool
     random_seed: Optional[int]
-    building_params_folder: Optional[str]
+    #building_params_folder: Optional[str]
     start_date: Optional[str]
     end_date: Optional[str]
     ohe_file: Optional[str]
     cleaned_columns_file: Optional[str]
-
+    '''
     @pydantic.validator("building_param_files", "energy_param_files", "val_hourly_energy_file", "val_building_params_file", "ohe_file", "cleaned_columns_file")
     @classmethod
     def validate_files_exist(cls, value, values):
@@ -108,3 +108,4 @@ class PreprocessingModel(pydantic.BaseModel):
         """
         if value == "": return value
         return shared_functions.validate_date_strings(value)
+    '''

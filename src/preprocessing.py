@@ -18,7 +18,7 @@ from sklearn.model_selection import GroupShuffleSplit
 from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
 
 import config
-import plot as pl
+#import plot as pl
 import prepare_weather
 from models.preprocessing_model import PreprocessingModel
 
@@ -146,9 +146,12 @@ def clean_data(df, additional_exemptions=[]) -> pd.DataFrame:
         # Remove any columns with only one unique value and which are not exceptions
         if ((len(df[col].unique()) == 1) and (col not in column_exceptions)):
             df.drop(col, inplace=True, axis=1)
+
     return df
 
-def process_building_files(path_elec, path_gas, clean_dataframe=True):
+def process_building_files(path_elec, 
+                           #path_gas, 
+                           clean_dataframe=True):
     """
     Used to read the building simulation I/O file
 
@@ -162,16 +165,19 @@ def process_building_files(path_elec, path_gas, clean_dataframe=True):
         floor_sq: the square foot of the building
         epw_keys: Dictionary containing all unique weather keys.
     """
-    btap_df = pd.read_excel(path_elec)
-    if path_gas:
-        btap_df = pd.concat([btap_df, pd.read_excel(path_gas)], ignore_index=True)
+    btap_df = pd.read_csv(path_elec)
+    #print(btap_df.shape)
+    #if path_gas:
+    #    btap_df = pd.concat([btap_df, pd.read_excel(path_gas)], ignore_index=True)
     # Building meters squared
     floor_sq = btap_df['bldg_conditioned_floor_area_m_sq'].unique()
     #print(btap_df['bldg_conditioned_floor_area_m_sq'].unique())
     # Unique weather keys
     epw_keys = btap_df[':epw_file'].unique()
+    
     # Dynamic list of columns to remove
-    output_drop_list = ['Unnamed: 0', ':template']
+    output_drop_list = [':template']
+    #output_drop_list = ['Unnamed: 0', ':template']
     # List of columns to keep despite being ruled to be removed
     output_drop_list_exceptions = ['energy_eui_additional_fuel_gj_per_m_sq',
                                    'energy_eui_electricity_gj_per_m_sq',
@@ -180,7 +186,12 @@ def process_building_files(path_elec, path_gas, clean_dataframe=True):
                                    ':building_type',
                                    ':epw_file',
                                    'bldg_conditioned_floor_area_m_sq',
-                                   ':erv_package'
+                                   ':erv_package',
+                                   'average People Occupant Count',
+                                   'average Lights Electricity Energy',
+                                   'average Zone Thermostat Cooling Setpoint Temperature',
+                                   'average Zone Thermostat Heating Setpoint Temperature',
+                                   'Electricity Facility',
                                   ]
 
     # Since :srr_set contains string and float values, we replace it with
@@ -188,13 +199,14 @@ def process_building_files(path_elec, path_gas, clean_dataframe=True):
     btap_df[':srr_set'] = btap_df['bldg_srr'] / 100
 
     # Remove columns without a ':' and which are not exceptions
-    for col in btap_df.columns:
-        if ((':' not in col) and (col not in output_drop_list_exceptions)):# or is_df_col_mixed_type(btap_df[col]):
-            output_drop_list.append(col)
+    #for col in btap_df.columns:
+    #    if ((':' not in col) and (col not in output_drop_list_exceptions)):# or is_df_col_mixed_type(btap_df[col]):
+    #        output_drop_list.append(col)
+    
     btap_df = btap_df.drop(output_drop_list, axis=1)
     # If specified, clean the data using the generic cleaning call
     if clean_dataframe:
-        btap_df = clean_data(btap_df)
+        btap_df = clean_data(btap_df, additional_exemptions=output_drop_list_exceptions)
     # Define a Total energy column
     if 'net_site_eui_gj_per_m_sq' in btap_df:
         btap_df['Total Energy'] = btap_df[['net_site_eui_gj_per_m_sq']].sum(axis=1)
@@ -210,9 +222,8 @@ def process_building_files(path_elec, path_gas, clean_dataframe=True):
                  ':job_id']
     # Drop any remaining fields which exist, ignoring raised errors
     btap_df = btap_df.drop(drop_list, axis=1, errors='ignore')
-
     return btap_df, floor_sq, epw_keys
-
+'''
 def process_building_files_batch(directory: str, start_date: str, end_date: str, for_energy: bool=True):
     """
     Given a directory of .xlsx building files, process and clean each file, combining
@@ -281,7 +292,7 @@ def process_building_files_batch(directory: str, start_date: str, end_date: str,
             else:
                 buildings_df = building_df
     return buildings_df, epw_keys
-
+'''
 def read_weather(epw_keys: list) -> pd.DataFrame:
     """
     Used to read retrieve all weather data for the specified epw_keys.
@@ -565,11 +576,11 @@ def categorical_encode(x_train, x_test, x_validate, output_path, ohe_file=''):
 def main(config_file: str = typer.Argument(..., help="Location of the .yml config file (default name is input_config.yml)."),
          process_type: str = typer.Argument(..., help="Either 'energy' or 'costing' to specify the operations to be performed."),
          hourly_energy_electric_file: str = typer.Option("", help="Location and name of a electricity energy file to be used if the config file is not used."),
-         building_params_electric_file: str = typer.Option("", help="Location and name of a electricity building parameters file to be used if the config file is not used."),
+         #building_params_electric_file: str = typer.Option("", help="Location and name of a electricity building parameters file to be used if the config file is not used."),
          val_hourly_energy_file: str = typer.Option("", help="Location and name of an energy validation file to be used if the config file is not used."),
-         val_building_params_file: str = typer.Option("", help="Location and name of a building parameters validation file to be used if the config file is not used."),
+         #val_building_params_file: str = typer.Option("", help="Location and name of a building parameters validation file to be used if the config file is not used."),
          hourly_energy_gas_file: str = typer.Option("", help="Location and name of a gas energy file to be used if the config file is not used."),
-         building_params_gas_file: str = typer.Option("", help="Location and name of a gas building parameters file to be used if the config file is not used."),
+         #building_params_gas_file: str = typer.Option("", help="Location and name of a gas building parameters file to be used if the config file is not used."),
          output_path: str = typer.Option("", help="The output path to be used. Note that this value should be empty unless this file is called from a pipeline."),
          preprocess_only_for_predictions: bool = typer.Option(False, help="True if the data to be preprocessed is to be used for prediction, not for training."),
          random_seed: int = typer.Option(42, help="The random seed to be used when splitting the data."),
@@ -608,13 +619,13 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
         # Load the specified config file
         cfg = config.get_config(DOCKER_INPUT_PATH + config_file)
         # Load the stored building and energy files for the train and val sets
-        building_params = cfg.get(config.Settings().APP_CONFIG.BUILDING_PARAM_FILES)
+        #building_params = cfg.get(config.Settings().APP_CONFIG.BUILDING_PARAM_FILES)
         energy_params = cfg.get(config.Settings().APP_CONFIG.ENERGY_PARAM_FILES)
-        if building_params_electric_file == "": building_params_electric_file = building_params[0]
+        #if building_params_electric_file == "": building_params_electric_file = building_params[0]
         if hourly_energy_electric_file == "": hourly_energy_electric_file = energy_params[0]
-        if building_params_gas_file == "": building_params_gas_file = building_params[1]
-        if hourly_energy_gas_file == "": hourly_energy_gas_file = energy_params[1]
-        if val_building_params_file == "": val_building_params_file = cfg.get(config.Settings().APP_CONFIG.VAL_BUILDING_PARAM_FILE)
+        #if building_params_gas_file == "": building_params_gas_file = building_params[1]
+        #if hourly_energy_gas_file == "": hourly_energy_gas_file = energy_params[1]
+        #if val_building_params_file == "": val_building_params_file = cfg.get(config.Settings().APP_CONFIG.VAL_BUILDING_PARAM_FILE)
         if val_hourly_energy_file == "": val_hourly_energy_file = cfg.get(config.Settings().APP_CONFIG.VAL_ENERGY_PARAM_FILE)
         if random_seed < 0: random_seed = 0
         # Load the folder directory of building files and the start/end timespans if they are used
@@ -627,16 +638,17 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
         output_path = config.Settings().APP_CONFIG.DOCKER_OUTPUT_PATH
     # Validation of all inputs
     input_model = PreprocessingModel(input_prefix=DOCKER_INPUT_PATH,
-                                     building_param_files=[building_params_electric_file,
-                                                           building_params_gas_file],
+                                     #building_param_files=[building_params_electric_file,
+                                     #                      building_params_gas_file],
                                      energy_param_files=[hourly_energy_electric_file,
-                                                           hourly_energy_gas_file],
+                                                           #hourly_energy_gas_file],
+                                                        ],
                                      val_hourly_energy_file=val_hourly_energy_file,
-                                     val_building_params_file=val_building_params_file,
+                                     #val_building_params_file=val_building_params_file,
                                      output_path=output_path,
                                      preprocess_only_for_predictions=preprocess_only_for_predictions,
                                      random_seed=random_seed,
-                                     building_params_folder=building_params_folder,
+                                     #building_params_folder=building_params_folder,
                                      start_date=start_date,
                                      end_date=end_date,
                                      ohe_file=ohe_file,
@@ -675,9 +687,13 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
 
     # Otherwise, load the file(s) to be used for training
     if process_type.lower() == config.Settings().APP_CONFIG.ENERGY:
-        btap_df, floor_sq, epw_keys = process_building_files(input_model.building_param_files[0], input_model.building_param_files[1])
-    elif process_type.lower() == config.Settings().APP_CONFIG.COSTING:
-        btap_df, costing_df = process_costing_building_files(input_model.building_param_files[0], input_model.building_param_files[1])
+        btap_df, floor_sq, epw_keys = process_building_files(input_model.energy_param_files[0]) # input_model.building_param_files[1])
+    print(btap_df.head(10))
+    print(floor_sq)
+    print(epw_keys)
+
+    #elif process_type.lower() == config.Settings().APP_CONFIG.COSTING:
+    #    btap_df, costing_df = process_costing_building_files(input_model.building_param_files[0], input_model.building_param_files[1])
     # Save the column names from the cleaning process
     column_path = Path(output_path).joinpath(config.Settings().APP_CONFIG.CLEANED_COLUMNS_FILENAME)
     cleaned_column_data = btap_df.columns

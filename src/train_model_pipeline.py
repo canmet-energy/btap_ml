@@ -7,6 +7,8 @@ import shutil
 from datetime import datetime
 from pathlib import Path
 
+os.environ["TYPER_HIDE_TRACEBACK"] = "0"
+
 import typer
 
 import config
@@ -99,10 +101,11 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
         # If the energy or building electricity files are not provided, load the files
         if hourly_energy_electric_file == "":
             hourly_energy_electric_file = cfg.get(config.Settings().APP_CONFIG.ENERGY_PARAM_FILES)[0]
-            building_params_electric_file = cfg.get(config.Settings().APP_CONFIG.BUILDING_PARAM_FILES)[0]
-        if hourly_energy_gas_file == "":
-            hourly_energy_gas_file = cfg.get(config.Settings().APP_CONFIG.ENERGY_PARAM_FILES)[1]
-            building_params_gas_file = cfg.get(config.Settings().APP_CONFIG.BUILDING_PARAM_FILES)[1]
+            #building_params_electric_file = cfg.get(config.Settings().APP_CONFIG.BUILDING_PARAM_FILES)[0]
+        print(hourly_energy_electric_file)
+        #if hourly_energy_gas_file == "":
+        #    hourly_energy_gas_file = cfg.get(config.Settings().APP_CONFIG.ENERGY_PARAM_FILES)[1]
+        #    building_params_gas_file = cfg.get(config.Settings().APP_CONFIG.BUILDING_PARAM_FILES)[1]
         if val_hourly_energy_file == "": val_hourly_energy_file = cfg.get(config.Settings().APP_CONFIG.VAL_ENERGY_PARAM_FILE)
         if val_building_params_file == "": val_building_params_file = cfg.get(config.Settings().APP_CONFIG.VAL_BUILDING_PARAM_FILE)
         if estimator_type == "": estimator_type = cfg.get(config.Settings().APP_CONFIG.ESTIMATOR_TYPE)
@@ -112,7 +115,8 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
     # Identify the training processes to be taken and whether the updated model should
     # be used for the specified training (energy and/or costing)
     TRAINING_PROCESSES = [[config.Settings().APP_CONFIG.ENERGY, use_updated_model],
-                          [config.Settings().APP_CONFIG.COSTING, use_updated_model]]
+                          #[config.Settings().APP_CONFIG.COSTING, use_updated_model]
+                          ]
 
     # Create directory to hold all data for the run (datetime/...)
     # If used, copy the config file within the directory to log the input values
@@ -142,12 +146,12 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
         input_model = TrainingModel(input_prefix=DOCKER_INPUT_PATH,
                                     config_file=config_file,
                                     random_seed=random_seed,
-                                    building_param_files=[building_params_electric_file,
-                                                          building_params_gas_file],
+                                    #building_param_files=[building_params_electric_file,
+                                    #                      building_params_gas_file],
                                     energy_param_files=[hourly_energy_electric_file,
                                                         hourly_energy_gas_file],
                                     val_hourly_energy_file=val_hourly_energy_file,
-                                    val_building_params_file=val_building_params_file,
+                                    #val_building_params_file=val_building_params_file,
                                     skip_file_preprocessing=skip_file_preprocessing,
                                     preprocessed_data_file=preprocessed_data_file,
                                     estimator_type=estimator_type,
@@ -168,11 +172,11 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
             input_model.preprocessed_data_file = preprocessing.main(config_file=input_model.config_file,
                                                                     process_type=training_process,
                                                                     hourly_energy_electric_file=input_model.energy_param_files[0],
-                                                                    building_params_electric_file=input_model.building_param_files[0],
+                                                                    #building_params_electric_file=input_model.building_param_files[0],
                                                                     val_hourly_energy_file=input_model.val_hourly_energy_file,
-                                                                    val_building_params_file=input_model.val_building_params_file,
+                                                                    #val_building_params_file=input_model.val_building_params_file,
                                                                     hourly_energy_gas_file=input_model.energy_param_files[1],
-                                                                    building_params_gas_file=input_model.building_param_files[1],
+                                                                    #building_params_gas_file=input_model.building_param_files[1],
                                                                     output_path=output_path,
                                                                     preprocess_only_for_predictions=False,
                                                                     random_seed=input_model.random_seed,

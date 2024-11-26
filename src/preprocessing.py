@@ -25,7 +25,7 @@ from models.preprocessing_model import PreprocessingModel
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
+'''
 def process_costing_building_files(path_elec, path_gas, clean_dataframe=True, cleaned_columns_list=[]):
     """
     Used to read the building simulation I/O file in preparation for costing
@@ -87,68 +87,9 @@ def process_costing_building_files(path_elec, path_gas, clean_dataframe=True, cl
     btap_df = btap_df.drop(output_drop_list, axis=1, errors='ignore')
     # Columns with nan values are removed to ensure compatability with each potential feature selection algorithm
     return btap_df, costing_df
+'''
 
-def is_df_col_mixed_type(col) -> bool:
-    """
-    Returns True if the col has multiple dtypes and False otherwise.
-
-    Args:
-        col: dataframe column to check
-
-    Returns:
-        True if the col has multiple dtypes and False otherwise
-    """
-    return pd.api.types.infer_dtype(col) in ['mixed', 'mixed-integer', 'mixed-integer-float']
-
-def clean_data(df, additional_exemptions=[]) -> pd.DataFrame:
-    """
-    Basic cleaning of the data using the following criterion:
-
-    - dropping any column with more than 10% missing values
-      We cant use N/A as it will elimnate the entire row /datapoint_id. Giving the number of features we have to work it its better we eliminate
-      columns with features that have too much missing values than to eliminate by rows, which is what N/A will do .
-    - dropping columns with 1 unique value
-      For columns with  1 unique values are dropped during data cleaning as they have low variance
-      and hence have little or no significant contribution to the accuracy of the model.
-
-    Args:
-        df: dataset to be cleaned
-        additional_exemptions: list of columns to not be dropped in addition to any in this function
-
-    Returns:
-        df: cleaned dataframe
-    """
-    # Needed to avoid SettingWithCopyWarning from pandas
-    df = df.copy()
-    # Drop any column with more than 10% missing values
-    threshold = len(df) * 0.9
-    df = df.dropna(thresh=threshold, axis=1)
-    df = df.dropna()
-    df.reset_index(drop=True, inplace=True)
-
-    # Lists of columns which ignore the one unique value restraint since
-    # they may be needed later on
-    column_exceptions = ['energy_eui_additional_fuel_gj_per_m_sq',
-                         'energy_eui_electricity_gj_per_m_sq',
-                         'energy_eui_natural_gas_gj_per_m_sq',
-                         ':building_type',
-                         ':epw_file',
-                         'bldg_conditioned_floor_area_m_sq',
-                         'Name'] + additional_exemptions
-
-    # Again, there may be some columns with more than one unique value, but one
-    # value that has insignificant frequency in the data set.
-    for col in df.columns:
-        # If a column contains a mix of NECB_DEFAULT and ints, convert it to
-        # a discrete set of columns
-        if is_df_col_mixed_type(df[col]):
-            df[col] = df[col].astype(str)
-        # Remove any columns with only one unique value and which are not exceptions
-        if ((len(df[col].unique()) == 1) and (col not in column_exceptions)):
-            df.drop(col, inplace=True, axis=1)
-
-    return df
-
+'''
 def process_building_files(path_elec, 
                            #path_gas, 
                            clean_dataframe=True):
@@ -224,6 +165,7 @@ def process_building_files(path_elec,
     btap_df = btap_df.drop(drop_list, axis=1, errors='ignore')
     return btap_df, floor_sq, epw_keys
 '''
+'''
 def process_building_files_batch(directory: str, start_date: str, end_date: str, for_energy: bool=True):
     """
     Given a directory of .xlsx building files, process and clean each file, combining
@@ -293,32 +235,10 @@ def process_building_files_batch(directory: str, start_date: str, end_date: str,
                 buildings_df = building_df
     return buildings_df, epw_keys
 '''
-def read_weather(epw_keys: list) -> pd.DataFrame:
-    """
-    Used to read retrieve all weather data for the specified epw_keys.
+'''
 
-    Args:
-        epw_keys: Weather file keys to be loaded.
-
-    Returns:
-        btap_df: Dataframe containing the clean weather data.
-    """
-    # Load the weather data from the specified path
-    logger.info("Loading and preparing the weather files.")
-    weather_df = prepare_weather.process_weather_files(epw_keys)
-    # Remove spurious columns.
-    # NOTE: The clean call will remove the :epw_key column if only one is used
-    #weather_df = clean_data(weather_df)
-    # date_int is used later to join data together.
-    weather_df['date_int'] = weather_df['rep_time'].dt.strftime("%m%d").astype(int)
-
-    # Remove the rep_time column, since later stages don't know to expect it.
-    weather_df = weather_df.drop('rep_time', axis='columns')
-    weather_df = weather_df.groupby(['date_int', ':epw_file']).agg(lambda x: x.sum())
-    logger.debug("weather data shape: %s", weather_df.shape)
-    logger.debug("Weather data NA values:\n%s", weather_df.isna().any())
-    return weather_df
-
+'''
+'''
 def process_hourly_energy(path_elec, path_gas, floor_sq):
     """
     Used to read the hourly energy file(s)
@@ -376,7 +296,7 @@ def process_hourly_energy(path_elec, path_gas, floor_sq):
     energy_df['energy'] = energy_df['energy_elec'] + energy_df['energy_gas']
 
     return energy_df
-
+'''
 
 def groupsplit(X, y, valsplit, random_seed=42):
     """
@@ -573,6 +493,182 @@ def categorical_encode(x_train, x_test, x_validate, output_path, ohe_file=''):
         joblib.dump(ct, output_path + "/" + config.Settings().APP_CONFIG.OHE_FILENAME)
     return x_train_oh, x_test_oh, x_val_oh, all_features
 
+def is_df_col_mixed_type(col) -> bool:
+    """
+    Returns True if the col has multiple dtypes and False otherwise.
+
+    Args:
+        col: dataframe column to check
+
+    Returns:
+        True if the col has multiple dtypes and False otherwise
+    """
+    return pd.api.types.infer_dtype(col) in ['mixed', 'mixed-integer', 'mixed-integer-float']
+
+def clean_data(df, additional_exemptions=[]) -> pd.DataFrame:
+    """
+    Basic cleaning of the data using the following criterion:
+
+    - dropping any column with more than 10% missing values
+      We cant use N/A as it will elimnate the entire row /datapoint_id. Giving the number of features we have to work it its better we eliminate
+      columns with features that have too much missing values than to eliminate by rows, which is what N/A will do .
+    - dropping columns with 1 unique value
+      For columns with  1 unique values are dropped during data cleaning as they have low variance
+      and hence have little or no significant contribution to the accuracy of the model.
+
+    Args:
+        df: dataset to be cleaned
+        additional_exemptions: list of columns to not be dropped in addition to any in this function
+
+    Returns:
+        df: cleaned dataframe
+    """
+    # Needed to avoid SettingWithCopyWarning from pandas
+    df = df.copy()
+    # Drop any column with more than 10% missing values
+    threshold = len(df) * 0.9
+    df = df.dropna(thresh=threshold, axis=1)
+    df = df.dropna()
+    df.reset_index(drop=True, inplace=True)
+
+    # Lists of columns which ignore the one unique value restraint since
+    # they may be needed later on
+    column_exceptions = ['energy_eui_additional_fuel_gj_per_m_sq',
+                         'energy_eui_electricity_gj_per_m_sq',
+                         'energy_eui_natural_gas_gj_per_m_sq',
+                         ':building_type',
+                         ':epw_file',
+                         'bldg_conditioned_floor_area_m_sq',
+                         'Name'] + additional_exemptions
+
+    # Again, there may be some columns with more than one unique value, but one
+    # value that has insignificant frequency in the data set.
+    for col in df.columns:
+        # If a column contains a mix of NECB_DEFAULT and ints, convert it to
+        # a discrete set of columns
+        if is_df_col_mixed_type(df[col]):
+            df[col] = df[col].astype(str)
+        # Remove any columns with only one unique value and which are not exceptions
+        if ((len(df[col].unique()) == 1) and (col not in column_exceptions)):
+            df.drop(col, inplace=True, axis=1)
+
+    return df
+
+def read_weather(epw_keys: list) -> pd.DataFrame:
+    """
+    Used to read retrieve all weather data for the specified epw_keys.
+
+    Args:
+        epw_keys: Weather file keys to be loaded.
+
+    Returns:
+        btap_df: Dataframe containing the clean weather data.
+    """
+    # Load the weather data from the specified path
+    logger.info("Loading and preparing the weather files.")
+    weather_df = prepare_weather.process_weather_files(epw_keys)
+    # Remove spurious columns.
+    # NOTE: The clean call will remove the :epw_key column if only one is used
+    #weather_df = clean_data(weather_df)
+    # date_int is used later to join data together.
+    weather_df['date_int'] = weather_df['rep_time'].dt.strftime("%m%d").astype(int)
+
+    # Remove the rep_time column, since later stages don't know to expect it.
+    weather_df = weather_df.drop('rep_time', axis='columns')
+    weather_df = weather_df.groupby(['date_int', ':epw_file']).agg(lambda x: x.sum())
+    logger.debug("weather data shape: %s", weather_df.shape)
+    logger.debug("Weather data NA values:\n%s", weather_df.isna().any())
+    return weather_df
+
+def process_energy_files(path_elec, 
+                        #path_gas, 
+                        clean_dataframe=True):
+    """
+    Used to read the building simulation I/O file
+
+    Args:
+        path_elec: file path where data is to be read. This is a mandatory parameter and in the case where only one simulation I/O file is provided, the path to this file should be indicated here.
+        path_gas: This would be path to the gas output file. This is optional, if there is no gas output file to the loaded, then a value of path_gas ='' should be used
+        clean_dataframe: True if the loaded data should be cleaned, False if cleaning should be skipped
+
+    Returns:
+        btap_df: Dataframe containing the clean building parameters file.
+        floor_sq: the square foot of the building
+        epw_keys: Dictionary containing all unique weather keys.
+    """
+    logger.info("Loading and preparing the energy file(s).")
+    btap_df = pd.read_csv(path_elec)
+    #print(btap_df.shape)
+    #if path_gas:
+    #    btap_df = pd.concat([btap_df, pd.read_excel(path_gas)], ignore_index=True)
+    # Building meters squared
+    floor_sq = btap_df['bldg_conditioned_floor_area_m_sq'].unique()
+    #print(btap_df['bldg_conditioned_floor_area_m_sq'].unique())
+    # Unique weather keys
+    epw_keys = btap_df[':epw_file'].unique()
+    
+    # Dynamic list of columns to remove
+    output_drop_list = [':template']
+    #output_drop_list = ['Unnamed: 0', ':template']
+    # List of columns to keep despite being ruled to be removed
+    output_drop_list_exceptions = ['energy_eui_additional_fuel_gj_per_m_sq',
+                                   'energy_eui_electricity_gj_per_m_sq',
+                                   'energy_eui_natural_gas_gj_per_m_sq',
+                                   'net_site_eui_gj_per_m_sq',
+                                   ':building_type',
+                                   ':epw_file',
+                                   'bldg_conditioned_floor_area_m_sq',
+                                   ':erv_package',
+                                   'average People Occupant Count',
+                                   'average Lights Electricity Energy',
+                                   'average Zone Thermostat Cooling Setpoint Temperature',
+                                   'average Zone Thermostat Heating Setpoint Temperature',
+                                   'Electricity Facility',
+                                  ]
+
+    # Since :srr_set contains string and float values, we replace it with
+    # TODO: Remove when the inputs handle default values
+    btap_df[':srr_set'] = btap_df['bldg_srr'] / 100
+
+    # Remove columns without a ':' and which are not exceptions
+    #for col in btap_df.columns:
+    #    if ((':' not in col) and (col not in output_drop_list_exceptions)):# or is_df_col_mixed_type(btap_df[col]):
+    #        output_drop_list.append(col)
+    
+    btap_df = btap_df.drop(output_drop_list, axis=1)
+    # If specified, clean the data using the generic cleaning call
+    if clean_dataframe:
+        btap_df = clean_data(btap_df, additional_exemptions=output_drop_list_exceptions)
+    # Define a Total energy column
+    if 'net_site_eui_gj_per_m_sq' in btap_df:
+        btap_df['Total Energy'] = btap_df[['net_site_eui_gj_per_m_sq']].sum(axis=1)
+
+    drop_list = ['energy_eui_additional_fuel_gj_per_m_sq',
+                 'energy_eui_electricity_gj_per_m_sq',
+                 'energy_eui_natural_gas_gj_per_m_sq',
+                 'net_site_eui_gj_per_m_sq',
+                 ':analysis_id',
+                 ':analysis_name',
+                 ':os_standards_branch',
+                 ':btap_costing_branch',
+                 ':job_id']
+    # Drop any remaining fields which exist, ignoring raised errors
+    btap_df = btap_df.drop(drop_list, axis=1, errors='ignore')
+
+    btap_df['energy'] = btap_df['Electricity Facility'] / (btap_df['bldg_conditioned_floor_area_m_sq'] * 1000000)
+
+    logger.info("NA values in btap_df after merging with energy:\n%s", btap_df.isna().any())
+
+    btap_df["date_int"] = btap_df['Date'].apply(lambda r : datetime.strptime(r, '%Y-%m-%d %H:%M'))
+    # Since the year is ignored, change the date to an int of the form:
+    # <month_number><day_number>
+    # where <day_number always has two digits AND <month_number> may only have one
+    btap_df["date_int"] = btap_df["date_int"].apply(lambda r: r.strftime("%m%d"))
+    btap_df["date_int"] = btap_df["date_int"].apply(lambda r: int(r))
+    
+
+    return btap_df, floor_sq, epw_keys
+
 def main(config_file: str = typer.Argument(..., help="Location of the .yml config file (default name is input_config.yml)."),
          process_type: str = typer.Argument(..., help="Either 'energy' or 'costing' to specify the operations to be performed."),
          hourly_energy_electric_file: str = typer.Option("", help="Location and name of a electricity energy file to be used if the config file is not used."),
@@ -669,7 +765,6 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
         btap_df_ids = btap_df[keys]
         btap_df = btap_df.drop(['floor_sq', ':datapoint_id', "Prediction Identifier", "Total Energy"], axis='columns', errors='ignore')
         # Keep only the columns used when training alongside the date_int column
-        print(btap_df.columns)
         with open(input_model.cleaned_columns_file, 'r', encoding='UTF-8') as cleaned_columns_f:
             cleaned_columns = json.load(cleaned_columns_f)["columns"]
             if process_type.lower() == config.Settings().APP_CONFIG.ENERGY:
@@ -687,10 +782,7 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
 
     # Otherwise, load the file(s) to be used for training
     if process_type.lower() == config.Settings().APP_CONFIG.ENERGY:
-        btap_df, floor_sq, epw_keys = process_building_files(input_model.energy_param_files[0]) # input_model.building_param_files[1])
-    print(btap_df.head(10))
-    print(floor_sq)
-    print(epw_keys)
+        btap_df, floor_sq, epw_keys = process_energy_files(input_model.energy_param_files[0]) # input_model.building_param_files[1])
 
     #elif process_type.lower() == config.Settings().APP_CONFIG.COSTING:
     #    btap_df, costing_df = process_costing_building_files(input_model.building_param_files[0], input_model.building_param_files[1])
@@ -699,34 +791,37 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
     cleaned_column_data = btap_df.columns
     with open(str(column_path), 'w', encoding='utf8') as json_output:
         json.dump({'columns': [col for col in btap_df.columns if col not in ["Total Energy", ":datapoint_id", "bldg_conditioned_floor_area_m_sq"]]}, json_output)
+    '''
     if process_type.lower() == config.Settings().APP_CONFIG.ENERGY:
         # Hourly energy consumption (electric - mandatory, gas - optional)
-        logger.info("Loading and preparing the energy file(s).")
+        
         # Merge the building parameters with the hourly energy consuption
-        btap_df = pd.merge(process_hourly_energy(input_model.energy_param_files[0],
-                                                 input_model.energy_param_files[1],
-                                                 floor_sq),
-                           btap_df,
-                           left_on=['datapoint_id'],
-                           right_on=[':datapoint_id'],
-                           how='left').reset_index()
+        #btap_df = pd.merge(process_hourly_energy(input_model.energy_param_files[0],
+        #                                         input_model.energy_param_files[1],
+        #                                         floor_sq),
+        #                   btap_df,
+        #                   left_on=['datapoint_id'],
+        #                   right_on=[':datapoint_id'],
+        #                   how='left').reset_index()
         # Drop any row containing any missing values
-        btap_df = clean_data(btap_df, ['energy', 'energy_elec', 'energy_gas'])
+        #btap_df = clean_data(btap_df, ['energy', 'energy_elec', 'energy_gas'])
         # Adjust the energy values based on the floor area in meters squared
-        btap_df['energy'] = btap_df['energy'] / (btap_df['bldg_conditioned_floor_area_m_sq'] * 1000000)
+        
         # Adjust the energy values based on the floor area in meters squared
-        btap_df['energy_elec'] = btap_df['energy_elec'] / (btap_df['bldg_conditioned_floor_area_m_sq'] * 1000000)
+        #btap_df['energy_elec'] = btap_df['energy_elec'] / (btap_df['bldg_conditioned_floor_area_m_sq'] * 1000000)
         # Adjust the energy values based on the floor area in meters squared
-        btap_df['energy_gas'] = btap_df['energy_gas'] / (btap_df['bldg_conditioned_floor_area_m_sq'] * 1000000)
+        #btap_df['energy_gas'] = btap_df['energy_gas'] / (btap_df['bldg_conditioned_floor_area_m_sq'] * 1000000)
 
         logger.info("NA values in btap_df after merging with energy:\n%s", btap_df.isna().any())
 
         # Derive a daily consumption dataframe between the weather and hourly energy consumption
         #btap_df = pd.merge(btap_df, weather_df, on='date_int', how='left').reset_index()
         logger.info("NA values in btap_df after merging with weather:\n%s", btap_df.isna().any())
+    '''
     # Proceed normally to construct the train/test/val sets only if the data will be used for training
     btap_df_val = ''
     costing_df_val = ''
+    '''
     if input_model.val_building_params_file:
         logger.info("Loading files to be used for the validation set.")
         # Use the same columns from the training/testing sets
@@ -767,6 +862,8 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
             btap_df_val, costing_df_val = process_costing_building_files(input_model.val_building_params_file, '', False, btap_df.columns)
             # Generate the dataset
             X_train, X_test, y_train, y_test, y_test_complete, X_validate, y_validate, y_validate_complete = create_costing_dataset(btap_df, btap_df_val, costing_df, costing_df_val, 'yes', input_model.random_seed)
+    '''
+    '''
     else:
         if process_type.lower() == config.Settings().APP_CONFIG.ENERGY:
             weather_df = read_weather(epw_keys)
@@ -776,25 +873,34 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
         elif process_type.lower() == config.Settings().APP_CONFIG.COSTING:
             # Generate the dataset
             X_train, X_test, y_train, y_test, y_test_complete, X_validate, y_validate, y_validate_complete = create_costing_dataset(btap_df, btap_df_val, costing_df, costing_df_val, 'no', input_model.random_seed)
+    '''
+
+    weather_df = read_weather(epw_keys)
+    btap_df = pd.merge(btap_df, weather_df, on=['date_int', ':epw_file'], how='left').reset_index()
+    logger.info("NA values in btap_df after merging with weather:\n%s", btap_df.isna().any())
+    print(btap_df.shape)
+    print(btap_df.columns)
+    
     # Otherwise generate the samples to get predictions for
     # Encode any categorical features
-    X_train_oh, X_test_oh, X_val_oh, all_features = categorical_encode(X_train, X_test, X_validate, output_path)
+    #X_train_oh, X_test_oh, X_val_oh, all_features = categorical_encode(X_train, X_test, X_validate, output_path)
 
     logger.info("Preparing json file of the train/test/validation sets.")
     # Creates `data` structure to save and share train and test datasets.
-    data = {
-            'features': all_features.tolist(),
-            'y_train': y_train.to_json(orient='values'),
-            'X_train': X_train_oh.tolist(),
-            'X_test': X_test_oh.tolist(),
-            'y_test': y_test.values.tolist(),
-            'y_test_complete': y_test_complete.values.tolist(),
-            'X_validate': X_val_oh.tolist(),
-            'y_validate': y_validate.values.tolist(),
-            'y_validate_complete': y_validate_complete.values.tolist()}
+    #data = {
+    #        'features': all_features.tolist(),
+    #        'y_train': y_train.to_json(orient='values'),
+    #        'X_train': X_train_oh.tolist(),
+    #        'X_test': X_test_oh.tolist(),
+    #        'y_test': y_test.values.tolist(),
+    #        'y_test_complete': y_test_complete.values.tolist(),
+    #        'X_validate': X_val_oh.tolist(),
+    #        'y_validate': y_validate.values.tolist(),
+    #        'y_validate_complete': y_validate_complete.values.tolist()}
 
     # Before saving, ensure that the directory exists
     # Bucket used to store preprocessing data.
+
     preprocessing_path = Path(output_path).joinpath(config.Settings().APP_CONFIG.PREPROCESSING_BUCKET_NAME)
 
     # Make sure the bucket for preprocessing data exists to avoid write errors

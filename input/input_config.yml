@@ -41,10 +41,9 @@ selected_model_type: 'mlp'
 # Specify the inputs for the building file(s) to be used for training
 
 energy_param_files: [
-  '/home/btap-admin/btap_ml/input/fc1745da-3c81-48b0-b262-adea9611f823.csv',
+  '/home/btap-admin/btap_ml/input/fccb6f20-8bec-46d0-a73d-257fb18e27a9.csv',
   ""
 ]
-
 #building_param_files: [
 #  # Electricity file (mandatory)
 #  'calgary_toronto_elec.xlsx',

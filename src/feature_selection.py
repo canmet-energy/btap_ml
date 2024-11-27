@@ -9,7 +9,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import typer
-import xgboost as xgb
+#import xgboost as xgb
 from sklearn import linear_model
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.feature_selection import RFECV

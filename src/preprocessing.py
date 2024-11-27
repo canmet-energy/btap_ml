@@ -10,6 +10,8 @@ from datetime import datetime
 from pathlib import Path
 
 import joblib
+import torch
+from torch.utils.data import Dataset, DataLoader
 import numpy as np
 import pandas as pd
 import typer
@@ -107,12 +109,10 @@ def process_building_files(path_elec,
         epw_keys: Dictionary containing all unique weather keys.
     """
     btap_df = pd.read_csv(path_elec)
-    #print(btap_df.shape)
     #if path_gas:
     #    btap_df = pd.concat([btap_df, pd.read_excel(path_gas)], ignore_index=True)
     # Building meters squared
     floor_sq = btap_df['bldg_conditioned_floor_area_m_sq'].unique()
-    #print(btap_df['bldg_conditioned_floor_area_m_sq'].unique())
     # Unique weather keys
     epw_keys = btap_df[':epw_file'].unique()
     
@@ -447,7 +447,7 @@ def create_costing_dataset(energy_daily_df, val_df, costing_df, costing_df_val, 
     X_test = X_test.drop(['datapoint_id'], axis=1, errors='ignore')
 
     return X_train, X_test, y_train, y_test, y_test_complete, X_validate, y_validate, y_validate_complete
-
+'''
 def categorical_encode(x_train, x_test, x_validate, output_path, ohe_file=''):
     """
     Used to encode the categorical variables contained in the x_train, x_test and x_validate
@@ -492,6 +492,74 @@ def categorical_encode(x_train, x_test, x_validate, output_path, ohe_file=''):
     if len(ohe_file) < 1:
         joblib.dump(ct, output_path + "/" + config.Settings().APP_CONFIG.OHE_FILENAME)
     return x_train_oh, x_test_oh, x_val_oh, all_features
+'''
+
+def one_hot_encode_and_save(df):
+    """
+    Identifies categorical columns in a DataFrame, applies OneHotEncoding,
+    saves the encoders, and returns the transformed DataFrame.
+
+    Args:
+        df (pd.DataFrame): Input DataFrame.
+        save_path (str): Directory to save the OneHotEncoder objects. Defaults to 'encoders/'.
+
+    Returns:
+        pd.DataFrame: Transformed DataFrame with one-hot encoded columns.
+    """
+    
+    # Ensure data is sorted by time before dropping Date column
+    df = df.sort_values(by="Date").reset_index(drop=True)
+
+    # Handle datetime column
+    df['Year'] = df['Date'].dt.year
+    df['Month'] = df['Date'].dt.month
+    df['Day'] = df['Date'].dt.day
+    df['Hour'] = df['Date'].dt.hour
+    df['Weekday'] = df['Date'].dt.weekday
+    df = df.drop(columns=['Date'])
+
+    # Identify categorical columns
+    categorical_columns = df.select_dtypes(include=['object', 'category']).columns
+    print(f"Categorical columns identified: {list(categorical_columns)}")
+    
+    # Initialize a dictionary to store encoders
+    encoders = {}
+    encoded_dfs = []
+    
+    # Apply OneHotEncoder to each categorical column
+    for col in categorical_columns:
+        print(f"Processing column: {col}")
+        
+        # Initialize encoder
+        encoder = OneHotEncoder(sparse_output=False, handle_unknown='ignore')
+        
+        # Fit and transform the column
+        transformed = encoder.fit_transform(df[[col]])
+        
+        # Save the encoder
+        #encoder_filename = os.path.join(save_path, f"{col}_encoder.pkl")
+        #with open(encoder_filename, 'wb') as f:
+        #    pickle.dump(encoder, f)
+        #print(f"Encoder for '{col}' saved to {encoder_filename}")
+        
+        # Create a DataFrame for the encoded columns
+        encoded_df = pd.DataFrame(
+            transformed,
+            columns=[f"{col}_{category}" for category in encoder.categories_[0]],
+            index=df.index
+        )
+        encoded_dfs.append(encoded_df)
+        
+        # Store the encoder
+        encoders[col] = encoder
+
+    # Drop original categorical columns
+    df = df.drop(columns=categorical_columns)
+    
+    # Concatenate the encoded columns back to the original DataFrame
+    df = pd.concat([df] + encoded_dfs, axis=1)
+    
+    return df
 
 def is_df_col_mixed_type(col) -> bool:
     """
@@ -571,11 +639,11 @@ def read_weather(epw_keys: list) -> pd.DataFrame:
     # NOTE: The clean call will remove the :epw_key column if only one is used
     #weather_df = clean_data(weather_df)
     # date_int is used later to join data together.
-    weather_df['date_int'] = weather_df['rep_time'].dt.strftime("%m%d").astype(int)
+    #weather_df['date_int'] = weather_df['rep_time'].dt.strftime("%m%d").astype(int)
 
     # Remove the rep_time column, since later stages don't know to expect it.
-    weather_df = weather_df.drop('rep_time', axis='columns')
-    weather_df = weather_df.groupby(['date_int', ':epw_file']).agg(lambda x: x.sum())
+    #weather_df = weather_df.drop('rep_time', axis='columns')
+    #weather_df = weather_df.groupby(['date_int', ':epw_file']).agg(lambda x: x.sum())
     logger.debug("weather data shape: %s", weather_df.shape)
     logger.debug("Weather data NA values:\n%s", weather_df.isna().any())
     return weather_df
@@ -598,12 +666,11 @@ def process_energy_files(path_elec,
     """
     logger.info("Loading and preparing the energy file(s).")
     btap_df = pd.read_csv(path_elec)
-    #print(btap_df.shape)
+
     #if path_gas:
     #    btap_df = pd.concat([btap_df, pd.read_excel(path_gas)], ignore_index=True)
     # Building meters squared
     floor_sq = btap_df['bldg_conditioned_floor_area_m_sq'].unique()
-    #print(btap_df['bldg_conditioned_floor_area_m_sq'].unique())
     # Unique weather keys
     epw_keys = btap_df[':epw_file'].unique()
     
@@ -651,7 +718,9 @@ def process_energy_files(path_elec,
                  ':analysis_name',
                  ':os_standards_branch',
                  ':btap_costing_branch',
-                 ':job_id']
+                 ':job_id',
+                 'Cooling Consumption',
+                 'Heating Consumption']
     # Drop any remaining fields which exist, ignoring raised errors
     btap_df = btap_df.drop(drop_list, axis=1, errors='ignore')
 
@@ -659,15 +728,80 @@ def process_energy_files(path_elec,
 
     logger.info("NA values in btap_df after merging with energy:\n%s", btap_df.isna().any())
 
-    btap_df["date_int"] = btap_df['Date'].apply(lambda r : datetime.strptime(r, '%Y-%m-%d %H:%M'))
+    #btap_df["date_int"] = btap_df['Date'].apply(lambda r : datetime.strptime(r, '%Y-%m-%d %H:%M'))
     # Since the year is ignored, change the date to an int of the form:
     # <month_number><day_number>
     # where <day_number always has two digits AND <month_number> may only have one
-    btap_df["date_int"] = btap_df["date_int"].apply(lambda r: r.strftime("%m%d"))
-    btap_df["date_int"] = btap_df["date_int"].apply(lambda r: int(r))
+    #btap_df["date_int"] = btap_df["date_int"].apply(lambda r: r.strftime("%m%d"))
+    #btap_df["date_int"] = btap_df["date_int"].apply(lambda r: int(r))
     
 
     return btap_df, floor_sq, epw_keys
+
+class TimeSeriesDataset(Dataset):
+    def __init__(self, data, target_column, sequence_length=24):
+        """
+        Initialize the dataset with time series sequences.
+        Args:
+            data (DataFrame): Entire DataFrame, including target column.
+            target_column (str): Name of the target column.
+            sequence_length (int): Number of time steps in each input sequence.
+        """
+        self.sequence_length = sequence_length
+        self.features = data.drop(columns=[target_column]).values
+        self.target = data[target_column].values
+
+    def __len__(self):
+        # Length is adjusted to account for sequence length
+        return len(self.features) - self.sequence_length
+
+    def __getitem__(self, idx):
+        # Extract sequence of features and the corresponding target
+        seq_start = idx
+        seq_end = idx + self.sequence_length
+        X = self.features[seq_start:seq_end]
+        y = self.target[seq_end]  # Target is the next time step
+        return torch.tensor(X, dtype=torch.float32), torch.tensor(y, dtype=torch.float32)
+
+def create_time_series_datasets(energy_daily_df, target_column, sequence_length, train_size=0.7, val_size=0.15):
+    """
+    Splits time series data into train, validation, and test datasets.
+    """
+    # Ensure data is sorted by time
+    #energy_daily_df = energy_daily_df.sort_values(by="Date").reset_index(drop=True)
+
+    # Split indices
+    total_size = len(energy_daily_df)
+    train_end = int(train_size * total_size)
+    val_end = train_end + int(val_size * total_size)
+
+    train_data = energy_daily_df.iloc[:train_end]
+    val_data = energy_daily_df.iloc[train_end:val_end]
+    test_data = energy_daily_df.iloc[val_end:]
+
+    # Create datasets
+    train_dataset = TimeSeriesDataset(train_data, target_column, sequence_length)
+    val_dataset = TimeSeriesDataset(val_data, target_column, sequence_length)
+    test_dataset = TimeSeriesDataset(test_data, target_column, sequence_length)
+
+    return train_dataset, val_dataset, test_dataset
+
+def get_time_series_dataloaders(
+    energy_daily_df, target_column, sequence_length=24, batch_size=32, train_size=0.7, val_size=0.15
+):
+    """
+    Creates PyTorch DataLoaders for time series modeling.
+    """
+    train_dataset, val_dataset, test_dataset = create_time_series_datasets(
+        energy_daily_df, target_column, sequence_length, train_size, val_size
+    )
+
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+
+    return train_loader, val_loader, test_loader
+
 
 def main(config_file: str = typer.Argument(..., help="Location of the .yml config file (default name is input_config.yml)."),
          process_type: str = typer.Argument(..., help="Either 'energy' or 'costing' to specify the operations to be performed."),
@@ -876,10 +1010,13 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
     '''
 
     weather_df = read_weather(epw_keys)
-    btap_df = pd.merge(btap_df, weather_df, on=['date_int', ':epw_file'], how='left').reset_index()
-    logger.info("NA values in btap_df after merging with weather:\n%s", btap_df.isna().any())
-    print(btap_df.shape)
-    print(btap_df.columns)
+    #weather_df['datetime'] = pd.to_datetime(weather_df[['year', 'month', 'day', 'hour']])
+    btap_df['Date'] = pd.to_datetime(btap_df['Date'])
+    btap_df = pd.merge(btap_df, weather_df, on=['Date', ':epw_file'], how='left').reset_index().drop(['index'], axis=1)
+    
+    encoded_btap_df = one_hot_encode_and_save(btap_df)
+    encoded_btap_df = encoded_btap_df.dropna(axis=1, how='all')
+    logger.info("NA values in btap_df after merging with weather:\n%s", encoded_btap_df.isna().any())
     
     # Otherwise generate the samples to get predictions for
     # Encode any categorical features
@@ -901,20 +1038,38 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
     # Before saving, ensure that the directory exists
     # Bucket used to store preprocessing data.
 
-    preprocessing_path = Path(output_path).joinpath(config.Settings().APP_CONFIG.PREPROCESSING_BUCKET_NAME)
+    # Example: Using the loaders for RNN
+    sequence_length = 24  # e.g., use the past 24 hours
+    batch_size = 32
+    target_column = "Electricity Facility"
 
-    # Make sure the bucket for preprocessing data exists to avoid write errors
-    logger.info("Creating directory %s.", str(preprocessing_path))
-    config.create_directory(str(preprocessing_path))
+    print(encoded_btap_df.info())
+    train_loader, val_loader, test_loader = get_time_series_dataloaders(
+        encoded_btap_df, target_column, sequence_length, batch_size
+    )
 
-    # Save the json file
-    output_file = str(preprocessing_path.joinpath(config.Settings().APP_CONFIG.PREPROCESSING_FILENAME + ".json"))
-    logger.info("Saving json file %s.", output_file)
-    with open(output_file, 'w', encoding='utf8') as json_output:
-        json.dump(data, json_output)
 
-    logger.info("Preprocessing file has been saved as %s.", output_file)
-    return output_file
+    # Verify a batch
+    for batch_X, batch_y in train_loader:
+        print(batch_X, batch_y)
+        print("Batch X shape:", batch_X.shape)  # Expected: (batch_size, sequence_length, num_features)
+        print("Batch y shape:", batch_y.shape)  # Expected: (batch_size,)
+        break
+
+    #preprocessing_path = Path(output_path).joinpath(config.Settings().APP_CONFIG.PREPROCESSING_BUCKET_NAME)
+#
+    ## Make sure the bucket for preprocessing data exists to avoid write errors
+    #logger.info("Creating directory %s.", str(preprocessing_path))
+    #config.create_directory(str(preprocessing_path))
+#
+    ## Save the json file
+    #output_file = str(preprocessing_path.joinpath(config.Settings().APP_CONFIG.PREPROCESSING_FILENAME + ".json"))
+    #logger.info("Saving json file %s.", output_file)
+    #with open(output_file, 'w', encoding='utf8') as json_output:
+    #    json.dump(data, json_output)
+#
+    #logger.info("Preprocessing file has been saved as %s.", output_file)
+    return None
 
 if __name__ == '__main__':
     # Load settings from the environment

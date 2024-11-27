@@ -113,7 +113,7 @@ def process_weather_file(filename: str):
     df = (get_weather_df(filename)
           .drop(weather_drop_list, axis=1)
           .pipe(adjust_hour)
-          .assign(rep_time=lambda x: pd.to_datetime(x[['year', 'month', 'day', 'hour']])))
+          .assign(Date=lambda x: pd.to_datetime(x[['year', 'month', 'day', 'hour']])))
     logger.debug("Data shape in processing: %s", df.shape)
     if df['hour'].loc[df['hour'] > 23].any():
         logger.warn("Hour values greater than 23 found. Date parsing will likely return values coded to the following days.")
@@ -129,6 +129,7 @@ def process_weather_files(filenames: list):
     Returns:
         A pd.DataFrame object with the ready to use weather information
     """
+
     combined_weather_df = None
     # Loop through all weather keys
     for filename in filenames:
@@ -142,6 +143,7 @@ def process_weather_files(filenames: list):
         else:
             combined_weather_df = weather_df
     return combined_weather_df
+
 
 def main(config_file: str = typer.Argument(..., help="Path to configuration YAML file."),
          epw_file: str = typer.Option("", help="The epw key to be used if the config file is not used."),

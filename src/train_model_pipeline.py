@@ -185,6 +185,7 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
                                                                     end_date='',
                                                                     ohe_file='',
                                                                     cleaned_columns_file='')
+        '''
         # Perform feature selection (retrieve the features to be used)
         if not skip_feature_selection:
             input_model.selected_features_file = feature_selection.main(input_model.config_file,
@@ -216,6 +217,7 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
     # Provide any additional outputs/plots as needed
     #...
     logger.info("Training process has been completed.")
+    '''
     return
 
 if __name__ == '__main__':

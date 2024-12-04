@@ -178,6 +178,8 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
                                                                     hourly_energy_gas_file=input_model.energy_param_files[1],
                                                                     #building_params_gas_file=input_model.building_param_files[1],
                                                                     output_path=output_path,
+                                                                    skip_feature_selection=skip_feature_selection,
+                                                                    estimator_type=estimator_type,
                                                                     preprocess_only_for_predictions=False,
                                                                     random_seed=input_model.random_seed,
                                                                     building_params_folder='',

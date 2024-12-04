@@ -16,7 +16,7 @@ class FeatureSelectionModel(pydantic.BaseModel):
     input_prefix: str
     preprocessed_data_file: str
     estimator_type: Optional[str]
-
+'''
     @pydantic.validator("preprocessed_data_file")
     @classmethod
     def validate_files_exist(cls, value, values):
@@ -33,3 +33,4 @@ class FeatureSelectionModel(pydantic.BaseModel):
             value: One or two string values with an added prefix, if needed.
         """
         return shared_functions.validate_files_exist(value, values)
+'''

@@ -17,7 +17,7 @@ import config
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def get_weather_df(filename: str) -> pd.DataFrame:
+def get_weather_df(filename: str, year) -> pd.DataFrame:
     """Fetch weather data from the main storage location.
     Loads weather files from the NREL/openstudio-standards GitHub repository where they are managed.
 
@@ -43,6 +43,7 @@ def get_weather_df(filename: str) -> pd.DataFrame:
     file_url = f"{epw_file_store}/{filename}"
     logger.info("Reading EPW file from %s", file_url)
     df = pd.read_csv(file_url, names=epw_columns, skiprows=meta_row_count)
+    df['year'] = year
     logger.debug("Data shape after fetch: %s", df.shape)
 
     return df
@@ -94,7 +95,7 @@ def adjust_hour(df: pd.DataFrame, colname: str = 'hour'):
     return df
 
 
-def process_weather_file(filename: str):
+def process_weather_file(filename: str, year):
     """Process a weather file and return the dataframe.
 
     Args:
@@ -110,7 +111,7 @@ def process_weather_file(filename: str):
                          'aerosol_opt_depth', 'days_last_snow', 'Albedo', 'liq_precip_rate', 'presweathcodes']
     logger.debug("Dropping %s unused columns from weather data", len(weather_drop_list))
 
-    df = (get_weather_df(filename)
+    df = (get_weather_df(filename, year)
           .drop(weather_drop_list, axis=1)
           .pipe(adjust_hour)
           .assign(Date=lambda x: pd.to_datetime(x[['year', 'month', 'day', 'hour']])))
@@ -119,7 +120,7 @@ def process_weather_file(filename: str):
         logger.warn("Hour values greater than 23 found. Date parsing will likely return values coded to the following days.")
     return df
 
-def process_weather_files(filenames: list):
+def process_weather_files(filenames: list, year):
     """
     Process a batch of weather files and return the dataframe
 
@@ -134,7 +135,7 @@ def process_weather_files(filenames: list):
     # Loop through all weather keys
     for filename in filenames:
         # Process each file individually
-        weather_df = process_weather_file(filename)
+        weather_df = process_weather_file(filename, year)
         # Add the epw_key as a column
         weather_df[':epw_file'] = filename
         # Set/merge the output with the other processed weather data

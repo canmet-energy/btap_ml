@@ -43,18 +43,19 @@ def select_features(preprocessed_data_file, estimator_type, output_path):
         preprocessed_dataset = json.load(preprocessing_file)
 
     features = preprocessed_dataset["features"]
-    X_train = pd.DataFrame(preprocessed_dataset["X_train"], columns=features)
-    X_test = pd.DataFrame(preprocessed_dataset["X_test"], columns=features)
+    x = pd.DataFrame(preprocessed_dataset["x"], columns=features)
+    y = preprocessed_dataset["y"]
+    #X_test = pd.DataFrame(preprocessed_dataset["X_test"], columns=features)
 
-    print(X_train.head(10))
+    #print(X_train.head(10))
 
     # Scale the inputs before selecting the featueres
     scalerx = StandardScaler()
     #scalerx = QuantileTransformer(output_distribution="normal", random_state=42)#RobustScaler()#QuantileTransformer(output_distribution="normal", random_state=42)#StandardScaler()#MinMaxScaler()#RobustScaler()
-    X_train = scalerx.fit_transform(preprocessed_dataset["X_train"])
-    y_train = pd.read_json(preprocessed_dataset["y_train"], orient='values').values#.ravel()
+    X = scalerx.fit_transform(preprocessed_dataset["x"])
+    #y = pd.read_json(preprocessed_dataset["y"], orient='values').values# .ravel()
     # Ignore the total value within the loaded file, just use the individual outputs
-    y_train = y_train[:, 1:]
+    #y_train = y_train[:, 1:]
 
     # For multiple outputs, only the MultiTaskLassoCV is used, this can be adjusted if more time
     # is available to test other approaches.
@@ -83,9 +84,9 @@ def select_features(preprocessed_data_file, estimator_type, output_path):
     else:
     """
     # Use LassoCV
-    reg = linear_model.MultiTaskLassoCV(cv=10, n_jobs=-1, n_alphas=100, tol=600)
-    fit = reg.fit(X_train,y_train)
-    score = reg.score(X_train,y_train)
+    reg = linear_model.LassoCV(cv=10, n_jobs=-1, n_alphas=100, tol=600)
+    fit = reg.fit(x,y)
+    score = reg.score(x,y)
     selected_features = np.array(features)[np.abs(sum(reg.coef_) / len(reg.coef_))  > 0]
 
     print(score)
@@ -134,12 +135,12 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
     # If the output path is blank, map to the docker output path
     if len(output_path) < 1:
         output_path = config.Settings().APP_CONFIG.DOCKER_OUTPUT_PATH
-    # Validate all inputs
-    input_model = FeatureSelectionModel(input_prefix=DOCKER_INPUT_PATH,
-                                        preprocessed_data_file=preprocessed_data_file,
-                                        estimator_type=estimator_type)
+    ## Validate all inputs
+    #input_model = FeatureSelectionModel(input_prefix=DOCKER_INPUT_PATH,
+    #                                    preprocessed_data_file=preprocessed_data_file,
+    #                                    estimator_type=estimator_type)
     # Perform the feature selection
-    features_filepath = select_features(input_model.preprocessed_data_file, input_model.estimator_type, output_path)
+    features_filepath = select_features(preprocessed_data_file, estimator_type, output_path)
     return features_filepath
 
 if __name__ == '__main__':

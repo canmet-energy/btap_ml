@@ -22,6 +22,7 @@ from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
 import config
 #import plot as pl
 import prepare_weather
+import feature_selection
 from models.preprocessing_model import PreprocessingModel
 
 logging.basicConfig(level=logging.INFO)
@@ -622,7 +623,7 @@ def clean_data(df, additional_exemptions=[]) -> pd.DataFrame:
 
     return df
 
-def read_weather(epw_keys: list) -> pd.DataFrame:
+def read_weather(epw_keys: list, year) -> pd.DataFrame:
     """
     Used to read retrieve all weather data for the specified epw_keys.
 
@@ -634,7 +635,7 @@ def read_weather(epw_keys: list) -> pd.DataFrame:
     """
     # Load the weather data from the specified path
     logger.info("Loading and preparing the weather files.")
-    weather_df = prepare_weather.process_weather_files(epw_keys)
+    weather_df = prepare_weather.process_weather_files(epw_keys, year)
     # Remove spurious columns.
     # NOTE: The clean call will remove the :epw_key column if only one is used
     #weather_df = clean_data(weather_df)
@@ -707,8 +708,8 @@ def process_energy_files(path_elec,
     if clean_dataframe:
         btap_df = clean_data(btap_df, additional_exemptions=output_drop_list_exceptions)
     # Define a Total energy column
-    if 'net_site_eui_gj_per_m_sq' in btap_df:
-        btap_df['Total Energy'] = btap_df[['net_site_eui_gj_per_m_sq']].sum(axis=1)
+    #if 'net_site_eui_gj_per_m_sq' in btap_df:
+    #    btap_df['Total Energy'] = btap_df[['net_site_eui_gj_per_m_sq']].sum(axis=1)
 
     drop_list = ['energy_eui_additional_fuel_gj_per_m_sq',
                  'energy_eui_electricity_gj_per_m_sq',
@@ -812,6 +813,8 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
          hourly_energy_gas_file: str = typer.Option("", help="Location and name of a gas energy file to be used if the config file is not used."),
          #building_params_gas_file: str = typer.Option("", help="Location and name of a gas building parameters file to be used if the config file is not used."),
          output_path: str = typer.Option("", help="The output path to be used. Note that this value should be empty unless this file is called from a pipeline."),
+         skip_feature_selection: bool = typer.Option(False, help="True if the .json feature selection file generation should be skipped, where the selected_features_file input is used, False if the feature selection file generation should be performed."),
+         estimator_type: str = typer.Option("", help="The type of feature selection to be performed. The default is lasso, which will be used if nothing is passed. The other options are 'linear', 'elasticnet', and 'xgb'."),
          preprocess_only_for_predictions: bool = typer.Option(False, help="True if the data to be preprocessed is to be used for prediction, not for training."),
          random_seed: int = typer.Option(42, help="The random seed to be used when splitting the data."),
          building_params_folder: str = typer.Option("", help="The folder location containing all building parameter files which will have predictions made on by the provided model. Only used preprocess_only_for_predictions is True."),
@@ -914,9 +917,15 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
         X, _, _, all_features = categorical_encode(btap_df, None, None, output_path, input_model.ohe_file)
         return X, btap_df_ids, all_features
 
+
     # Otherwise, load the file(s) to be used for training
     if process_type.lower() == config.Settings().APP_CONFIG.ENERGY:
         btap_df, floor_sq, epw_keys = process_energy_files(input_model.energy_param_files[0]) # input_model.building_param_files[1])
+
+    btap_df['Date'] = pd.to_datetime(btap_df['Date'])
+    btap_df['year'] = btap_df['Date'].dt.year
+    year = btap_df['year'].unique()[0]
+    btap_df = btap_df[btap_df['year']==year]
 
     #elif process_type.lower() == config.Settings().APP_CONFIG.COSTING:
     #    btap_df, costing_df = process_costing_building_files(input_model.building_param_files[0], input_model.building_param_files[1])
@@ -1009,15 +1018,44 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
             X_train, X_test, y_train, y_test, y_test_complete, X_validate, y_validate, y_validate_complete = create_costing_dataset(btap_df, btap_df_val, costing_df, costing_df_val, 'no', input_model.random_seed)
     '''
 
-    weather_df = read_weather(epw_keys)
+    weather_df = read_weather(epw_keys, year)
     #weather_df['datetime'] = pd.to_datetime(weather_df[['year', 'month', 'day', 'hour']])
-    btap_df['Date'] = pd.to_datetime(btap_df['Date'])
+
     btap_df = pd.merge(btap_df, weather_df, on=['Date', ':epw_file'], how='left').reset_index().drop(['index'], axis=1)
     
     encoded_btap_df = one_hot_encode_and_save(btap_df)
     encoded_btap_df = encoded_btap_df.dropna(axis=1, how='all')
     logger.info("NA values in btap_df after merging with weather:\n%s", encoded_btap_df.isna().any())
     
+    preprocessing_path = Path(output_path).joinpath(config.Settings().APP_CONFIG.PREPROCESSING_BUCKET_NAME)
+
+    logger.info("Creating directory %s.", str(preprocessing_path))
+    config.create_directory(str(preprocessing_path))
+
+    target_column = ['energy']
+    x = encoded_btap_df.drop(columns=target_column)
+    y = encoded_btap_df[target_column]
+
+    features = encoded_btap_df.columns.tolist()  # Get all column names as a list
+    features.remove(target_column[0])    
+    data = {
+            'features': features,
+            'x': x.values.tolist(),
+            'y': y[target_column[0]].tolist()
+    }
+#
+    #Save the json file
+    output_file = str(preprocessing_path.joinpath(config.Settings().APP_CONFIG.PREPROCESSING_FILENAME + ".json"))
+    logger.info("Saving json file %s.", output_file)
+    with open(output_file, 'w', encoding='utf8') as json_output:
+        json.dump(data, json_output)
+
+    if not skip_feature_selection:
+        selected_features_file = feature_selection.main(config_file,
+                                                        output_file,
+                                                        estimator_type,
+                                                        output_path)
+
     # Otherwise generate the samples to get predictions for
     # Encode any categorical features
     #X_train_oh, X_test_oh, X_val_oh, all_features = categorical_encode(X_train, X_test, X_validate, output_path)
@@ -1043,7 +1081,6 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
     batch_size = 32
     target_column = "Electricity Facility"
 
-    print(encoded_btap_df.info())
     train_loader, val_loader, test_loader = get_time_series_dataloaders(
         encoded_btap_df, target_column, sequence_length, batch_size
     )
@@ -1056,7 +1093,7 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
         print("Batch y shape:", batch_y.shape)  # Expected: (batch_size,)
         break
 
-    #preprocessing_path = Path(output_path).joinpath(config.Settings().APP_CONFIG.PREPROCESSING_BUCKET_NAME)
+    #
 #
     ## Make sure the bucket for preprocessing data exists to avoid write errors
     #logger.info("Creating directory %s.", str(preprocessing_path))

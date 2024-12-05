@@ -595,9 +595,9 @@ def clean_data(df, additional_exemptions=[]) -> pd.DataFrame:
     # Needed to avoid SettingWithCopyWarning from pandas
     df = df.copy()
     # Drop any column with more than 10% missing values
-    threshold = len(df) * 0.9
-    df = df.dropna(thresh=threshold, axis=1)
-    df = df.dropna()
+    #threshold = len(df) * 0.9
+    #df = df.dropna(thresh=threshold, axis=1)
+    #df = df.dropna()
     df.reset_index(drop=True, inplace=True)
 
     # Lists of columns which ignore the one unique value restraint since
@@ -666,8 +666,9 @@ def process_energy_files(path_elec,
         epw_keys: Dictionary containing all unique weather keys.
     """
     logger.info("Loading and preparing the energy file(s).")
+    ## For Ben: the reading of the files
+    # needs to be a loop and concatenate all the incoming files
     btap_df = pd.read_csv(path_elec)
-
     #if path_gas:
     #    btap_df = pd.concat([btap_df, pd.read_excel(path_gas)], ignore_index=True)
     # Building meters squared
@@ -684,6 +685,25 @@ def process_energy_files(path_elec,
                                    'energy_eui_natural_gas_gj_per_m_sq',
                                    'net_site_eui_gj_per_m_sq',
                                    ':building_type',
+                                   ':dcv_type',
+                                   ':ecm_system_name',
+                                   ':erv_package',
+                                   ':ext_wall_cond',
+                                   ':ext_floor_cond',
+                                   ':ext_roof_cond',
+                                   ':fdwr_set',
+                                   ':fixed_wind_solar_trans',
+                                   ':fixed_window_cond',
+                                   ':fixed_window_solar_trans',
+                                   ':fdwr_set',
+                                   ':rotation_degrees',
+                                   ':pv_ground_type',
+                                   ':nv_type',
+                                   ':airloop_economizer_type',
+                                   ':boiler_eff',
+                                   ':furnace_eff',
+                                   ':shw_eff',
+                                   ':primary_heating_fuel',
                                    ':epw_file',
                                    'bldg_conditioned_floor_area_m_sq',
                                    ':erv_package',

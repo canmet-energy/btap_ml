@@ -15,8 +15,8 @@ logger = logging.getLogger(__name__)
 class AppConfig(BaseModel):
     """Application configuration."""
     # Paths to all BTAP calls within the docker container
-    DOCKER_INPUT_PATH: str = 'D:/btap_ml_weather/btap_ml/input/'
-    DOCKER_OUTPUT_PATH: str = 'D:/btap_ml_weather/btap_ml/input/'
+    DOCKER_INPUT_PATH: str = 'C:/btap_ml/input/'
+    DOCKER_OUTPUT_PATH: str = 'C:/btap_ml/input/'
     DOCKER_SRC_PATH: str = 'src/' #'../src/' # switch to 'src/' for energy
     # Bucket prefix to be used as part of the run folder being created for training and running
     TRAIN_BUCKET_NAME: str = 'training_model_'
@@ -42,7 +42,7 @@ class AppConfig(BaseModel):
     TRAINING_BUCKET_NAME: str = 'model_training'
     # # URL where weather files are stored
     # WEATHER_DATA_STORE: AnyHttpUrl = 'https://raw.githubusercontent.com/NREL/openstudio-standards/nrcan/data/weather/'
-    WEATHER_DATA_STORE: AnyHttpUrl = 'https://raw.githubusercontent.com/canmet-energy/btap_weather/tree/main/historic'
+    WEATHER_DATA_STORE: AnyHttpUrl = 'https://raw.githubusercontent.com/canmet-energy/btap_weather/main/historic'
     # WEATHER_DATA_STORE: dict = {
     #     "historic": "https://github.com/canmet-energy/btap_weather/tree/main/historic",
     #     "future": "https://github.com/canmet-energy/btap_weather/tree/main/future",

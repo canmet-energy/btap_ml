@@ -43,9 +43,10 @@ def get_weather_df_from_zip(epw_filename: str) -> pd.DataFrame:
     response.raise_for_status()
 
     with zipfile.ZipFile(BytesIO(response.content)) as z:
-        if epw_filename not in z.namelist():
-            raise FileNotFoundError(f"{epw_filename} not found in the zip archive.")
-        with z.open(epw_filename) as epw_file:
+        expected_filename = epw_filename + ".epw"
+        if expected_filename not in z.namelist():
+            raise FileNotFoundError(f"{expected_filename} not found in the zip archive.")
+        with z.open(expected_filename) as epw_file:
             logger.info("Reading EPW file from zip archive")
             df = pd.read_csv(epw_file, names=epw_columns, skiprows=meta_row_count)
 

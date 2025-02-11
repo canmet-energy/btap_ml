@@ -326,7 +326,7 @@ def process_hourly_energy(path_elec, path_gas, floor_sq):
         energy_df = pd.concat([energy_df, pd.read_csv(path_gas, low_memory=False)], ignore_index=True)
     # Adds all except Electricity:Facility
     #energy_df.loc[(energy_df['Name'] != "ElectricityNet:Facility") & (energy_df['Name'] != "NaturalGas:Facility"), ['Name']] = "Electricity:Facility"
-    energy_df = energy_df.loc[(energy_df['Name'] == "ElectricityNet:Facility") | (energy_df['Name'] == "NaturalGas:Facility")]
+    energy_df = energy_df.loc[(energy_df['Name'] == "Electricity:Facility") | (energy_df['Name'] == "NaturalGas:Facility")]
     #print(energy_df[energy_df['Name'] == "ElectricityNet:Facility" or energy_df['Name'] == 'NaturalGas:Facility'])
     #energy_df = energy_df[energy_df['Name'] != "Electricity:Facility"].groupby(['datapoint_id']).sum()
     # TODO: REMOVE
@@ -349,7 +349,7 @@ def process_hourly_energy(path_elec, path_gas, floor_sq):
     energy_df = energy_df.groupby(['datapoint_id', 'date_int', 'Name'])['energy'].agg(lambda x: x.sum()).reset_index()
 
     # Merge gas and electricity rows together
-    energy_df = pd.merge(energy_df.loc[(energy_df['Name'] == "ElectricityNet:Facility")],
+    energy_df = pd.merge(energy_df.loc[(energy_df['Name'] == "Electricity:Facility")],
                          energy_df.loc[(energy_df['Name'] == "NaturalGas:Facility")],
                          on=['datapoint_id', 'date_int'],
                          how='outer',

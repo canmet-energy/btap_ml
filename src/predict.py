@@ -70,9 +70,20 @@ def rmse_loss(y_true, y_pred):
     Returns:
        rmse loss from comparing the y_test and y_pred values
     """
+    # tf.print("Y True: ", y_true)
+    # tf.print("Y Pred: ", y_pred)
     sum_pred = K.sum(y_pred, axis=-1)
     sum_true = K.sum(y_true, axis=-1)
-    loss = K.sqrt(K.mean(K.square(sum_pred - sum_true)))
+
+    # tf.print("Sum Pred: ", sum_pred)
+    # tf.print("Sum True: ", sum_true)
+
+    #loss = K.sqrt(K.mean(K.square(sum_pred - sum_true)))
+
+    elec_loss = K.sqrt(K.mean(K.square(y_pred[:, 0] - y_true[:, 0])))
+    gas_loss = K.sqrt(K.mean(K.square(y_pred[:, 1] - y_true[:, 1])))
+
+    loss = (elec_loss + gas_loss)/2
 
     return loss
 
@@ -90,22 +101,19 @@ def model_builder(hp):
     model = keras.Sequential()
     model.add(keras.layers.Flatten())
 
-    hp_activation= hp.Choice('activation', values=['relu','tanh','sigmoid'])
-    for i in range(hp.Int("num_layers", 1, 1)):
+    hp_activation= hp.Choice('activation', values=['relu'])
+    for i in range(hp.Int("num_layers", 1, 3)):
         model.add(layers.Dense(
-            units=hp.Int("units_" + str(i), min_value=8, max_value=96, step=8),
+            units=hp.Int("units_" + str(i), min_value=8, max_value=512, step=8),
             activation=hp_activation,
             input_shape=(36, ),
             kernel_initializer='normal',
-            kernel_regularizer=regularizers.l1_l2(l1=1e-5, l2=1e-5),
-            bias_regularizer=regularizers.l2(1e-4),
-            activity_regularizer=regularizers.l2(1e-5)
             ))
-        model.add(Dropout(hp.Choice('dropout_rate', values=[0.1, 0.2, 0.3])))
-    model.add(Dense(1, activation='linear'))
+        model.add(Dropout(hp.Choice('dropout_rate', values=[0.0, 0.05, 0.1, 0.2, 0.3])))
+    model.add(Dense(2, activation='linear'))
 
-    hp_learning_rate = hp.Choice('learning_rate', values=[1e-3, 1e-4, 1e-5])
-    hp_optimizer = hp.Choice('optimizer', values=['rmsprop', 'adam', 'sgd'])
+    hp_learning_rate = hp.Choice('learning_rate', values=[1e-3, 0.0005, 1e-4, 0.00005, 1e-5])
+    hp_optimizer = hp.Choice('optimizer', values=['adam'])
 
     if hp_optimizer == "adam":
         optimizer = tf.optimizers.Adam(learning_rate=hp_learning_rate)
@@ -146,7 +154,7 @@ def predicts_hp(X_train, y_train, X_test, y_test, selected_feature, output_path,
 
     tuner = Hyperband(model_builder,
                       objective='val_loss',
-                      max_epochs=50,
+                      max_epochs=100,
                       overwrite=True,
                       factor=3,
                       directory=parameter_search_path,
@@ -157,7 +165,7 @@ def predicts_hp(X_train, y_train, X_test, y_test, selected_feature, output_path,
     tuner.search(X_train,
                  y_train,
                  epochs=100,
-                 batch_size=365,
+                 batch_size=256,
                  callbacks=[stop_early],
                  use_multiprocessing=True,
                  validation_split=0.2)
@@ -171,6 +179,16 @@ def predicts_hp(X_train, y_train, X_test, y_test, selected_feature, output_path,
     layer is {best_hps.get('units_0')} and the optimal learning rate for the optimizer
     is {best_hps.get('learning_rate')}.
     """)
+
+    print(f"""
+            The optimal hyperparameters are:
+            - Activation function: {best_hps.get('activation')}
+            - Number of layers: {best_hps.get('num_layers')}
+            - Units in each layer: {[best_hps.get(f'units_{i}') for i in range(best_hps.get('num_layers'))]}
+            - Dropout rate: {best_hps.get('dropout_rate')}
+            - Learning rate: {best_hps.get('learning_rate')}
+            - Optimizer: {best_hps.get('optimizer')}
+            """)
     result = best_hps
 
     logdir = os.path.join(log_path, datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
@@ -315,6 +333,10 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
         actual_set = COSTING_ACTUAL
 
     # For each initial prediction, map it to the appropriate dictionary entry
+    print(prediction_set)
+    print(len(prediction_set))
+    print(test_predictions)
+
     for i in range(len(prediction_set)):
         y_test[prediction_set[i]] = [elem[i] for elem in test_predictions]
         y_validate[prediction_set[i]] = [elem[i] for elem in validate_predictions]
@@ -470,9 +492,6 @@ def create_model_mlp(dense_layers, activation, optimizer, dropout_rate, length, 
         model.add(Dense(lsize, input_shape=(length,),
                         activation=activation, kernel_initializer='normal',
                         # kernel_regularizer=regularizers.l1(1e-5),
-                        kernel_regularizer=regularizers.l1_l2(l1=1e-2, l2=1e-2),
-                        bias_regularizer=regularizers.l2(1e-2),
-                        activity_regularizer=regularizers.l2(1e-2)
                         ))
         if dropout_rate > 0 and dropout_rate <= 1:
             model.add(Dropout(dropout_rate))
@@ -508,7 +527,7 @@ def create_model_mlp(dense_layers, activation, optimizer, dropout_rate, length, 
                         verbose=1,
                         #shuffle=False,
                         validation_split=0.2)
-
+    pl.save_plot(history)
     print(model.summary())
     plt.ylabel('loss')
 
@@ -562,8 +581,8 @@ def create_model_rf(n_estimators, max_depth, min_samples_split, min_samples_leaf
                                   random_state=42,
                                   verbose = 1)
     # Train the model
-    model.fit(X_train, y_train)
-
+    history = model.fit(X_train, y_train)
+    pl.save_plot(history)
     result = evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
 
     return result, model
@@ -633,6 +652,7 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, selected_model_
     y_validate_complete = pd.DataFrame(preprocessing_json["y_validate_complete"], columns=json_columns)
     # Remove "Total Energy" from json_columns if the energy predictions are being performed
     output_nodes = len(y_train[0])
+    print(output_nodes)
     if process_type.lower() == config.Settings().APP_CONFIG.ENERGY:
         #json_columns = json_columns[:-1]
         json_columns.remove('Total Energy')
@@ -657,16 +677,23 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, selected_model_
     if param_search.lower() == "yes":
         hypermodel = predicts_hp(X_train, y_train, X_test, y_test, features, output_path, random_seed)
         results_pred = evaluate(hypermodel, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
+
+        if selected_model_type.lower() == 'mlp':
+            model_output_path = str(model_path.joinpath(config.Settings().APP_CONFIG.TRAINED_MODEL_FILENAME_MLP))
+            hypermodel.save(model_output_path) 
+        else:
+            model_output_path = str(model_path.joinpath(config.Settings().APP_CONFIG.TRAINED_MODEL_FILENAME_RF))
+            joblib.dump(hypermodel, model_output_path)
     # Otherwise use a default model design and train with that model
     else:
         if selected_model_type.lower() == 'mlp':
             # Default parameters for the MLP used
-            DROPOUT_RATE = 0.1
-            LEARNING_RATE = 0.0001
+            DROPOUT_RATE = 0.0
+            LEARNING_RATE = 0.0005
             EPOCHS = 100
-            BATCH_SIZE = 90
-            NUMBER_OF_NODES = 5000
-            ACTIVATION = 'selu'
+            BATCH_SIZE = 32
+            NUMBER_OF_NODES = 512
+            ACTIVATION = 'relu'
             OPTIMIZER = 'adam'
 
             if not use_updated_model:
@@ -676,7 +703,7 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, selected_model_
                 DROPOUT_RATE = -1
 
             results_pred, hypermodel = create_model_mlp(
-                                    dense_layers=[NUMBER_OF_NODES],
+                                    dense_layers=[128, 120],
                                     activation=ACTIVATION,
                                     optimizer=OPTIMIZER,
                                     dropout_rate=DROPOUT_RATE,

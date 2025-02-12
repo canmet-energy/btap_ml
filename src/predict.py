@@ -70,15 +70,10 @@ def rmse_loss(y_true, y_pred):
     Returns:
        rmse loss from comparing the y_test and y_pred values
     """
-    # tf.print("Y True: ", y_true)
-    # tf.print("Y Pred: ", y_pred)
-    sum_pred = K.sum(y_pred, axis=-1)
-    sum_true = K.sum(y_true, axis=-1)
+    # sum_pred = K.sum(y_pred, axis=-1)
+    # sum_true = K.sum(y_true, axis=-1)
 
-    # tf.print("Sum Pred: ", sum_pred)
-    # tf.print("Sum True: ", sum_true)
-
-    #loss = K.sqrt(K.mean(K.square(sum_pred - sum_true)))
+    # loss = K.sqrt(K.mean(K.square(sum_pred - sum_true)))
 
     elec_loss = K.sqrt(K.mean(K.square(y_pred[:, 0] - y_true[:, 0])))
     gas_loss = K.sqrt(K.mean(K.square(y_pred[:, 1] - y_true[:, 1])))
@@ -204,8 +199,8 @@ def predicts_hp(X_train, y_train, X_test, y_test, selected_feature, output_path,
     model = tuner.hypermodel.build(best_hps)
     history = model.fit(X_train,
                         y_train,
-                        epochs=50,
-                        batch_size=365,
+                        epochs=100,
+                        batch_size=256,
                         validation_split=0.2,
                         callbacks=[stop_early, hist_callback],
                         )
@@ -581,8 +576,7 @@ def create_model_rf(n_estimators, max_depth, min_samples_split, min_samples_leaf
                                   random_state=42,
                                   verbose = 1)
     # Train the model
-    history = model.fit(X_train, y_train)
-    pl.save_plot(history)
+    model.fit(X_train, y_train)
     result = evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
 
     return result, model
@@ -691,7 +685,7 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, selected_model_
             DROPOUT_RATE = 0.0
             LEARNING_RATE = 0.0005
             EPOCHS = 100
-            BATCH_SIZE = 32
+            BATCH_SIZE = 256
             NUMBER_OF_NODES = 512
             ACTIVATION = 'relu'
             OPTIMIZER = 'adam'
@@ -703,7 +697,7 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, selected_model_
                 DROPOUT_RATE = -1
 
             results_pred, hypermodel = create_model_mlp(
-                                    dense_layers=[128, 120],
+                                    dense_layers=[496, 256, 232],
                                     activation=ACTIVATION,
                                     optimizer=OPTIMIZER,
                                     dropout_rate=DROPOUT_RATE,

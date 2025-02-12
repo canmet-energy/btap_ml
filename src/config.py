@@ -15,8 +15,8 @@ logger = logging.getLogger(__name__)
 class AppConfig(BaseModel):
     """Application configuration."""
     # Paths to all BTAP calls within the docker container
-    DOCKER_INPUT_PATH: str = '/home/btap_ml/input/'
-    DOCKER_OUTPUT_PATH: str = '/home/btap_ml/output/'
+    DOCKER_INPUT_PATH: str = 'C:/Users/dlau/Documents/btap_ml/input/'
+    DOCKER_OUTPUT_PATH: str = 'C:/Users/dlau/Documents/btap_ml/output/'
     DOCKER_SRC_PATH: str = 'src/' #'../src/' # switch to 'src/' for energy
     # Bucket prefix to be used as part of the run folder being created for training and running
     TRAIN_BUCKET_NAME: str = 'training_model_'

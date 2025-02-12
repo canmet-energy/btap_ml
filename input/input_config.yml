@@ -41,16 +41,16 @@ selected_model_type: 'mlp'
 # Specify the inputs for the building file(s) to be used for training
 building_param_files: [
   # Electricity file (mandatory)
-  'calgary_toronto_elec.xlsx',
+  'elec_output.xlsx',
   # Gas file (optional, leave as an empty string if unused)
-  "calgary_toronto_gas.xlsx" # 'calgary_toronto_gas.xlsx'
+  "gas_output.xlsx" # 'calgary_toronto_gas.xlsx'
 ]
 # Specify the inputs for the energy file(s) to be used for training
 energy_param_files: [
   # Electricity file (mandatory)
-  'calgary_toronto_elec_energy.csv',
+  'Toronto_MidR_Elec_New_merged.csv',
   # Gas file (optional, leave as an empty string if unused)
-  "calgary_toronto_gas_energy.csv" # 'calgary_toronto_gas_energy.csv'
+  "Toronto_MidR_NG_New_merged.csv" # 'calgary_toronto_gas_energy.csv'
 ]
 # Specify the input for the building file to be used for train validation (optional)
 # Default value=''

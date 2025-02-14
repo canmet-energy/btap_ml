@@ -75,15 +75,16 @@ def rmse_loss(y_true, y_pred):
 
     # loss = K.sqrt(K.mean(K.square(sum_pred - sum_true)))
 
-    elec_loss = K.sqrt(K.mean(K.square(y_pred[:, 0] - y_true[:, 0])))
-    gas_loss = K.sqrt(K.mean(K.square(y_pred[:, 1] - y_true[:, 1])))
+    # Calculating RMSE for each output.
+    loss = K.sqrt(tf.reduce_mean(K.square(y_pred - y_true), axis=0))
 
-    loss = (elec_loss + gas_loss)/2
+    # Adjusting the weights of the RMSE so that it focuses on the ones that are underperforming.
+    weights = loss/tf.reduce_sum(loss)
 
-    return loss
+    return K.mean(loss)
 
 
-def model_builder(hp):
+def energy_model_builder(hp):
     """
     Builds the model that would be used to search for hyperparameter.
     The hyperparameters search inclues activation, regularizers, dropout_rate, learning_rate, and optimizer
@@ -99,9 +100,9 @@ def model_builder(hp):
     hp_activation= hp.Choice('activation', values=['relu'])
     for i in range(hp.Int("num_layers", 1, 3)):
         model.add(layers.Dense(
-            units=hp.Int("units_" + str(i), min_value=8, max_value=512, step=8),
+            units=hp.Int("units_" + str(i), min_value=8, max_value=1024, step=8),
             activation=hp_activation,
-            input_shape=(36, ),
+            input_shape=(52, ),
             kernel_initializer='normal',
             ))
         model.add(Dropout(hp.Choice('dropout_rate', values=[0.0, 0.05, 0.1, 0.2, 0.3])))
@@ -124,8 +125,48 @@ def model_builder(hp):
 
     return model
 
+def costing_model_builder(hp):
+    """
+    Builds the model that would be used to search for hyperparameter.
+    The hyperparameters search inclues activation, regularizers, dropout_rate, learning_rate, and optimizer
 
-def predicts_hp(X_train, y_train, X_test, y_test, selected_feature, output_path, random_seed):
+    Args:
+        hp: hyperband object with different hyperparameters to be checked.
+    Returns:
+       model will be built based on the different hyperparameter combinations.
+    """
+    model = keras.Sequential()
+    model.add(keras.layers.Flatten())
+
+    hp_activation= hp.Choice('activation', values=['relu'])
+    for i in range(hp.Int("num_layers", 1, 3)):
+        model.add(layers.Dense(
+            units=hp.Int("units_" + str(i), min_value=8, max_value=1024, step=8),
+            activation=hp_activation,
+            input_shape=(54, ),
+            kernel_initializer='normal',
+            ))
+        model.add(Dropout(hp.Choice('dropout_rate', values=[0.0, 0.05, 0.1, 0.2, 0.3])))
+    model.add(Dense(6, activation='linear'))
+
+    hp_learning_rate = hp.Choice('learning_rate', values=[1e-3, 0.0005, 1e-4, 0.00005, 1e-5])
+    hp_optimizer = hp.Choice('optimizer', values=['adam'])
+
+    if hp_optimizer == "adam":
+        optimizer = tf.optimizers.Adam(learning_rate=hp_learning_rate)
+    elif hp_optimizer == "sgd":
+        optimizer = tf.optimizers.SGD(learning_rate=hp_learning_rate)
+    else:
+        optimizer = tf.optimizers.RMSprop(learning_rate=hp_learning_rate)
+
+    # Comiple the mode with the optimizer and learninf rate specified in hparams
+    model.compile(optimizer=optimizer,
+                  loss=rmse_loss,
+                  metrics=['mae', 'mse','mape'])
+
+    return model
+
+def predicts_hp(X_train, y_train, X_test, y_test, selected_feature, output_path, random_seed, process_type):
     """
     DECOMMISIONED: May need updates for multi-outputs
     Using the set of hyperparameter combined,the model built is used to make predictions.
@@ -147,14 +188,24 @@ def predicts_hp(X_train, y_train, X_test, y_test, selected_feature, output_path,
     config.create_directory(parameter_search_path)
     config.create_directory(log_path)
 
-    tuner = Hyperband(model_builder,
-                      objective='val_loss',
-                      max_epochs=100,
-                      overwrite=True,
-                      factor=3,
-                      directory=parameter_search_path,
-                      project_name='btap',
-                      seed=random_seed)
+    if process_type == 'energy':
+        tuner = Hyperband(energy_model_builder,
+                            objective='val_loss',
+                            max_epochs=100,
+                            overwrite=True,
+                            factor=3,
+                            directory=parameter_search_path,
+                            project_name='btap',
+                            seed=random_seed)
+    else:
+        tuner = Hyperband(costing_model_builder,
+                            objective='val_loss',
+                            max_epochs=100,
+                            overwrite=True,
+                            factor=3,
+                            directory=parameter_search_path,
+                            project_name='btap',
+                            seed=random_seed)
 
     stop_early = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=5)
     tuner.search(X_train,
@@ -646,7 +697,8 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, selected_model_
     y_validate_complete = pd.DataFrame(preprocessing_json["y_validate_complete"], columns=json_columns)
     # Remove "Total Energy" from json_columns if the energy predictions are being performed
     output_nodes = len(y_train[0])
-    print(output_nodes)
+    print("Output nodes: " + str(output_nodes))
+    print("Input shape: " + str(col_length))
     if process_type.lower() == config.Settings().APP_CONFIG.ENERGY:
         #json_columns = json_columns[:-1]
         json_columns.remove('Total Energy')
@@ -669,7 +721,7 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, selected_model_
     # If set to "yes", search for best hyperparameters before training
     # "YES" HAS BEEN DECOMMISSIONED AS OF THE RELEASE OF TASKS 5/6 OF PHASE 3
     if param_search.lower() == "yes":
-        hypermodel = predicts_hp(X_train, y_train, X_test, y_test, features, output_path, random_seed)
+        hypermodel = predicts_hp(X_train, y_train, X_test, y_test, features, output_path, random_seed, process_type)
         results_pred = evaluate(hypermodel, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
 
         if selected_model_type.lower() == 'mlp':
@@ -682,13 +734,22 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, selected_model_
     else:
         if selected_model_type.lower() == 'mlp':
             # Default parameters for the MLP used
-            DROPOUT_RATE = 0.0
-            LEARNING_RATE = 0.0005
-            EPOCHS = 100
-            BATCH_SIZE = 256
-            NUMBER_OF_NODES = 512
-            ACTIVATION = 'relu'
-            OPTIMIZER = 'adam'
+            if process_type == 'energy':
+                DROPOUT_RATE = 0.0
+                LEARNING_RATE = 0.0005
+                EPOCHS = 100
+                BATCH_SIZE = 256
+                NUMBER_OF_NODES = [496, 256]
+                ACTIVATION = 'relu'
+                OPTIMIZER = 'adam'
+            else:
+                DROPOUT_RATE = 0.1
+                LEARNING_RATE = 0.001
+                EPOCHS = 100
+                BATCH_SIZE = 256
+                NUMBER_OF_NODES = [1096]
+                ACTIVATION = 'relu'
+                OPTIMIZER = 'adam'
 
             if not use_updated_model:
                 LEARNING_RATE = 0.001
@@ -697,7 +758,7 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, selected_model_
                 DROPOUT_RATE = -1
 
             results_pred, hypermodel = create_model_mlp(
-                                    dense_layers=[496, 256, 232],
+                                    dense_layers=NUMBER_OF_NODES,
                                     activation=ACTIVATION,
                                     optimizer=OPTIMIZER,
                                     dropout_rate=DROPOUT_RATE,

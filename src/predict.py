@@ -31,6 +31,8 @@ from sklearn.preprocessing import (MaxAbsScaler, MinMaxScaler, Normalizer,
 from tensorboard.plugins.hparams import api as hp
 from tensorflow.keras import layers
 
+from sklearn.model_selection import RandomizedSearchCV
+
 import config
 import plot as pl
 import preprocessing
@@ -59,8 +61,27 @@ def score(y_test, y_pred):
               "mape": mape}
     return scores
 
-
 def rmse_loss(y_true, y_pred):
+    """
+    A customized rmse score that takes a sum of y_pred and y_test before computing the rmse score
+
+    Args:
+        y_true: y testset
+        y_pred: y predicted value from the model
+    Returns:
+       rmse loss from comparing the y_test and y_pred values
+    """
+    # sum_pred = K.sum(y_pred, axis=-1)
+    # sum_true = K.sum(y_true, axis=-1)
+
+    # loss = K.sqrt(K.mean(K.square(sum_pred - sum_true)))
+
+    # Calculating RMSE for each output.
+    loss = K.sqrt(tf.reduce_mean(K.square(y_pred - y_true), axis=0))
+
+    return K.mean(loss)
+
+def weighted_rmse_loss(y_true, y_pred):
     """
     A customized rmse score that takes a sum of y_pred and y_test before computing the rmse score
 
@@ -81,7 +102,7 @@ def rmse_loss(y_true, y_pred):
     # Adjusting the weights of the RMSE so that it focuses on the ones that are underperforming.
     weights = loss/tf.reduce_sum(loss)
 
-    return K.mean(loss)
+    return K.sum(weights * loss)
 
 
 def energy_model_builder(hp):
@@ -97,10 +118,10 @@ def energy_model_builder(hp):
     model = keras.Sequential()
     model.add(keras.layers.Flatten())
 
-    hp_activation= hp.Choice('activation', values=['relu'])
+    hp_activation= hp.Choice('activation', values=['relu', 'tanh'])
     for i in range(hp.Int("num_layers", 1, 3)):
         model.add(layers.Dense(
-            units=hp.Int("units_" + str(i), min_value=8, max_value=1024, step=8),
+            units=hp.Int("units_" + str(i), min_value=8, max_value=4096, step=8),
             activation=hp_activation,
             input_shape=(52, ),
             kernel_initializer='normal',
@@ -109,7 +130,7 @@ def energy_model_builder(hp):
     model.add(Dense(2, activation='linear'))
 
     hp_learning_rate = hp.Choice('learning_rate', values=[1e-3, 0.0005, 1e-4, 0.00005, 1e-5])
-    hp_optimizer = hp.Choice('optimizer', values=['adam'])
+    hp_optimizer = hp.Choice('optimizer', values=['adam', 'sgd', 'rmsprop'])
 
     if hp_optimizer == "adam":
         optimizer = tf.optimizers.Adam(learning_rate=hp_learning_rate)
@@ -138,10 +159,10 @@ def costing_model_builder(hp):
     model = keras.Sequential()
     model.add(keras.layers.Flatten())
 
-    hp_activation= hp.Choice('activation', values=['relu'])
+    hp_activation= hp.Choice('activation', values=['relu', 'tanh'])
     for i in range(hp.Int("num_layers", 1, 3)):
         model.add(layers.Dense(
-            units=hp.Int("units_" + str(i), min_value=8, max_value=1024, step=8),
+            units=hp.Int("units_" + str(i), min_value=8, max_value=4096, step=8),
             activation=hp_activation,
             input_shape=(54, ),
             kernel_initializer='normal',
@@ -150,7 +171,7 @@ def costing_model_builder(hp):
     model.add(Dense(6, activation='linear'))
 
     hp_learning_rate = hp.Choice('learning_rate', values=[1e-3, 0.0005, 1e-4, 0.00005, 1e-5])
-    hp_optimizer = hp.Choice('optimizer', values=['adam'])
+    hp_optimizer = hp.Choice('optimizer', values=['adam', 'sgd', 'rmsprop'])
 
     if hp_optimizer == "adam":
         optimizer = tf.optimizers.Adam(learning_rate=hp_learning_rate)
@@ -423,7 +444,7 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
         y_validate_complete = y_validate_complete.drop(['datapoint_id'], axis=1)
 
     # Retrieve the annual energy predictions
-    if process_type.lower() == config.Settings().APP_CONFIG.ENERGY:
+    # if process_type.lower() == config.Settings().APP_CONFIG.ENERGY:
         for actual_label, predicted_label in zip(actual_set, prediction_set):
             # Retrieve the score and store it with the appropriate title for both the test and validation sets
             performance_score = score(y_test[actual_label], y_test[predicted_label + TRANSFORMATION_SUFFIX])
@@ -629,6 +650,68 @@ def create_model_rf(n_estimators, max_depth, min_samples_split, min_samples_leaf
     # Train the model
     model.fit(X_train, y_train)
     result = evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
+    print(score(model.predict(X_train), y_train))
+
+    return result, model
+
+def tune_rf(X_train, y_train, X_test, y_test, y_test_complete, scalery, X_validate, y_validate, y_validate_complete, output_path, path_elec, path_gas, val_building_path, process_type, output_nodes):
+    """
+    Creates a model with defaulted values without need to perform an hyperparameter search at all times.
+    Its initutive to have run the hyperparameter search beforehand to know the hyperparameter value to set.
+
+    Args:
+        n_estimators: the number of trees in the random forest
+        max_depth: the maximum depth of the tree.
+        min_samples_split: The minimum number of samples required to split an internal node:
+        min_samples_leaf: The minimum number of samples required to be at a leaf node.
+        X_train: X trainset
+        y_train: y trainset
+        X_test: X testset
+        y_test: y testset
+        y_test_complete: dataframe containing the target variable with corresponding datapointid for the test set
+        scalery: y scaler used to transform the y values to the original scale
+        X_validate: X validation set
+        y_validate: y validation set
+        y_validate_complete: dataframe containing the target variable with corresponding datapointid for the validation set
+        output_path: Where the outputs will be placed
+        path_elec: Filepath of the electricity building file which has been used
+        path_gas: Filepath of the gas building file, if it has been used (pass nothing otherwise)
+        val_building_path: Filepath of the validation building file, if it has been used (pass nothing otherwise).
+        process_type: Either 'energy' or 'costing' to specify the operations to be performed.
+        output_nodes: The number of outputs which the model needs to predict.
+    Returns:
+        metric: evaluation results containing the loss value from the testset prediction,
+        annual_metric: predicted value for each datapooint_id is summed to calculate the annual energy consumed and the loss value from the testset prediction,
+        output_df: merge of y_pred, y_test, datapoint_id, the final dataframe showing the model output using the testset
+        val_metric:evaluation results containing the loss value from the validationset prediction,
+        val_annual_metric:predicted value for each datapooint_id is summed to calculate the annual energy consumed and the loss value from the validationset prediction,,
+        output_val_df: merge of y_pred, y_validate, datapoint_id, the final dataframe showing the model output using the validation set
+    """
+    parameter_search_path = str(Path(output_path).joinpath("parameter_search"))
+    btap_log_path = str(Path(parameter_search_path).joinpath("btap"))
+    # Create the output directories if they do not exist
+    config.create_directory(parameter_search_path)
+    config.create_directory(btap_log_path)
+
+    model = RandomForestRegressor()
+    
+    rf_search_space = {
+        'n_estimators': [100, 150, 200],
+        'max_depth': [None, 5, 10, 15],
+        'min_samples_split': [1, 2, 4],
+        'min_samples_leaf': [1, 2, 4],
+        'max_features': ['auto', 'sqrt', 'log2']
+    }
+
+    random_search = RandomizedSearchCV(model, param_distributions=rf_search_space, n_iter=50, cv=10, random_state=42)
+
+    # Train the model
+    random_search.fit(X_train, y_train)
+
+    print(random_search.best_params_)
+
+    result = evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
+    print(score(model.predict(X_train), y_train))
 
     return result, model
 
@@ -721,13 +804,31 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, selected_model_
     # If set to "yes", search for best hyperparameters before training
     # "YES" HAS BEEN DECOMMISSIONED AS OF THE RELEASE OF TASKS 5/6 OF PHASE 3
     if param_search.lower() == "yes":
-        hypermodel = predicts_hp(X_train, y_train, X_test, y_test, features, output_path, random_seed, process_type)
-        results_pred = evaluate(hypermodel, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
-
         if selected_model_type.lower() == 'mlp':
+            hypermodel = predicts_hp(X_train, y_train, X_test, y_test, features, output_path, random_seed, process_type)
+            results_pred = evaluate(hypermodel, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
+
             model_output_path = str(model_path.joinpath(config.Settings().APP_CONFIG.TRAINED_MODEL_FILENAME_MLP))
             hypermodel.save(model_output_path) 
         else:
+            results_pred, hypermodel = tune_rf(
+                            X_train=X_train,
+                            y_train=y_train,
+                            X_test=X_test,
+                            y_test=y_test,
+                            y_test_complete=y_test_complete,
+                            scalery=scalery,
+                            X_validate = X_validate,
+                            y_validate=y_validate,
+                            y_validate_complete= y_validate_complete,
+                            output_path=output_path,
+                            path_elec=path_elec,
+                            path_gas=path_gas,
+                            val_building_path=val_building_path,
+                            process_type=process_type,
+                            output_nodes=output_nodes
+                            )
+            
             model_output_path = str(model_path.joinpath(config.Settings().APP_CONFIG.TRAINED_MODEL_FILENAME_RF))
             joblib.dump(hypermodel, model_output_path)
     # Otherwise use a default model design and train with that model

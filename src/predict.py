@@ -77,9 +77,9 @@ def rmse_loss(y_true, y_pred):
     # loss = K.sqrt(K.mean(K.square(sum_pred - sum_true)))
 
     # Calculating RMSE for each output.
-    loss = K.sqrt(tf.reduce_mean(K.square(y_pred - y_true), axis=0))
+    loss = tf.reduce_mean(K.square(y_pred - y_true), axis=0)
 
-    return K.mean(loss)
+    return K.sqrt(K.mean(loss))
 
 def weighted_rmse_loss(y_true, y_pred):
     """
@@ -360,6 +360,7 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
     """
     test_predictions = model.predict(X_test)
     validate_predictions = model.predict(X_validate)
+
     ENERGY_PREDICTIONS = [
         'y_pred_elec',
         'y_pred_gas'
@@ -585,7 +586,7 @@ def create_model_mlp(dense_layers, activation, optimizer, dropout_rate, length, 
     scores_metric = ''
     history = model.fit(X_train,
                         y_train,
-                        callbacks=[logger,
+                        callbacks=[
                                    early_stopping,
                                    hist_callback,
                                    ],
@@ -599,6 +600,7 @@ def create_model_mlp(dense_layers, activation, optimizer, dropout_rate, length, 
     plt.ylabel('loss')
 
     result = evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
+    print(score(model.predict(X_train), y_train))
 
     return result, model
 
@@ -700,7 +702,6 @@ def tune_rf(X_train, y_train, X_test, y_test, y_test_complete, scalery, X_valida
         'max_depth': [None, 5, 10, 15],
         'min_samples_split': [1, 2, 4],
         'min_samples_leaf': [1, 2, 4],
-        'max_features': ['auto', 'sqrt', 'log2']
     }
 
     random_search = RandomizedSearchCV(model, param_distributions=rf_search_space, n_iter=50, cv=10, random_state=42)
@@ -840,15 +841,15 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, selected_model_
                 LEARNING_RATE = 0.0005
                 EPOCHS = 100
                 BATCH_SIZE = 256
-                NUMBER_OF_NODES = [496, 256]
+                NUMBER_OF_NODES = [680, 2864]
                 ACTIVATION = 'relu'
-                OPTIMIZER = 'adam'
+                OPTIMIZER = 'rmsprop'
             else:
-                DROPOUT_RATE = 0.1
-                LEARNING_RATE = 0.001
+                DROPOUT_RATE = 0.05
+                LEARNING_RATE = 0.0005
                 EPOCHS = 100
                 BATCH_SIZE = 256
-                NUMBER_OF_NODES = [1096]
+                NUMBER_OF_NODES = [2672]
                 ACTIVATION = 'relu'
                 OPTIMIZER = 'adam'
 

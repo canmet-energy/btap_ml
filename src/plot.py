@@ -76,6 +76,7 @@ def plot_metric(df: pd.DataFrame) -> None:
 
 def save_plot(H) -> None:
     # plot the training loss and accuracy
+    plt.clf()
     plt.style.use("ggplot")
     plt.figure()
     plt.plot(H.history["loss"], label="train")
@@ -85,6 +86,7 @@ def save_plot(H) -> None:
     plt.legend(fontsize="x-large")
     plt.savefig('./output/train_test_loss.png')
 
+    plt.clf()
     plt.style.use("ggplot")
     plt.figure(2)
     plt.plot(H.history["mae"], label="train")
@@ -94,6 +96,7 @@ def save_plot(H) -> None:
     plt.legend(fontsize="x-large")
     plt.savefig('./output/train_test_mae.png')
 
+    plt.clf()
     plt.style.use("ggplot")
     plt.figure(3)
     plt.plot(H.history["mse"], label="train")
@@ -103,6 +106,7 @@ def save_plot(H) -> None:
     plt.legend(fontsize="x-large")
     plt.savefig('./output/train_test_mse.png')
 
+    plt.clf()
     plt.style.use("ggplot")
     plt.figure(4)
     plt.plot(H.history["mape"], label="train")

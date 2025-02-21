@@ -61,6 +61,11 @@ def score(y_test, y_pred):
               "mape": mape}
     return scores
 
+def det_coeff(y_true, y_pred):
+    u = K.sum(K.square(y_true - y_pred))
+    v = K.sum(K.square(y_true - K.mean(y_true)))
+    return K.ones_like(v) - (u / v)
+
 def rmse_loss(y_true, y_pred):
     """
     A customized rmse score that takes a sum of y_pred and y_test before computing the rmse score
@@ -80,30 +85,6 @@ def rmse_loss(y_true, y_pred):
     loss = tf.reduce_mean(K.square(y_pred - y_true), axis=0)
 
     return K.sqrt(K.mean(loss))
-
-def weighted_rmse_loss(y_true, y_pred):
-    """
-    A customized rmse score that takes a sum of y_pred and y_test before computing the rmse score
-
-    Args:
-        y_true: y testset
-        y_pred: y predicted value from the model
-    Returns:
-       rmse loss from comparing the y_test and y_pred values
-    """
-    # sum_pred = K.sum(y_pred, axis=-1)
-    # sum_true = K.sum(y_true, axis=-1)
-
-    # loss = K.sqrt(K.mean(K.square(sum_pred - sum_true)))
-
-    # Calculating RMSE for each output.
-    loss = K.sqrt(tf.reduce_mean(K.square(y_pred - y_true), axis=0))
-
-    # Adjusting the weights of the RMSE so that it focuses on the ones that are underperforming.
-    weights = loss/tf.reduce_sum(loss)
-
-    return K.sum(weights * loss)
-
 
 def energy_model_builder(hp):
     """
@@ -587,6 +568,7 @@ def create_model_mlp(dense_layers, activation, optimizer, dropout_rate, length, 
     history = model.fit(X_train,
                         y_train,
                         callbacks=[
+                                   logger,
                                    early_stopping,
                                    hist_callback,
                                    ],
@@ -698,23 +680,23 @@ def tune_rf(X_train, y_train, X_test, y_test, y_test_complete, scalery, X_valida
     model = RandomForestRegressor()
     
     rf_search_space = {
-        'n_estimators': [100, 150, 200],
-        'max_depth': [None, 5, 10, 15],
-        'min_samples_split': [1, 2, 4],
+        'n_estimators': [50, 100, 150],
+        'max_depth': [None, 5, 10, 15, 30],
+        'min_samples_split': [2, 4, 8],
         'min_samples_leaf': [1, 2, 4],
     }
 
-    random_search = RandomizedSearchCV(model, param_distributions=rf_search_space, n_iter=50, cv=10, random_state=42)
+    random_search = RandomizedSearchCV(model, param_distributions=rf_search_space, n_iter=70, cv=10, n_jobs=-1, random_state=42)
 
     # Train the model
     random_search.fit(X_train, y_train)
 
     print(random_search.best_params_)
 
-    result = evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
-    print(score(model.predict(X_train), y_train))
+    result = evaluate(random_search.best_estimator_, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
+    print(score(random_search.predict(X_train), y_train))
 
-    return result, model
+    return result, random_search.best_estimator_
 
 def fit_evaluate(preprocessed_data_file, selected_features_file, selected_model_type, param_search, output_path, random_seed, path_elec, path_gas, val_building_path, process_type, use_updated_model, use_dropout):
     """
@@ -889,10 +871,16 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, selected_model_
 
         elif selected_model_type.lower() == 'rf':
             # Default parameters for the Random forest regressor
-            N_ESTIMATORS = 150
-            MAX_DEPTH = None
-            MIN_SAMPLES_SPLIT = 2
-            MIN_SAMPLES_LEAF = 1
+            if process_type == 'energy':
+                N_ESTIMATORS = 150
+                MAX_DEPTH = 30
+                MIN_SAMPLES_SPLIT = 2
+                MIN_SAMPLES_LEAF = 1
+            else:
+                N_ESTIMATORS = 50
+                MAX_DEPTH = None
+                MIN_SAMPLES_SPLIT = 2
+                MIN_SAMPLES_LEAF = 1
 
             if not use_updated_model:
                 LEARNING_RATE = 0.001

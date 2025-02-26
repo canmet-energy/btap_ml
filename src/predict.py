@@ -64,6 +64,7 @@ def score(y_test, y_pred):
 def det_coeff(y_true, y_pred):
     u = K.sum(K.square(y_true - y_pred))
     v = K.sum(K.square(y_true - K.mean(y_true)))
+    
     return K.ones_like(v) - (u / v)
 
 def rmse_loss(y_true, y_pred):
@@ -81,10 +82,7 @@ def rmse_loss(y_true, y_pred):
 
     # loss = K.sqrt(K.mean(K.square(sum_pred - sum_true)))
 
-    # Calculating RMSE for each output.
-    loss = tf.reduce_mean(K.square(y_pred - y_true), axis=0)
-
-    return K.sqrt(K.mean(loss))
+    return K.sqrt(tf.reduce_mean(K.square(y_pred - y_true)))
 
 def energy_model_builder(hp):
     """
@@ -123,7 +121,7 @@ def energy_model_builder(hp):
     # Comiple the mode with the optimizer and learninf rate specified in hparams
     model.compile(optimizer=optimizer,
                   loss=rmse_loss,
-                  metrics=['mae', 'mse','mape'])
+                  metrics=['mae', 'mse','mape', det_coeff])
 
     return model
 
@@ -164,7 +162,7 @@ def costing_model_builder(hp):
     # Comiple the mode with the optimizer and learninf rate specified in hparams
     model.compile(optimizer=optimizer,
                   loss=rmse_loss,
-                  metrics=['mae', 'mse','mape'])
+                  metrics=['mae', 'mse','mape', det_coeff])
 
     return model
 
@@ -257,7 +255,7 @@ def predicts_hp(X_train, y_train, X_test, y_test, selected_feature, output_path,
                         validation_split=0.2,
                         callbacks=[stop_early, hist_callback],
                         )
-    pl.save_plot(history)
+    pl.shared_learning_curve_plot(history)
 
     val_acc_per_epoch = history.history['mae']
     best_epoch = val_acc_per_epoch.index(max(val_acc_per_epoch)) + 1
@@ -556,7 +554,7 @@ def create_model_mlp(dense_layers, activation, optimizer, dropout_rate, length, 
     # Comiple the mode with the optimizer and learninf rate specified in hparams
     model.compile(optimizer=optimizer,
                   loss=rmse_loss,
-                  metrics=['mae', 'mse', 'mape'])
+                  metrics=['mae', 'mse', 'mape', det_coeff])
     # Define callback
     early_stopping = EarlyStopping(monitor='loss', patience=5)
     logdir = os.path.join(btap_log_path, datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
@@ -577,7 +575,7 @@ def create_model_mlp(dense_layers, activation, optimizer, dropout_rate, length, 
                         verbose=1,
                         #shuffle=False,
                         validation_split=0.2)
-    pl.save_plot(history)
+    pl.shared_learning_curve_plot(history)
     print(model.summary())
     plt.ylabel('loss')
 
@@ -630,6 +628,7 @@ def create_model_rf(n_estimators, max_depth, min_samples_split, min_samples_leaf
                                   min_samples_split=min_samples_split,
                                   min_samples_leaf=min_samples_leaf,
                                   random_state=42,
+                                  n_jobs = -1,
                                   verbose = 1)
     # Train the model
     model.fit(X_train, y_train)
@@ -677,7 +676,7 @@ def tune_rf(X_train, y_train, X_test, y_test, y_test_complete, scalery, X_valida
     config.create_directory(parameter_search_path)
     config.create_directory(btap_log_path)
 
-    model = RandomForestRegressor()
+    model = RandomForestRegressor(n_jobs = -1)
     
     rf_search_space = {
         'n_estimators': [50, 100, 150],
@@ -686,7 +685,7 @@ def tune_rf(X_train, y_train, X_test, y_test, y_test_complete, scalery, X_valida
         'min_samples_leaf': [1, 2, 4],
     }
 
-    random_search = RandomizedSearchCV(model, param_distributions=rf_search_space, n_iter=70, cv=10, n_jobs=-1, random_state=42)
+    random_search = RandomizedSearchCV(model, param_distributions=rf_search_space, n_iter=100, cv=10, n_jobs=-1, random_state=42)
 
     # Train the model
     random_search.fit(X_train, y_train)

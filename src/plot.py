@@ -73,7 +73,37 @@ def plot_metric(df: pd.DataFrame) -> None:
 
     return
 
+index = 0
+fig, ax = plt.subplots(1, 2, figsize=(15,5))
 
+def shared_learning_curve_plot(H) -> None:
+    global index
+
+    if index == 0:
+        ax[0].set_title('Energy', fontsize=16)
+        ax[0].plot(H.history["loss"], label="Train", color="coral")
+        ax[0].plot(H.history["val_loss"], label="Validation", color="darkolivegreen")
+        ax[0].set_xlabel("Epoch #", color='black', fontsize=14)
+        ax[0].set_ylabel("RMSE", color='black', fontsize=14)
+    else:
+        ax[1].set_title('Costing', fontsize=16)
+        ax[1].plot(H.history["loss"], label="Train", color="coral")
+        ax[1].plot(H.history["val_loss"], label="Validation", color="darkolivegreen")
+        ax[1].set_xlabel("Epoch #", color='black', fontsize=14)
+        ax[1].set_ylabel(" ", color='black', fontsize=14)
+
+        plt.savefig('./output/Learning curve shared plot')
+
+    handles, labels = ax[0].get_legend_handles_labels()
+
+    fig.subplots_adjust(top=0.80)
+
+    legend = fig.legend(handles, labels, loc='upper center', fontsize='x-large')
+    legend.get_frame().set_facecolor('none')
+    legend.get_frame().set_edgecolor('none')
+        
+    index += 1
+    
 def save_plot(H) -> None:
     # plot the training loss and accuracy
     plt.clf()

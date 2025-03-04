@@ -24,14 +24,16 @@ from keras.models import Sequential
 from keras_tuner import Hyperband
 from matplotlib import pyplot as plt
 from sklearn import metrics
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from sklearn.preprocessing import (MaxAbsScaler, MinMaxScaler, Normalizer,
                                    PowerTransformer, QuantileTransformer,
                                    RobustScaler, StandardScaler, minmax_scale)
+from sklearn.multioutput import MultiOutputRegressor
 from tensorboard.plugins.hparams import api as hp
 from tensorflow.keras import layers
+from xgboost import XGBRegressor
 
-from sklearn.model_selection import RandomizedSearchCV
+from sklearn.model_selection import RandomizedSearchCV, GridSearchCV
 
 import config
 import plot as pl
@@ -166,6 +168,101 @@ def costing_model_builder(hp):
 
     return model
 
+def tune_gradient_boosting(X_train, y_train, X_test, y_test, y_test_complete, scalery, X_validate, y_validate, y_validate_complete, output_path, path_elec, path_gas, val_building_path, process_type, output_nodes):
+    parameter_search_path = str(Path(output_path).joinpath("parameter_search"))
+    btap_log_path = str(Path(parameter_search_path).joinpath("btap"))
+    # Create the output directories if they do not exist
+    config.create_directory(parameter_search_path)
+    config.create_directory(btap_log_path)
+
+    param_grid = {
+        'estimator__n_estimators' : [100, 250, 400],
+        'estimator__max_depth': [2, 5, 10],
+        'estimator__learning_rate': [0.01, 0.05, 0.1],
+        'estimator__gamma': [0, 2, 5],
+        'estimator__subsample': [0.5, 1]
+    }
+    model = XGBRegressor(n_estimators = 500, random_state=42, n_jobs=-1)
+    multi_output = MultiOutputRegressor(model, n_jobs=-1)
+
+    grid_search = GridSearchCV(multi_output,
+                                param_grid,
+                                scoring='neg_mean_squared_error',
+                                cv=3,
+                                verbose=1,
+                                n_jobs=-1)
+
+    grid_search.fit(X_train, y_train, verbose=True)
+
+    best_model = grid_search.best_estimator_
+    print("Best parameters:", grid_search.best_params_)
+    print("Best CV score (neg MSE):", grid_search.best_score_)
+
+    result = evaluate(best_model, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
+    print(score(best_model.predict(X_train), y_train))
+
+    return result, best_model
+
+def tune_rf(X_train, y_train, X_test, y_test, y_test_complete, scalery, X_validate, y_validate, y_validate_complete, output_path, path_elec, path_gas, val_building_path, process_type, output_nodes):
+    """
+    Creates a model with defaulted values without need to perform an hyperparameter search at all times.
+    Its initutive to have run the hyperparameter search beforehand to know the hyperparameter value to set.
+
+    Args:
+        n_estimators: the number of trees in the random forest
+        max_depth: the maximum depth of the tree.
+        min_samples_split: The minimum number of samples required to split an internal node:
+        min_samples_leaf: The minimum number of samples required to be at a leaf node.
+        X_train: X trainset
+        y_train: y trainset
+        X_test: X testset
+        y_test: y testset
+        y_test_complete: dataframe containing the target variable with corresponding datapointid for the test set
+        scalery: y scaler used to transform the y values to the original scale
+        X_validate: X validation set
+        y_validate: y validation set
+        y_validate_complete: dataframe containing the target variable with corresponding datapointid for the validation set
+        output_path: Where the outputs will be placed
+        path_elec: Filepath of the electricity building file which has been used
+        path_gas: Filepath of the gas building file, if it has been used (pass nothing otherwise)
+        val_building_path: Filepath of the validation building file, if it has been used (pass nothing otherwise).
+        process_type: Either 'energy' or 'costing' to specify the operations to be performed.
+        output_nodes: The number of outputs which the model needs to predict.
+    Returns:
+        metric: evaluation results containing the loss value from the testset prediction,
+        annual_metric: predicted value for each datapooint_id is summed to calculate the annual energy consumed and the loss value from the testset prediction,
+        output_df: merge of y_pred, y_test, datapoint_id, the final dataframe showing the model output using the testset
+        val_metric:evaluation results containing the loss value from the validationset prediction,
+        val_annual_metric:predicted value for each datapooint_id is summed to calculate the annual energy consumed and the loss value from the validationset prediction,,
+        output_val_df: merge of y_pred, y_validate, datapoint_id, the final dataframe showing the model output using the validation set
+    """
+    parameter_search_path = str(Path(output_path).joinpath("parameter_search"))
+    btap_log_path = str(Path(parameter_search_path).joinpath("btap"))
+    # Create the output directories if they do not exist
+    config.create_directory(parameter_search_path)
+    config.create_directory(btap_log_path)
+
+    model = RandomForestRegressor(random_state=42, n_jobs = -1)
+    
+    rf_search_space = {
+        'n_estimators': [50, 100, 150],
+        'max_depth': [None, 5, 10, 15, 30],
+        'min_samples_split': [2, 4, 8],
+        'min_samples_leaf': [1, 2, 4],
+    }
+
+    random_search = RandomizedSearchCV(model, param_distributions=rf_search_space, n_iter=100, cv=10, n_jobs=-1, random_state=42)
+
+    # Train the model
+    random_search.fit(X_train, y_train)
+
+    print(random_search.best_params_)
+
+    result = evaluate(random_search.best_estimator_, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
+    print(score(random_search.predict(X_train), y_train))
+
+    return result, random_search.best_estimator_
+
 def predicts_hp(X_train, y_train, X_test, y_test, selected_feature, output_path, random_seed, process_type):
     """
     DECOMMISIONED: May need updates for multi-outputs
@@ -207,12 +304,11 @@ def predicts_hp(X_train, y_train, X_test, y_test, selected_feature, output_path,
                             project_name='btap',
                             seed=random_seed)
 
-    stop_early = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=5)
+    stop_early = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=10)
     tuner.search(X_train,
                  y_train,
                  epochs=100,
                  batch_size=256,
-                 callbacks=[stop_early],
                  use_multiprocessing=True,
                  validation_split=0.2)
 
@@ -253,10 +349,11 @@ def predicts_hp(X_train, y_train, X_test, y_test, selected_feature, output_path,
                         epochs=100,
                         batch_size=256,
                         validation_split=0.2,
-                        callbacks=[stop_early, hist_callback],
+                        callbacks=[hist_callback],
                         )
     pl.shared_learning_curve_plot(history)
 
+    '''
     val_acc_per_epoch = history.history['mae']
     best_epoch = val_acc_per_epoch.index(max(val_acc_per_epoch)) + 1
     print('Best epoch: %d' % (best_epoch,))
@@ -264,8 +361,9 @@ def predicts_hp(X_train, y_train, X_test, y_test, selected_feature, output_path,
     # Re-instantiate the hypermodel and train it with the optimal number of epochs from above.
     hypermodel = tuner.hypermodel.build(best_hps)
     hypermodel.fit(X_train, y_train, epochs=best_epoch, validation_split=0.2)
+    '''
 
-    return hypermodel
+    return model
 
 def convert_dataframe_to_annual(df):
     """
@@ -380,10 +478,6 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
         actual_set = COSTING_ACTUAL
 
     # For each initial prediction, map it to the appropriate dictionary entry
-    print(prediction_set)
-    print(len(prediction_set))
-    print(test_predictions)
-
     for i in range(len(prediction_set)):
         y_test[prediction_set[i]] = [elem[i] for elem in test_predictions]
         y_validate[prediction_set[i]] = [elem[i] for elem in validate_predictions]
@@ -424,7 +518,7 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
         y_validate_complete = y_validate_complete.drop(['datapoint_id'], axis=1)
 
     # Retrieve the annual energy predictions
-    # if process_type.lower() == config.Settings().APP_CONFIG.ENERGY:
+    if process_type.lower() == config.Settings().APP_CONFIG.ENERGY:
         for actual_label, predicted_label in zip(actual_set, prediction_set):
             # Retrieve the score and store it with the appropriate title for both the test and validation sets
             performance_score = score(y_test[actual_label], y_test[predicted_label + TRANSFORMATION_SUFFIX])
@@ -556,7 +650,7 @@ def create_model_mlp(dense_layers, activation, optimizer, dropout_rate, length, 
                   loss=rmse_loss,
                   metrics=['mae', 'mse', 'mape', det_coeff])
     # Define callback
-    early_stopping = EarlyStopping(monitor='loss', patience=5)
+    early_stopping = EarlyStopping(monitor='val_loss', patience=10)
     logdir = os.path.join(btap_log_path, datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
     hist_callback = tf.keras.callbacks.TensorBoard(logdir, histogram_freq=1)
     logger = keras.callbacks.CSVLogger(output_path + '/metric.csv', append=True)
@@ -637,65 +731,22 @@ def create_model_rf(n_estimators, max_depth, min_samples_split, min_samples_leaf
 
     return result, model
 
-def tune_rf(X_train, y_train, X_test, y_test, y_test_complete, scalery, X_validate, y_validate, y_validate_complete, output_path, path_elec, path_gas, val_building_path, process_type, output_nodes):
-    """
-    Creates a model with defaulted values without need to perform an hyperparameter search at all times.
-    Its initutive to have run the hyperparameter search beforehand to know the hyperparameter value to set.
-
-    Args:
-        n_estimators: the number of trees in the random forest
-        max_depth: the maximum depth of the tree.
-        min_samples_split: The minimum number of samples required to split an internal node:
-        min_samples_leaf: The minimum number of samples required to be at a leaf node.
-        X_train: X trainset
-        y_train: y trainset
-        X_test: X testset
-        y_test: y testset
-        y_test_complete: dataframe containing the target variable with corresponding datapointid for the test set
-        scalery: y scaler used to transform the y values to the original scale
-        X_validate: X validation set
-        y_validate: y validation set
-        y_validate_complete: dataframe containing the target variable with corresponding datapointid for the validation set
-        output_path: Where the outputs will be placed
-        path_elec: Filepath of the electricity building file which has been used
-        path_gas: Filepath of the gas building file, if it has been used (pass nothing otherwise)
-        val_building_path: Filepath of the validation building file, if it has been used (pass nothing otherwise).
-        process_type: Either 'energy' or 'costing' to specify the operations to be performed.
-        output_nodes: The number of outputs which the model needs to predict.
-    Returns:
-        metric: evaluation results containing the loss value from the testset prediction,
-        annual_metric: predicted value for each datapooint_id is summed to calculate the annual energy consumed and the loss value from the testset prediction,
-        output_df: merge of y_pred, y_test, datapoint_id, the final dataframe showing the model output using the testset
-        val_metric:evaluation results containing the loss value from the validationset prediction,
-        val_annual_metric:predicted value for each datapooint_id is summed to calculate the annual energy consumed and the loss value from the validationset prediction,,
-        output_val_df: merge of y_pred, y_validate, datapoint_id, the final dataframe showing the model output using the validation set
-    """
+def create_model_gradient_boosting(n_estimators, max_depth, min_samples_split, min_samples_leaf, X_train, y_train, X_test, y_test, y_test_complete, scalery, X_validate, y_validate, y_validate_complete, output_path, path_elec, path_gas, val_building_path, process_type, output_nodes):
     parameter_search_path = str(Path(output_path).joinpath("parameter_search"))
     btap_log_path = str(Path(parameter_search_path).joinpath("btap"))
     # Create the output directories if they do not exist
     config.create_directory(parameter_search_path)
     config.create_directory(btap_log_path)
 
-    model = RandomForestRegressor(n_jobs = -1)
-    
-    rf_search_space = {
-        'n_estimators': [50, 100, 150],
-        'max_depth': [None, 5, 10, 15, 30],
-        'min_samples_split': [2, 4, 8],
-        'min_samples_leaf': [1, 2, 4],
-    }
+    model = XGBRegressor(random_state=42, n_jobs=-1)
+    multi_output = MultiOutputRegressor(model, n_jobs=-1)
 
-    random_search = RandomizedSearchCV(model, param_distributions=rf_search_space, n_iter=100, cv=10, n_jobs=-1, random_state=42)
+    multi_output.fit(X_train, y_train, verbose=True)
 
-    # Train the model
-    random_search.fit(X_train, y_train)
+    result = evaluate(multi_output, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
+    print(score(multi_output.predict(X_train), y_train))
 
-    print(random_search.best_params_)
-
-    result = evaluate(random_search.best_estimator_, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
-    print(score(random_search.predict(X_train), y_train))
-
-    return result, random_search.best_estimator_
+    return result, multi_output
 
 def fit_evaluate(preprocessed_data_file, selected_features_file, selected_model_type, param_search, output_path, random_seed, path_elec, path_gas, val_building_path, process_type, use_updated_model, use_dropout):
     """
@@ -792,7 +843,8 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, selected_model_
 
             model_output_path = str(model_path.joinpath(config.Settings().APP_CONFIG.TRAINED_MODEL_FILENAME_MLP))
             hypermodel.save(model_output_path) 
-        else:
+
+        elif selected_model_type.lower() == 'rf':
             results_pred, hypermodel = tune_rf(
                             X_train=X_train,
                             y_train=y_train,
@@ -813,6 +865,29 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, selected_model_
             
             model_output_path = str(model_path.joinpath(config.Settings().APP_CONFIG.TRAINED_MODEL_FILENAME_RF))
             joblib.dump(hypermodel, model_output_path)
+
+        else:
+            results_pred, hypermodel = tune_gradient_boosting(
+                X_train=X_train,
+                y_train=y_train,
+                X_test=X_test,
+                y_test=y_test,
+                y_test_complete=y_test_complete,
+                scalery=scalery,
+                X_validate = X_validate,
+                y_validate=y_validate,
+                y_validate_complete= y_validate_complete,
+                output_path=output_path,
+                path_elec=path_elec,
+                path_gas=path_gas,
+                val_building_path=val_building_path,
+                process_type=process_type,
+                output_nodes=output_nodes
+            )
+            
+            model_output_path = str(model_path.joinpath(config.Settings().APP_CONFIG.TRAINED_MODEL_FILENAME_RF))
+            joblib.dump(hypermodel, model_output_path)
+
     # Otherwise use a default model design and train with that model
     else:
         if selected_model_type.lower() == 'mlp':
@@ -910,7 +985,40 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, selected_model_
                                        )
             model_output_path = str(model_path.joinpath(config.Settings().APP_CONFIG.TRAINED_MODEL_FILENAME_RF))
             joblib.dump(hypermodel, model_output_path)
-
+        
+        else:
+            if process_type == 'energy':
+                N_ESTIMATORS = 400
+                MAX_DEPTH = 10
+                LEARNING_RATE = 0.1
+            else:
+                N_ESTIMATORS = 400
+                MAX_DEPTH = 10
+                LEARNING_RATE = 0.1
+                
+            results_pred, hypermodel = create_model_gradient_boosting(
+                            n_estimators = N_ESTIMATORS,
+                            max_depth=MAX_DEPTH,
+                            min_samples_split=MIN_SAMPLES_SPLIT,
+                            min_samples_leaf=MIN_SAMPLES_LEAF,
+                            X_train=X_train,
+                            y_train=y_train,
+                            X_test=X_test,
+                            y_test=y_test,
+                            y_test_complete=y_test_complete,
+                            scalery=scalery,
+                            X_validate = X_validate,
+                            y_validate=y_validate,
+                            y_validate_complete= y_validate_complete,
+                            output_path=output_path,
+                            path_elec=path_elec,
+                            path_gas=path_gas,
+                            val_building_path=val_building_path,
+                            process_type=process_type,
+                            output_nodes=output_nodes
+                            )
+            model_output_path = str(model_path.joinpath(config.Settings().APP_CONFIG.TRAINED_MODEL_FILENAME_RF))
+            joblib.dump(hypermodel, model_output_path)
 
     # Calculate the time spent training in minutes
     time_taken = ((time.time() - start_time) / 60)

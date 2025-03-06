@@ -140,7 +140,7 @@ def costing_model_builder(hp):
     model = keras.Sequential()
     model.add(keras.layers.Flatten())
 
-    hp_activation= hp.Choice('activation', values=['relu', 'tanh'])
+    hp_activation= hp.Choice('activation', values=['relu'])
     for i in range(hp.Int("num_layers", 1, 3)):
         model.add(layers.Dense(
             units=hp.Int("units_" + str(i), min_value=8, max_value=4096, step=8),
@@ -176,20 +176,20 @@ def tune_gradient_boosting(X_train, y_train, X_test, y_test, y_test_complete, sc
     config.create_directory(btap_log_path)
 
     param_grid = {
-        'estimator__n_estimators' : [100, 250, 400],
-        'estimator__max_depth': [2, 5, 10],
+        'estimator__n_estimators' : [100, 250, 500],
+        'estimator__max_depth': [5, 10, 15],
         'estimator__learning_rate': [0.01, 0.05, 0.1],
-        'estimator__gamma': [0, 2, 5],
-        'estimator__subsample': [0.5, 1]
+        'estimator__subsample': [0.5, 0.7, 1],
+        #'estimator__min_child_weight': [1, 3, 5],
     }
-    model = XGBRegressor(n_estimators = 500, random_state=42, n_jobs=-1)
+    model = XGBRegressor(random_state=42, n_jobs=-1)
     multi_output = MultiOutputRegressor(model, n_jobs=-1)
 
     grid_search = GridSearchCV(multi_output,
                                 param_grid,
                                 scoring='neg_mean_squared_error',
                                 cv=3,
-                                verbose=1,
+                                verbose=2,
                                 n_jobs=-1)
 
     grid_search.fit(X_train, y_train, verbose=True)
@@ -245,13 +245,13 @@ def tune_rf(X_train, y_train, X_test, y_test, y_test_complete, scalery, X_valida
     model = RandomForestRegressor(random_state=42, n_jobs = -1)
     
     rf_search_space = {
-        'n_estimators': [50, 100, 150],
-        'max_depth': [None, 5, 10, 15, 30],
+        'n_estimators': [100, 200, 300],
+        'max_depth': [None, 5, 10, 15],
         'min_samples_split': [2, 4, 8],
         'min_samples_leaf': [1, 2, 4],
     }
 
-    random_search = RandomizedSearchCV(model, param_distributions=rf_search_space, n_iter=100, cv=10, n_jobs=-1, random_state=42)
+    random_search = RandomizedSearchCV(model, param_distributions=rf_search_space, n_iter=70, cv=3, n_jobs=-1, verbose=3, random_state=42)
 
     # Train the model
     random_search.fit(X_train, y_train)
@@ -310,7 +310,7 @@ def predicts_hp(X_train, y_train, X_test, y_test, selected_feature, output_path,
                  epochs=100,
                  batch_size=256,
                  use_multiprocessing=True,
-                 validation_split=0.2)
+                 validation_split=0.1765)
 
     tuner.search_space_summary()
     # Get the optimal hyperparameters
@@ -348,7 +348,7 @@ def predicts_hp(X_train, y_train, X_test, y_test, selected_feature, output_path,
                         y_train,
                         epochs=100,
                         batch_size=256,
-                        validation_split=0.2,
+                        validation_split=0.1765,
                         callbacks=[hist_callback],
                         )
     pl.shared_learning_curve_plot(history)
@@ -661,14 +661,13 @@ def create_model_mlp(dense_layers, activation, optimizer, dropout_rate, length, 
                         y_train,
                         callbacks=[
                                    logger,
-                                   early_stopping,
                                    hist_callback,
                                    ],
                         epochs=epochs,
                         #batch_size=batch_size,
                         verbose=1,
                         #shuffle=False,
-                        validation_split=0.2)
+                        validation_split=0.1765)
     pl.shared_learning_curve_plot(history)
     print(model.summary())
     plt.ylabel('loss')
@@ -731,14 +730,19 @@ def create_model_rf(n_estimators, max_depth, min_samples_split, min_samples_leaf
 
     return result, model
 
-def create_model_gradient_boosting(n_estimators, max_depth, min_samples_split, min_samples_leaf, X_train, y_train, X_test, y_test, y_test_complete, scalery, X_validate, y_validate, y_validate_complete, output_path, path_elec, path_gas, val_building_path, process_type, output_nodes):
+def create_model_gradient_boosting(n_estimators, max_depth, learning_rate, subsample, X_train, y_train, X_test, y_test, y_test_complete, scalery, X_validate, y_validate, y_validate_complete, output_path, path_elec, path_gas, val_building_path, process_type, output_nodes):
     parameter_search_path = str(Path(output_path).joinpath("parameter_search"))
     btap_log_path = str(Path(parameter_search_path).joinpath("btap"))
     # Create the output directories if they do not exist
     config.create_directory(parameter_search_path)
     config.create_directory(btap_log_path)
 
-    model = XGBRegressor(random_state=42, n_jobs=-1)
+    model = XGBRegressor(n_estimators=n_estimators,
+                         max_depth=max_depth,
+                         learning_rate=learning_rate,
+                         subsample=subsample,
+                         random_state=42,
+                         n_jobs=-1)
     multi_output = MultiOutputRegressor(model, n_jobs=-1)
 
     multi_output.fit(X_train, y_train, verbose=True)
@@ -901,11 +905,11 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, selected_model_
                 ACTIVATION = 'relu'
                 OPTIMIZER = 'rmsprop'
             else:
-                DROPOUT_RATE = 0.05
-                LEARNING_RATE = 0.0005
+                DROPOUT_RATE = 0.0
+                LEARNING_RATE = 0.001
                 EPOCHS = 100
                 BATCH_SIZE = 256
-                NUMBER_OF_NODES = [2672]
+                NUMBER_OF_NODES = [856, 3744]
                 ACTIVATION = 'relu'
                 OPTIMIZER = 'adam'
 
@@ -951,8 +955,8 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, selected_model_
                 MIN_SAMPLES_SPLIT = 2
                 MIN_SAMPLES_LEAF = 1
             else:
-                N_ESTIMATORS = 50
-                MAX_DEPTH = None
+                N_ESTIMATORS = 100
+                MAX_DEPTH = 15
                 MIN_SAMPLES_SPLIT = 2
                 MIN_SAMPLES_LEAF = 1
 
@@ -988,19 +992,21 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, selected_model_
         
         else:
             if process_type == 'energy':
-                N_ESTIMATORS = 400
+                N_ESTIMATORS = 500
                 MAX_DEPTH = 10
                 LEARNING_RATE = 0.1
+                SUBSAMPLE = 0.5
             else:
-                N_ESTIMATORS = 400
-                MAX_DEPTH = 10
-                LEARNING_RATE = 0.1
+                N_ESTIMATORS = 500
+                MAX_DEPTH = 5
+                LEARNING_RATE = 0.05
+                SUBSAMPLE = 0.5
                 
             results_pred, hypermodel = create_model_gradient_boosting(
                             n_estimators = N_ESTIMATORS,
                             max_depth=MAX_DEPTH,
-                            min_samples_split=MIN_SAMPLES_SPLIT,
-                            min_samples_leaf=MIN_SAMPLES_LEAF,
+                            learning_rate=LEARNING_RATE,
+                            subsample=SUBSAMPLE,
                             X_train=X_train,
                             y_train=y_train,
                             X_test=X_test,

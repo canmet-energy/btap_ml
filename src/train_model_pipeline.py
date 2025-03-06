@@ -14,7 +14,6 @@ import feature_selection
 import predict
 import preprocessing
 from models.training_model import TrainingModel
-import tensorflow as tf
 
 # Get a log handler
 logging.basicConfig(level=logging.INFO)
@@ -83,8 +82,6 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
         use_dropout: True if the regularization technique should be used (on by default). False if tests are desired without dropout. Note that not using dropout may cause bias to learned when training.
         selected_model_type: Type of model selected. can either be 'mlp' for Multilayer Perceptron or 'rf' for Random Forest
     """
-    print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
-
     logger.info("Beginning the training process.")
     DOCKER_INPUT_PATH = config.Settings().APP_CONFIG.DOCKER_INPUT_PATH
     INPUT_CONFIG_FILENAME = "input_config.yml"
@@ -92,7 +89,7 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
     settings = config.Settings()
     # Set the perform_param_search parameter to 'no', this is hard-coded since we
     # want to leave the infrastructure for it in, but remove the ability to use it for now
-    perform_param_search = 'no'
+    perform_param_search = 'yes'
     # Begin by loading the config file, if passed, to overwrite
     # blank argument values
     if len(config_file) > 0:

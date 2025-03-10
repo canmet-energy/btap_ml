@@ -13,7 +13,7 @@ tensorboard==2.8.0
 tensorflow==2.8.0
 tensorflow_gpu==2.8.0
 typer==0.4.1
-xgboost==1.4.2
+xgboost==2.1.4
 openpyxl==3.0.9
 pyarrow==7.0.0
 pydantic==1.9.2

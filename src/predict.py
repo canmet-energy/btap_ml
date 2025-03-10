@@ -34,11 +34,14 @@ from tensorflow.keras import layers
 from xgboost import XGBRegressor
 
 from sklearn.model_selection import RandomizedSearchCV, GridSearchCV
+from sklearn.tree import export_graphviz
 
 import config
 import plot as pl
 import preprocessing
 from models.predict_model import PredictModel
+
+import graphviz
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -242,7 +245,7 @@ def tune_rf(X_train, y_train, X_test, y_test, y_test_complete, scalery, X_valida
     config.create_directory(parameter_search_path)
     config.create_directory(btap_log_path)
 
-    model = RandomForestRegressor(random_state=42, n_jobs = -1)
+    model = RandomForestRegressor(random_state=42, n_jobs=-1)
     
     rf_search_space = {
         'n_estimators': [100, 200, 300],
@@ -294,6 +297,7 @@ def predicts_hp(X_train, y_train, X_test, y_test, selected_feature, output_path,
                             directory=parameter_search_path,
                             project_name='btap',
                             seed=random_seed)
+        BATCH_SIZE = 1024
     else:
         tuner = Hyperband(costing_model_builder,
                             objective='val_loss',
@@ -303,12 +307,13 @@ def predicts_hp(X_train, y_train, X_test, y_test, selected_feature, output_path,
                             directory=parameter_search_path,
                             project_name='btap',
                             seed=random_seed)
+        BATCH_SIZE = 32
 
     stop_early = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=10)
     tuner.search(X_train,
                  y_train,
                  epochs=100,
-                 batch_size=256,
+                 batch_size=BATCH_SIZE,
                  use_multiprocessing=True,
                  validation_split=0.1765)
 
@@ -493,6 +498,15 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
 
     # Track each score within a dictionary
     test_val_scores = {}
+
+    costing_test_actual = 0
+    costing_test_predicted = 0
+    energy_test_actual = 0
+    energy_test_predicted = 0
+
+    energy_rmse = 0
+    costing_rmse = 0
+    
     # Loop through all outputs and track how well the model does at predicting them for daily predictions or costing annual prediction
     annual_daily_label = DAILY_PREFIX
     if process_type.lower() == config.Settings().APP_CONFIG.COSTING:
@@ -507,6 +521,11 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
         print("[" + actual_label, VAL_PREFIX + "score loss, test mae, test mse]:", performance_score)
         test_val_scores[VAL_PREFIX + annual_daily_label + actual_label] = performance_score
 
+        costing_test_actual += y_test[actual_label]
+        costing_test_predicted += y_test[predicted_label + TRANSFORMATION_SUFFIX]
+
+    costing_rmse = metrics.mean_squared_error(costing_test_actual, costing_test_predicted, squared=False)
+
     # Get the energy annual predictions
     # TODO: Up until final triple quote, fit within new metric trackiign and refactor
     if process_type.lower() == config.Settings().APP_CONFIG.ENERGY:
@@ -515,7 +534,7 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
     else:
         # Drop the duplicate datapoint_id entry
         y_test_complete = y_test_complete.drop(['datapoint_id'], axis=1)
-        y_validate_complete = y_validate_complete.drop(['datapoint_id'], axis=1)
+        y_validate_complete = y_validate_complete.drop(['datapoint_id'], axis=1)  
 
     # Retrieve the annual energy predictions
     if process_type.lower() == config.Settings().APP_CONFIG.ENERGY:
@@ -528,6 +547,11 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
             performance_score = score(y_validate[actual_label], y_validate[predicted_label + TRANSFORMATION_SUFFIX])
             print("[" + actual_label, VAL_PREFIX + "score loss, test mae, test mse]:", performance_score)
             test_val_scores[VAL_PREFIX + ANNUAL_PREFIX + actual_label] = performance_score
+
+            energy_test_actual += y_test[actual_label]
+            energy_test_predicted += y_test[predicted_label + TRANSFORMATION_SUFFIX]
+
+        energy_rmse = metrics.mean_squared_error(energy_test_actual, energy_test_predicted, squared=False)
 
     # Maintain original implemented notation by using two new variable names
     output_df = y_test
@@ -578,8 +602,8 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
             'output_val_df': output_val_df.values.tolist(),
             **building_weather_errors
             }
-
-    return results
+    
+    return results, energy_rmse, costing_rmse
 
 
 def create_model_mlp(dense_layers, activation, optimizer, dropout_rate, length, learning_rate, epochs, batch_size, X_train, y_train, X_test, y_test, y_test_complete, scalery,
@@ -728,29 +752,122 @@ def create_model_rf(n_estimators, max_depth, min_samples_split, min_samples_leaf
     result = evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
     print(score(model.predict(X_train), y_train))
 
+    """
+    for i in range(3):
+        dot_data = export_graphviz(model.estimators_[i],
+                                filled=True,  
+                                max_depth=2, 
+                                impurity=False, 
+                                proportion=True)
+        graph = graphviz.Source(dot_data)
+        graph.render('./output/visualize_RF.png')
+
+    for n in n_estimators:
+        model = RandomForestRegressor(n_estimators=n_estimators,
+                                        max_depth=max_depth,
+                                        min_samples_split=min_samples_split,
+                                        min_samples_leaf=min_samples_leaf,
+                                        random_state=42,
+                                        n_jobs = -1,
+                                        verbose = 1)
+        model.fit(X_train, y_train)
+        print(y_train)
+        train_loss = metrics.mean_squared_error(y_train, model.predict(X_train), squared=False)
+    
+    """
+
     return result, model
 
 def create_model_gradient_boosting(n_estimators, max_depth, learning_rate, subsample, X_train, y_train, X_test, y_test, y_test_complete, scalery, X_validate, y_validate, y_validate_complete, output_path, path_elec, path_gas, val_building_path, process_type, output_nodes):
     parameter_search_path = str(Path(output_path).joinpath("parameter_search"))
     btap_log_path = str(Path(parameter_search_path).joinpath("btap"))
+    
     # Create the output directories if they do not exist
     config.create_directory(parameter_search_path)
     config.create_directory(btap_log_path)
 
+    TEST_SCALING = True
+
     model = XGBRegressor(n_estimators=n_estimators,
-                         max_depth=max_depth,
-                         learning_rate=learning_rate,
-                         subsample=subsample,
-                         random_state=42,
-                         n_jobs=-1)
+                        max_depth=max_depth,
+                        learning_rate=learning_rate,
+                        subsample=subsample,
+                        random_state=42,
+                        n_jobs=-1)
+    
     multi_output = MultiOutputRegressor(model, n_jobs=-1)
+
+    if TEST_SCALING == True:
+        test_scaling(multi_output, X_train, y_train, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
 
     multi_output.fit(X_train, y_train, verbose=True)
 
-    result = evaluate(multi_output, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
+    result, _, _ = evaluate(multi_output, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
     print(score(multi_output.predict(X_train), y_train))
 
     return result, multi_output
+
+def test_scaling(model, X_train, y_train, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type):
+    time_array = []
+    energy_result_array = []
+    costing_result_array = []
+
+    X_train_full = X_train.copy()
+    y_train_full = y_train.copy()
+
+    training_size = [500, 1000, 2000, 3000, 4000]
+
+    for index, amount in enumerate(training_size): 
+        idx = np.random.randint(X_train.shape[0], size=amount)
+
+        X_train_subset = X_train_full[idx, :]
+        y_train_subset = y_train_full[idx, :]
+    
+        current_time = time.time()
+
+        model.fit(X_train_subset, y_train_subset, verbose=True)
+
+        time_taken = ((time.time() - current_time) / 60)
+        time_array.append(time_taken)
+
+        result, energy_rmse, costing_rmse = evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
+        
+        energy_result_array.append(energy_rmse)
+        costing_result_array.append(costing_rmse)
+
+    print("Energy")
+    print(energy_result_array)
+
+    print("Costing")
+    print(costing_result_array)
+
+    print("Time")
+    print(time_array)
+
+    if process_type.lower() == config.Settings().APP_CONFIG.ENERGY:
+        global fig
+        global ax
+        
+        fig, ax = plt.subplots(2, 2, figsize=(10,5))
+        
+        ax[0, 0].set_title('Energy')
+
+        ax[0, 0].plot(training_size, energy_result_array, color='darkcyan')
+        ax[1, 0].plot(training_size, time_array, color='yellowgreen')
+
+        ax[0, 0].set_ylabel("RMSE", color='black')
+        ax[1, 0].set_ylabel("Time (minutes)", color='black')
+
+    else:
+        ax[0, 1].set_title('Costing')
+
+        ax[0, 1].plot(training_size, costing_result_array, color='darkcyan')
+        ax[1, 1].plot(training_size, time_array, color='yellowgreen')
+
+        ax[1, 0].set_xlabel("Training size", color='black')
+        ax[1, 1].set_xlabel("Training size", color='black')
+
+    plt.savefig('./output/training_size.png')
 
 def fit_evaluate(preprocessed_data_file, selected_features_file, selected_model_type, param_search, output_path, random_seed, path_elec, path_gas, val_building_path, process_type, use_updated_model, use_dropout):
     """
@@ -889,7 +1006,7 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, selected_model_
                 output_nodes=output_nodes
             )
             
-            model_output_path = str(model_path.joinpath(config.Settings().APP_CONFIG.TRAINED_MODEL_FILENAME_RF))
+            model_output_path = str(model_path.joinpath(config.Settings().APP_CONFIG.TRAINED_MODEL_FILENAME_GB))
             joblib.dump(hypermodel, model_output_path)
 
     # Otherwise use a default model design and train with that model

@@ -17,6 +17,8 @@ import config
 import preprocessing
 from models.running_model import RunningModel
 
+import time
+
 # Get a log handler
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -103,6 +105,8 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
         end_date: The end date to specify the end of which weather data is attached to the building data. Expects the input to be in the form Month_number-Day_number.
         selected_model_type: Type of model selected. can either be 'mlp' for Multilayer Perceptron or 'rf' for Random Forest
     """
+    start_time = time.time()
+
     settings = config.Settings()
     DOCKER_INPUT_PATH = config.Settings().APP_CONFIG.DOCKER_INPUT_PATH
     # Define the year to be used for any date operations (a non leap year)
@@ -212,10 +216,13 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
             model = keras.models.load_model(input_model.model_file, compile=False)
         elif selected_model_type.lower() == config.Settings().APP_CONFIG.RANDOM_FOREST:
             model = joblib.load(input_model.model_file)
+        else:
+            model = joblib.load(input_model.model_file)
 
         logger.info("Getting the predictions for the input data.")
 
         predictions = scaler_y.inverse_transform(model.predict(X))
+
         if running_process.lower() == config.Settings().APP_CONFIG.ENERGY:
             X_ids[COL_NAME_DAILY_MEGAJOULES_ELEC] = [elem[0] for elem in predictions]
             X_ids[COL_NAME_DAILY_MEGAJOULES_GAS] = [elem[1] for elem in predictions]
@@ -263,6 +270,11 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
             aggregated_filename = settings.APP_CONFIG.RUNNING_AGGREGATED_RESULTS_FILENAME
             X_ids.to_csv(output_path + '/' + settings.APP_CONFIG.RUNNING_DAILY_RESULTS_FILENAME)
         X_aggregated.to_csv(output_path + '/' + aggregated_filename)
+
+    time_taken = (time.time() - start_time)
+
+    print(time_taken)
+
     return
 
 if __name__ == '__main__':

@@ -74,6 +74,8 @@ def plot_metric(df: pd.DataFrame) -> None:
     return
 
 index = 0
+
+plt.style.use('seaborn-darkgrid')
 fig, ax = plt.subplots(1, 2, figsize=(15,5))
 
 def shared_learning_curve_plot(H) -> None:

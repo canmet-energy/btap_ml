@@ -392,7 +392,7 @@ def groupsplit(X, y, valsplit, random_seed=42):
     if valsplit == 'yes':
         gs = GroupShuffleSplit(n_splits=2, train_size=.7, random_state=random_seed)
     else:
-        gs = GroupShuffleSplit(n_splits=2, test_size=.05, random_state=random_seed)
+        gs = GroupShuffleSplit(n_splits=2, test_size=.20, random_state=random_seed)
 
     train_ix, test_ix = next(gs.split(X, y, groups=X.datapoint_id))
 

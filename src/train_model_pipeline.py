@@ -134,7 +134,7 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
         shutil.copy(DOCKER_INPUT_PATH + config_file, str(output_path_root.joinpath(INPUT_CONFIG_FILENAME)))
 
     # Perform all specified training processes
-    for training_process_params in TRAINING_PROCESSES:
+    for idx, training_process_params in enumerate(TRAINING_PROCESSES):
         training_process = training_process_params[0]
         train_with_updated_model = training_process_params[1]
         # Validate all input arguments before continuing
@@ -201,7 +201,8 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
                                                      input_model.building_param_files[1],
                                                      input_model.val_building_params_file,
                                                      train_with_updated_model,
-                                                     use_dropout)
+                                                     use_dropout,
+                                                     idx)
 
         # If requested, delete the preprocessing file after completion
         if delete_preprocessing_file:

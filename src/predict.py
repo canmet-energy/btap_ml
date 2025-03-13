@@ -201,7 +201,7 @@ def tune_gradient_boosting(X_train, y_train, X_test, y_test, y_test_complete, sc
     print("Best parameters:", grid_search.best_params_)
     print("Best CV score (neg MSE):", grid_search.best_score_)
 
-    result = evaluate(best_model, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
+    result, _, _ = evaluate(best_model, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
     print(score(best_model.predict(X_train), y_train))
 
     return result, best_model
@@ -261,7 +261,7 @@ def tune_rf(X_train, y_train, X_test, y_test, y_test_complete, scalery, X_valida
 
     print(random_search.best_params_)
 
-    result = evaluate(random_search.best_estimator_, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
+    result, _, _ = evaluate(random_search.best_estimator_, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
     print(score(random_search.predict(X_train), y_train))
 
     return result, random_search.best_estimator_
@@ -297,7 +297,6 @@ def predicts_hp(X_train, y_train, X_test, y_test, selected_feature, output_path,
                             directory=parameter_search_path,
                             project_name='btap',
                             seed=random_seed)
-        BATCH_SIZE = 1024
     else:
         tuner = Hyperband(costing_model_builder,
                             objective='val_loss',
@@ -307,15 +306,14 @@ def predicts_hp(X_train, y_train, X_test, y_test, selected_feature, output_path,
                             directory=parameter_search_path,
                             project_name='btap',
                             seed=random_seed)
-        BATCH_SIZE = 32
 
     stop_early = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=10)
     tuner.search(X_train,
                  y_train,
                  epochs=100,
-                 batch_size=BATCH_SIZE,
+                 batch_size=256,
                  use_multiprocessing=True,
-                 validation_split=0.1765)
+                 validation_split=0.10)
 
     tuner.search_space_summary()
     # Get the optimal hyperparameters
@@ -353,7 +351,7 @@ def predicts_hp(X_train, y_train, X_test, y_test, selected_feature, output_path,
                         y_train,
                         epochs=100,
                         batch_size=256,
-                        validation_split=0.1765,
+                        validation_split=0.10,
                         callbacks=[hist_callback],
                         )
     pl.shared_learning_curve_plot(history)
@@ -606,7 +604,7 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
     return results, energy_rmse, costing_rmse
 
 
-def create_model_mlp(dense_layers, activation, optimizer, dropout_rate, length, learning_rate, epochs, batch_size, X_train, y_train, X_test, y_test, y_test_complete, scalery,
+def create_model_mlp(dense_layers, activation, optimizer, dropout_rate, length, learning_rate, epochs, batch_size, scaling_performance, X_train, y_train, X_test, y_test, y_test_complete, scalery,
                  X_validate, y_validate, y_validate_complete, output_path, path_elec, path_gas, val_building_path, process_type, output_nodes):
     """
     Creates a MLP model with defaulted values without need to perform an hyperparameter search at all times.
@@ -679,6 +677,11 @@ def create_model_mlp(dense_layers, activation, optimizer, dropout_rate, length, 
     hist_callback = tf.keras.callbacks.TensorBoard(logdir, histogram_freq=1)
     logger = keras.callbacks.CSVLogger(output_path + '/metric.csv', append=True)
     output_df = ''
+
+    # See how the model performs based on the training dataset size.
+    if scaling_performance == True:
+        test_scaling(model, X_train, y_train, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
+
     # prepare the model with target scaling
     scores_metric = ''
     history = model.fit(X_train,
@@ -691,17 +694,18 @@ def create_model_mlp(dense_layers, activation, optimizer, dropout_rate, length, 
                         #batch_size=batch_size,
                         verbose=1,
                         #shuffle=False,
-                        validation_split=0.1765)
+                        validation_split=0.10)
     pl.shared_learning_curve_plot(history)
     print(model.summary())
     plt.ylabel('loss')
-
-    result = evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
-    print(score(model.predict(X_train), y_train))
+    
+    result, _, _ = evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
 
     return result, model
 
-def create_model_rf(n_estimators, max_depth, min_samples_split, min_samples_leaf, X_train, y_train, X_test, y_test, y_test_complete, scalery, X_validate, y_validate, y_validate_complete, output_path, path_elec, path_gas, val_building_path, process_type, output_nodes):
+def create_model_rf(idx, n_estimators, max_depth, min_samples_split, min_samples_leaf, scaling_performance,
+                    X_train, y_train, X_test, y_test, y_test_complete, scalery, X_validate, y_validate,
+                    y_validate_complete, output_path, path_elec, path_gas, val_building_path, process_type, output_nodes):
     """
     Creates a model with defaulted values without need to perform an hyperparameter search at all times.
     Its initutive to have run the hyperparameter search beforehand to know the hyperparameter value to set.
@@ -736,6 +740,7 @@ def create_model_rf(n_estimators, max_depth, min_samples_split, min_samples_leaf
     """
     parameter_search_path = str(Path(output_path).joinpath("parameter_search"))
     btap_log_path = str(Path(parameter_search_path).joinpath("btap"))
+
     # Create the output directories if they do not exist
     config.create_directory(parameter_search_path)
     config.create_directory(btap_log_path)
@@ -747,22 +752,35 @@ def create_model_rf(n_estimators, max_depth, min_samples_split, min_samples_leaf
                                   random_state=42,
                                   n_jobs = -1,
                                   verbose = 1)
+    
+    # See how the model performs based on the training dataset size.
+    if scaling_performance == True:
+        test_scaling(model, X_train, y_train, X_test, y_test, scalery,
+                     X_validate, y_validate, y_test_complete, y_validate_complete,
+                     path_elec, path_gas, val_building_path, process_type)
+
+    # Visualize performance of the machine learning models
+    visualize_performance = True
+
+    n_estimators_array = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150]
+
+    if visualize_performance == True:
+        visualize_random_forest(idx, process_type, n_estimators_array,
+                                max_depth, min_samples_split, min_samples_leaf,
+                                X_train, y_train)
+    
     # Train the model
     model.fit(X_train, y_train)
-    result = evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
-    print(score(model.predict(X_train), y_train))
+    result, _, _ = evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
 
-    """
-    for i in range(3):
-        dot_data = export_graphviz(model.estimators_[i],
-                                filled=True,  
-                                max_depth=2, 
-                                impurity=False, 
-                                proportion=True)
-        graph = graphviz.Source(dot_data)
-        graph.render('./output/visualize_RF.png')
+    return result, model
 
-    for n in n_estimators:
+def visualize_random_forest(idx, process_type, n_estimators_array,
+                            max_depth, min_samples_split, min_samples_leaf,
+                            X_train, y_train):
+    training_results = []
+
+    for n_estimators in n_estimators_array:
         model = RandomForestRegressor(n_estimators=n_estimators,
                                         max_depth=max_depth,
                                         min_samples_split=min_samples_split,
@@ -771,22 +789,45 @@ def create_model_rf(n_estimators, max_depth, min_samples_split, min_samples_leaf
                                         n_jobs = -1,
                                         verbose = 1)
         model.fit(X_train, y_train)
-        print(y_train)
         train_loss = metrics.mean_squared_error(y_train, model.predict(X_train), squared=False)
-    
-    """
 
-    return result, model
+        training_results.append(train_loss)
 
-def create_model_gradient_boosting(n_estimators, max_depth, learning_rate, subsample, X_train, y_train, X_test, y_test, y_test_complete, scalery, X_validate, y_validate, y_validate_complete, output_path, path_elec, path_gas, val_building_path, process_type, output_nodes):
+    if idx == 0:
+        plt.style.use('seaborn-darkgrid')
+        global fig
+        global ax
+
+        fig, ax = plt.subplots(1, 2, figsize=(15,4))
+
+        ax[0].plot(n_estimators_array, training_results, color="coral")
+        ax[0].set_title(process_type.title(), fontsize=16)
+        ax[0].set_xlabel("# of decision trees", color='black', fontsize=14)
+        ax[0].set_ylabel("RMSE", color='black', fontsize=14)
+    else:
+        ax[1].plot(n_estimators_array, training_results, color="coral")
+        ax[1].set_title(process_type.title(), fontsize=16)
+        ax[1].set_xlabel("# of decision trees", color='black', fontsize=14)
+
+        plt.savefig('./output/RandomForest_Performance.png')
+
+def visualize_random_forest_decision_tree(model):
+    for i in range(3):
+        dot_data = export_graphviz(model.estimators_[i],
+                                filled=True,  
+                                max_depth=2, 
+                                impurity=False, 
+                                proportion=True)
+        graph = graphviz.Source(dot_data)
+        graph.render('./output/visualize_RF.png')
+        
+def create_model_gradient_boosting(idx, n_estimators, max_depth, learning_rate, subsample, scaling_performance, X_train, y_train, X_test, y_test, y_test_complete, scalery, X_validate, y_validate, y_validate_complete, output_path, path_elec, path_gas, val_building_path, process_type, output_nodes):
     parameter_search_path = str(Path(output_path).joinpath("parameter_search"))
     btap_log_path = str(Path(parameter_search_path).joinpath("btap"))
     
     # Create the output directories if they do not exist
     config.create_directory(parameter_search_path)
     config.create_directory(btap_log_path)
-
-    TEST_SCALING = True
 
     model = XGBRegressor(n_estimators=n_estimators,
                         max_depth=max_depth,
@@ -797,15 +838,61 @@ def create_model_gradient_boosting(n_estimators, max_depth, learning_rate, subsa
     
     multi_output = MultiOutputRegressor(model, n_jobs=-1)
 
-    if TEST_SCALING == True:
+    # See how the model performs based on the training dataset size.
+    if scaling_performance == True:
         test_scaling(multi_output, X_train, y_train, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
 
-    multi_output.fit(X_train, y_train, verbose=True)
+    # Visualize performance of the machine learning models
+    visualize_performance = True
 
+    n_estimators_array = [50, 75, 100, 125, 150, 175, 200, 225, 250, 275, 300, 325, 350, 375, 400, 425, 450, 475, 500]
+
+    if visualize_performance == True:
+        visualize_gradient_boosting(idx, process_type, n_estimators_array,
+                                max_depth, learning_rate, subsample,
+                                X_train, y_train)
+    # Train the model
+    multi_output.fit(X_train, y_train, verbose=True)
     result, _, _ = evaluate(multi_output, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
-    print(score(multi_output.predict(X_train), y_train))
 
     return result, multi_output
+
+def visualize_gradient_boosting(idx, process_type, n_estimators_array,
+                                max_depth, learning_rate, subsample,
+                                X_train, y_train):
+    training_results = []
+
+    for n_estimators in n_estimators_array:
+        model = XGBRegressor(n_estimators=n_estimators,
+                            max_depth=max_depth,
+                            learning_rate=learning_rate,
+                            subsample=subsample,
+                            random_state=42,
+                            n_jobs=-1)
+        
+        multi_output = MultiOutputRegressor(model, n_jobs=-1)
+        multi_output.fit(X_train, y_train)
+        train_loss = metrics.mean_squared_error(y_train, multi_output.predict(X_train), squared=False)
+
+        training_results.append(train_loss)
+
+    if idx == 0:
+        plt.style.use('seaborn-darkgrid')
+        global fig
+        global ax
+
+        fig, ax = plt.subplots(1, 2, figsize=(15,4))
+
+        ax[0].plot(n_estimators_array, training_results, color="coral")
+        ax[0].set_title(process_type.title(), fontsize=16)
+        ax[0].set_xlabel("# of decision trees", color='black', fontsize=14)
+        ax[0].set_ylabel("RMSE", color='black', fontsize=14)
+    else:
+        ax[1].plot(n_estimators_array, training_results, color="coral")
+        ax[1].set_title(process_type.title(), fontsize=16)
+        ax[1].set_xlabel("# of decision trees", color='black', fontsize=14)
+
+        plt.savefig('./output/XGBoost_Performance.png')
 
 def test_scaling(model, X_train, y_train, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type):
     time_array = []
@@ -818,7 +905,7 @@ def test_scaling(model, X_train, y_train, X_test, y_test, scalery, X_validate, y
     training_size = [500, 1000, 2000, 3000, 4000]
 
     for index, amount in enumerate(training_size): 
-        idx = np.random.randint(X_train.shape[0], size=amount)
+        idx = np.random.choice(X_train.shape[0], size=amount, replace=False)
 
         X_train_subset = X_train_full[idx, :]
         y_train_subset = y_train_full[idx, :]
@@ -834,14 +921,9 @@ def test_scaling(model, X_train, y_train, X_test, y_test, scalery, X_validate, y
         
         energy_result_array.append(energy_rmse)
         costing_result_array.append(costing_rmse)
-
-    print("Energy")
+    
     print(energy_result_array)
-
-    print("Costing")
     print(costing_result_array)
-
-    print("Time")
     print(time_array)
 
     if process_type.lower() == config.Settings().APP_CONFIG.ENERGY:
@@ -869,7 +951,7 @@ def test_scaling(model, X_train, y_train, X_test, y_test, scalery, X_validate, y
 
     plt.savefig('./output/training_size.png')
 
-def fit_evaluate(preprocessed_data_file, selected_features_file, selected_model_type, param_search, output_path, random_seed, path_elec, path_gas, val_building_path, process_type, use_updated_model, use_dropout):
+def fit_evaluate(idx, preprocessed_data_file, selected_features_file, selected_model_type, param_search, output_path, random_seed, path_elec, path_gas, val_building_path, process_type, use_updated_model, use_dropout):
     """
     Loads the output from preprocessing and feature selection, builds the model, then evaluates the model.
 
@@ -960,7 +1042,7 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, selected_model_
     if param_search.lower() == "yes":
         if selected_model_type.lower() == 'mlp':
             hypermodel = predicts_hp(X_train, y_train, X_test, y_test, features, output_path, random_seed, process_type)
-            results_pred = evaluate(hypermodel, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
+            results_pred, _, _ = evaluate(hypermodel, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
 
             model_output_path = str(model_path.joinpath(config.Settings().APP_CONFIG.TRAINED_MODEL_FILENAME_MLP))
             hypermodel.save(model_output_path) 
@@ -1011,6 +1093,9 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, selected_model_
 
     # Otherwise use a default model design and train with that model
     else:
+        # Try out different training dataset size and see how they perform in terms of performance and computational time
+        SCALING_PERFORMANCE = False
+
         if selected_model_type.lower() == 'mlp':
             # Default parameters for the MLP used
             if process_type == 'energy':
@@ -1045,6 +1130,7 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, selected_model_
                                     learning_rate=LEARNING_RATE,
                                     epochs=EPOCHS,
                                     batch_size=BATCH_SIZE,
+                                    scaling_performance=SCALING_PERFORMANCE,
                                     X_train=X_train,
                                     y_train=y_train,
                                     X_test=X_test,
@@ -1067,27 +1153,23 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, selected_model_
         elif selected_model_type.lower() == 'rf':
             # Default parameters for the Random forest regressor
             if process_type == 'energy':
-                N_ESTIMATORS = 150
-                MAX_DEPTH = 30
+                N_ESTIMATORS = 100
+                MAX_DEPTH = None
                 MIN_SAMPLES_SPLIT = 2
                 MIN_SAMPLES_LEAF = 1
             else:
                 N_ESTIMATORS = 100
-                MAX_DEPTH = 15
+                MAX_DEPTH = None
                 MIN_SAMPLES_SPLIT = 2
                 MIN_SAMPLES_LEAF = 1
 
-            if not use_updated_model:
-                LEARNING_RATE = 0.001
-                NUMBER_OF_NODES = 56
-            if not use_dropout:
-                DROPOUT_RATE = -1
-
             results_pred, hypermodel = create_model_rf(
+                                        idx=idx,
                                         n_estimators = N_ESTIMATORS,
                                         max_depth=MAX_DEPTH,
                                         min_samples_split=MIN_SAMPLES_SPLIT,
                                         min_samples_leaf=MIN_SAMPLES_LEAF,
+                                        scaling_performance=SCALING_PERFORMANCE,
                                         X_train=X_train,
                                         y_train=y_train,
                                         X_test=X_test,
@@ -1120,10 +1202,12 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, selected_model_
                 SUBSAMPLE = 0.5
                 
             results_pred, hypermodel = create_model_gradient_boosting(
+                            idx=idx,
                             n_estimators = N_ESTIMATORS,
                             max_depth=MAX_DEPTH,
                             learning_rate=LEARNING_RATE,
                             subsample=SUBSAMPLE,
+                            scaling_performance=SCALING_PERFORMANCE,
                             X_train=X_train,
                             y_train=y_train,
                             X_test=X_test,
@@ -1221,7 +1305,8 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
          path_gas: str = typer.Option("", help="Filepath of the gas building file, if it has been used (pass nothing otherwise)."),
          val_building_path: str = typer.Option("", help="Filepath of the validation building file, if it has been used (pass nothing otherwise)."),
          use_updated_model: bool = typer.Option(True, help="True if the larger model architecture should be used for training. Should be False if a costing model is being trained."),
-         use_dropout: bool = typer.Option(True, help="True if the regularization technique should be used (on by default). False if tests are desired without dropout. Note that not using dropout may cause bias to learned when training.")
+         use_dropout: bool = typer.Option(True, help="True if the regularization technique should be used (on by default). False if tests are desired without dropout. Note that not using dropout may cause bias to learned when training."),
+         idx: int = typer.Option(0, help="Keeps track of the training process type")
          ):
     """
     Using all preprocessed data, build and train a Machine Learning model to predict the total energy or costing values.
@@ -1242,6 +1327,7 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
         val_building_path: Filepath of the validation building file, if it has been used (pass nothing otherwise).
         use_updated_model: True if the larger model architecture should be used for training. Should be False if a costing model is being trained.
         use_dropout: True if the regularization technique should be used (on by default). False if tests are desired without dropout. Note that not using dropout may cause bias to learned when training.
+        idx: Keeps track of the training process type.
     """
     DOCKER_INPUT_PATH = config.Settings().APP_CONFIG.DOCKER_INPUT_PATH
     # Load all content stored from the config file, if provided
@@ -1264,7 +1350,7 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
     # If the output path is blank, map to the docker output path
     if len(output_path) < 1:
         output_path = config.Settings().APP_CONFIG.DOCKER_OUTPUT_PATH
-    return fit_evaluate(input_model.preprocessed_data_file, input_model.selected_features_file, input_model.selected_model_type, input_model.perform_param_search, output_path, input_model.random_seed, input_model.building_param_files[0], input_model.building_param_files[1], input_model.val_building_params_file, process_type, use_updated_model,
+    return fit_evaluate(idx, input_model.preprocessed_data_file, input_model.selected_features_file, input_model.selected_model_type, input_model.perform_param_search, output_path, input_model.random_seed, input_model.building_param_files[0], input_model.building_param_files[1], input_model.val_building_params_file, process_type, use_updated_model,
                         use_dropout)
 
 if __name__ == '__main__':

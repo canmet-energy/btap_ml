@@ -76,29 +76,23 @@ def plot_metric(df: pd.DataFrame) -> None:
 index = 0
 
 plt.style.use('seaborn-darkgrid')
-fig, ax = plt.subplots(1, 2, figsize=(15,5))
+fig, ax = plt.subplots(2, 1, figsize=(8, 13))
 
 def shared_learning_curve_plot(H) -> None:
     global index
 
     if index == 0:
-        ax[0].set_title('Energy', fontsize=16)
-        ax[0].plot(H.history["loss"], label="Train", color="coral")
-        ax[0].plot(H.history["val_loss"], label="Validation", color="darkolivegreen")
-        ax[0].set_xlabel("Epoch #", color='black', fontsize=14)
-        ax[0].set_ylabel("RMSE", color='black', fontsize=14)
+        ax[0].set_title('MLP', fontsize=16)
+        ax[0].plot(H.history["loss"], label="Training dataset", color="coral")
+        ax[0].plot(H.history["val_loss"], label="Validation dataset", color="darkolivegreen")
     else:
-        ax[1].set_title('Costing', fontsize=16)
         ax[1].plot(H.history["loss"], label="Train", color="coral")
         ax[1].plot(H.history["val_loss"], label="Validation", color="darkolivegreen")
         ax[1].set_xlabel("Epoch #", color='black', fontsize=14)
-        ax[1].set_ylabel(" ", color='black', fontsize=14)
 
-        plt.savefig('./output/Learning curve shared plot')
+        plt.savefig('./output/Stacked Learning curve shared plot')
 
     handles, labels = ax[0].get_legend_handles_labels()
-
-    fig.subplots_adjust(top=0.80)
 
     legend = fig.legend(handles, labels, loc='upper center', fontsize='x-large')
     legend.get_frame().set_facecolor('none')

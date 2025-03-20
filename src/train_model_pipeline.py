@@ -89,7 +89,7 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
     settings = config.Settings()
     # Set the perform_param_search parameter to 'no', this is hard-coded since we
     # want to leave the infrastructure for it in, but remove the ability to use it for now
-    perform_param_search = 'yes'
+    perform_param_search = 'no'
     # Begin by loading the config file, if passed, to overwrite
     # blank argument values
     if len(config_file) > 0:

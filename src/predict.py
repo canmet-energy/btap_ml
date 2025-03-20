@@ -201,7 +201,7 @@ def tune_rf(X_train, y_train, X_test, y_test, y_test_complete, scalery, X_valida
     config.create_directory(parameter_search_path)
     config.create_directory(btap_log_path)
 
-    model = RandomForestRegressor(random_state=42, n_jobs=-1)
+    model = RandomForestRegressor(random_state=42)
     
     rf_search_space = {
         'n_estimators': [100, 200, 300],
@@ -210,7 +210,14 @@ def tune_rf(X_train, y_train, X_test, y_test, y_test_complete, scalery, X_valida
         'min_samples_leaf': [1, 2, 4],
     }
 
-    random_search = RandomizedSearchCV(model, param_distributions=rf_search_space, n_iter=70, cv=3, n_jobs=-1, verbose=3, random_state=42)
+    random_search = RandomizedSearchCV(model,
+                                       param_distributions=rf_search_space,
+                                       scoring='neg_mean_squared_error',
+                                       n_iter=70,
+                                       cv=3,
+                                       n_jobs=-1,
+                                       verbose=3,
+                                       random_state=42)
 
     # Train the model
     random_search.fit(X_train, y_train)
@@ -635,8 +642,11 @@ def create_model_mlp(dense_layers, activation, optimizer, dropout_rate, length, 
     output_df = ''
 
     # See how the model performs based on the training dataset size.
+    isMLP = True
     if scaling_performance == True:
-        test_scaling(model, X_train, y_train, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
+        test_scaling(model, isMLP, epochs, batch_size, X_train, y_train, X_test, y_test, scalery,
+                     X_validate, y_validate, y_test_complete, y_validate_complete,
+                     path_elec, path_gas, val_building_path, process_type)
 
     # prepare the model with target scaling
     scores_metric = ''
@@ -714,58 +724,12 @@ def create_model_rf(idx, n_estimators, max_depth, min_samples_split, min_samples
         test_scaling(model, X_train, y_train, X_test, y_test, scalery,
                      X_validate, y_validate, y_test_complete, y_validate_complete,
                      path_elec, path_gas, val_building_path, process_type)
-
-    # Visualize performance of the machine learning models
-    visualize_performance = False
-
-    n_estimators_array = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150]
-
-    if visualize_performance == True:
-        visualize_random_forest(idx, process_type, n_estimators_array,
-                                max_depth, min_samples_split, min_samples_leaf,
-                                X_train, y_train)
     
     # Train the model
     model.fit(X_train, y_train)
     result, _, _ = evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
 
     return result, model
-
-def visualize_random_forest(idx, process_type, n_estimators_array,
-                            max_depth, min_samples_split, min_samples_leaf,
-                            X_train, y_train):
-    training_results = []
-
-    for n_estimators in n_estimators_array:
-        model = RandomForestRegressor(n_estimators=n_estimators,
-                                        max_depth=max_depth,
-                                        min_samples_split=min_samples_split,
-                                        min_samples_leaf=min_samples_leaf,
-                                        random_state=42,
-                                        n_jobs = -1,
-                                        verbose = 1)
-        model.fit(X_train, y_train)
-        train_loss = metrics.mean_squared_error(y_train, model.predict(X_train), squared=False)
-
-        training_results.append(train_loss)
-
-    if idx == 0:
-        plt.style.use('seaborn-darkgrid')
-        global fig
-        global ax
-
-        fig, ax = plt.subplots(1, 2, figsize=(15,4))
-
-        ax[0].plot(n_estimators_array, training_results, color="coral")
-        ax[0].set_title(process_type.title(), fontsize=16)
-        ax[0].set_xlabel("# of decision trees", color='black', fontsize=14)
-        ax[0].set_ylabel("RMSE", color='black', fontsize=14)
-    else:
-        ax[1].plot(n_estimators_array, training_results, color="coral")
-        ax[1].set_title(process_type.title(), fontsize=16)
-        ax[1].set_xlabel("# of decision trees", color='black', fontsize=14)
-
-        plt.savefig('./output/RandomForest_Performance.png')
         
 def create_model_gradient_boosting(idx, n_estimators, max_depth, learning_rate, subsample, scaling_performance,
                                    X_train, y_train, X_test, y_test, y_test_complete, scalery, X_validate, y_validate, y_validate_complete, modified_y_validate,
@@ -779,11 +743,11 @@ def create_model_gradient_boosting(idx, n_estimators, max_depth, learning_rate, 
     config.create_directory(btap_log_path)
     
     model = XGBRegressor(n_estimators=n_estimators,
-                        max_depth=max_depth,
-                        learning_rate=learning_rate,
-                        subsample=subsample,
-                        random_state=42,
-                        n_jobs=-1)
+                         max_depth=max_depth,
+                         learning_rate=learning_rate,
+                         subsample=subsample,
+                         random_state=42,
+                         n_jobs=-1)
     
     model.fit(X_train, y_train,
               eval_set=[(X_train, y_train), (X_validate, modified_y_validate)],
@@ -797,14 +761,14 @@ def create_model_gradient_boosting(idx, n_estimators, max_depth, learning_rate, 
 
     # Visualize performance of the machine learning models
     model_results = model.evals_result()
-    visualize_gradient_boosting(idx, process_type, model_results)
+    visualize_gradient_boosting(idx, model_results)
     
     # Evaluate performanec of XGBoost
     result, _, _ = evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
 
     return result, model
 
-def visualize_gradient_boosting(idx, process_type, model_results):
+def visualize_gradient_boosting(idx, model_results):
     
     train_rmse = model_results["validation_0"]["rmse"]
     eval_rmse = model_results["validation_1"]["rmse"]
@@ -814,18 +778,22 @@ def visualize_gradient_boosting(idx, process_type, model_results):
         global fig
         global ax
 
-        fig, ax = plt.subplots(2, 1, figsize=(8, 13))
+        fig, ax = plt.subplots(2, 1, figsize=(8, 10))
 
         ax[0].set_title("XGBoost", fontsize=16)
         ax[0].plot(train_rmse, label='Training dataset', color="coral")
         ax[0].plot(eval_rmse, label='Validation dataset', color="darkolivegreen")
-        ax[0].set_ylabel("Energy Consumption RMSE", color='black', fontsize=14)
+        ax[0].set_ylabel("Energy Use Intensity RMSE", color='black', fontsize=14)
+
+        ax[0].tick_params(axis='both', which='major', labelsize=13)
 
     else:
         ax[1].plot(train_rmse, label='Training dataset', color="coral")
         ax[1].plot(eval_rmse, label='Validation dataset', color="darkolivegreen")
         ax[1].set_xlabel("Number of trees", color='black', fontsize=14)
         ax[1].set_ylabel("Costing RMSE", color='black', fontsize=14)
+
+        ax[1].tick_params(axis='both', which='major', labelsize=13)
 
         plt.savefig('./output/XGBoost_Learning_Curve.png')
     
@@ -835,7 +803,7 @@ def visualize_gradient_boosting(idx, process_type, model_results):
     legend.get_frame().set_facecolor('none')
     legend.get_frame().set_edgecolor('none')
     
-def test_scaling(model, X_train, y_train, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type):
+def test_scaling(model, isMLP, epochs, batch_size, X_train, y_train, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type):
     time_array = []
     energy_result_array = []
     costing_result_array = []
@@ -846,7 +814,7 @@ def test_scaling(model, X_train, y_train, X_test, y_test, scalery, X_validate, y
     print(X_train_full.shape)
     print(y_train_full.shape)
 
-    training_size = np.array([100, 500, 1000, 1500])
+    training_size = np.array([500, 1000, 2000, 3000, 4000])
 
     # Energy dataset is based on daily data and not yearly data. Costing dataset is based on yearly data.
     if process_type == 'energy':
@@ -862,7 +830,17 @@ def test_scaling(model, X_train, y_train, X_test, y_test, scalery, X_validate, y
     
         current_time = time.time()
 
-        model.fit(X_train_subset, y_train_subset, verbose=True)
+        if isMLP == True:
+            print(batch_size)
+            model.fit(X_train_subset,
+                      y_train_subset,
+                      epochs=epochs,
+                      batch_size=batch_size,
+                      verbose=1,
+                      #shuffle=False,
+                      validation_split=0.10)
+        else:
+            model.fit(X_train_subset, y_train_subset)
 
         time_taken = ((time.time() - current_time) / 60)
         time_array.append(time_taken)
@@ -1150,11 +1128,6 @@ def fit_evaluate(idx, preprocessed_data_file, selected_features_file, selected_m
                 MAX_DEPTH = 5
                 LEARNING_RATE = 0.05
                 SUBSAMPLE = 0.5
-
-            print("TESTINGGGGGGGGGGGGGG")
-            print(y_train)
-            print(y_validate)
-            print(y_validate.columns)
 
             if process_type.lower() == config.Settings().APP_CONFIG.COSTING:
                 modified_y_validate = y_validate.iloc[:, 1:-1]

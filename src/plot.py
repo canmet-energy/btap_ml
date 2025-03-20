@@ -76,7 +76,7 @@ def plot_metric(df: pd.DataFrame) -> None:
 index = 0
 
 plt.style.use('seaborn-darkgrid')
-fig, ax = plt.subplots(2, 1, figsize=(8, 13))
+fig, ax = plt.subplots(2, 1, figsize=(8, 10))
 
 def shared_learning_curve_plot(H) -> None:
     global index
@@ -85,10 +85,14 @@ def shared_learning_curve_plot(H) -> None:
         ax[0].set_title('MLP', fontsize=16)
         ax[0].plot(H.history["loss"], label="Training dataset", color="coral")
         ax[0].plot(H.history["val_loss"], label="Validation dataset", color="darkolivegreen")
+
+        ax[0].tick_params(axis='both', which='major', labelsize=13)
     else:
         ax[1].plot(H.history["loss"], label="Train", color="coral")
         ax[1].plot(H.history["val_loss"], label="Validation", color="darkolivegreen")
         ax[1].set_xlabel("Epoch #", color='black', fontsize=14)
+
+        ax[1].tick_params(axis='both', which='major', labelsize=13)
 
         plt.savefig('./output/Stacked Learning curve shared plot')
 

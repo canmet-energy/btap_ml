@@ -41,7 +41,7 @@ class AppConfig(BaseModel):
     # Bucket used to store model training data
     TRAINING_BUCKET_NAME: str = 'model_training'
     # URL where weather files are stored
-    WEATHER_DATA_STORE: AnyHttpUrl = 'https://raw.githubusercontent.com/NREL/openstudio-standards/nrcan/data/weather/'
+    WEATHER_DATA_STORE: AnyHttpUrl = 'https://raw.githubusercontent.com/canmet-energy/btap_weather/main/historic'
     # File location of the file listing columns to ignore for costing predictions
     COSTING_COLUMNS_FILE: str = 'column_files/costing_columns_to_ignore.txt'
     # Parent level key within input_config.yml

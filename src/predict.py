@@ -25,10 +25,7 @@ from keras_tuner import Hyperband
 from matplotlib import pyplot as plt
 from sklearn import metrics
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
-from sklearn.preprocessing import (MaxAbsScaler, MinMaxScaler, Normalizer,
-                                   PowerTransformer, QuantileTransformer,
-                                   RobustScaler, StandardScaler, minmax_scale)
-from sklearn.multioutput import MultiOutputRegressor
+from sklearn.preprocessing import StandardScaler
 from tensorboard.plugins.hparams import api as hp
 from tensorflow.keras import layers
 from xgboost import XGBRegressor
@@ -39,6 +36,8 @@ import config
 import plot as pl
 import preprocessing
 from models.predict_model import PredictModel
+
+from tune import det_coeff, rmse_loss, model_builder, tune_gradient_boosting, tune_rf
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -63,173 +62,7 @@ def score(y_test, y_pred):
               "mape": mape}
     return scores
 
-def det_coeff(y_true, y_pred):
-    u = K.sum(K.square(y_true - y_pred))
-    v = K.sum(K.square(y_true - K.mean(y_true)))
-    
-    return K.ones_like(v) - (u / v)
-
-def rmse_loss(y_true, y_pred):
-    """
-    A customized rmse score that takes a sum of y_pred and y_test before computing the rmse score
-
-    Args:
-        y_true: y testset
-        y_pred: y predicted value from the model
-    Returns:
-       rmse loss from comparing the y_test and y_pred values
-    """
-    # sum_pred = K.sum(y_pred, axis=-1)
-    # sum_true = K.sum(y_true, axis=-1)
-
-    # loss = K.sqrt(K.mean(K.square(sum_pred - sum_true)))
-
-    return K.sqrt(tf.reduce_mean(K.square(y_pred - y_true)))
-
-def model_builder(hp, col_length, output_nodes):
-    """
-    Builds the model that would be used to search for hyperparameter.
-    The hyperparameters search inclues activation, regularizers, dropout_rate, learning_rate, and optimizer
-
-    Args:
-        hp: hyperband object with different hyperparameters to be checked.
-    Returns:
-       model will be built based on the different hyperparameter combinations.
-    """
-    model = keras.Sequential()
-    model.add(keras.layers.Flatten())
-
-    hp_activation= hp.Choice('activation', values=['relu'])
-    for i in range(hp.Int("num_layers", 1, 3)):
-        model.add(layers.Dense(
-            units=hp.Int("units_" + str(i), min_value=8, max_value=4096, step=8),
-            activation=hp_activation,
-            input_shape=(col_length, ),
-            kernel_initializer='normal',
-            ))
-        model.add(Dropout(hp.Choice('dropout_rate', values=[0.0, 0.05, 0.1, 0.2, 0.3])))
-    model.add(Dense(output_nodes, activation='linear'))
-
-    hp_learning_rate = hp.Choice('learning_rate', values=[1e-3, 0.0005, 1e-4, 0.00005, 1e-5])
-    hp_optimizer = hp.Choice('optimizer', values=['adam', 'sgd', 'rmsprop'])
-
-    if hp_optimizer == "adam":
-        optimizer = tf.optimizers.Adam(learning_rate=hp_learning_rate)
-    elif hp_optimizer == "sgd":
-        optimizer = tf.optimizers.SGD(learning_rate=hp_learning_rate)
-    else:
-        optimizer = tf.optimizers.RMSprop(learning_rate=hp_learning_rate)
-
-    # Comiple the mode with the optimizer and learninf rate specified in hparams
-    model.compile(optimizer=optimizer,
-                  loss=rmse_loss,
-                  metrics=['mae', 'mse','mape', det_coeff])
-
-    return model
-
-def tune_gradient_boosting(X_train, y_train, X_test, y_test, y_test_complete, scalery, X_validate, y_validate, y_validate_complete, output_path, path_elec, path_gas, val_building_path, process_type, output_nodes):
-    parameter_search_path = str(Path(output_path).joinpath("parameter_search"))
-    btap_log_path = str(Path(parameter_search_path).joinpath("btap"))
-    # Create the output directories if they do not exist
-    config.create_directory(parameter_search_path)
-    config.create_directory(btap_log_path)
-
-    param_grid = {
-        'estimator__n_estimators' : [100, 250, 500],
-        'estimator__max_depth': [5, 10, 15],
-        'estimator__learning_rate': [0.01, 0.05, 0.1],
-        'estimator__subsample': [0.5, 0.7, 1],
-        #'estimator__min_child_weight': [1, 3, 5],
-    }
-    model = XGBRegressor(random_state=42, n_jobs=-1)
-    multi_output = MultiOutputRegressor(model, n_jobs=-1)
-
-    grid_search = GridSearchCV(multi_output,
-                                param_grid,
-                                scoring='neg_mean_squared_error',
-                                cv=3,
-                                verbose=2,
-                                n_jobs=-1)
-
-    grid_search.fit(X_train, y_train, verbose=True)
-
-    best_model = grid_search.best_estimator_
-    print("Best parameters:", grid_search.best_params_)
-    print("Best CV score (neg MSE):", grid_search.best_score_)
-
-    result, _, _ = evaluate(best_model, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
-    print(score(best_model.predict(X_train), y_train))
-
-    return result, best_model
-
-def tune_rf(X_train, y_train, X_test, y_test, y_test_complete, scalery, X_validate, y_validate, y_validate_complete, output_path, path_elec, path_gas, val_building_path, process_type, output_nodes):
-    """
-    Creates a model with defaulted values without need to perform an hyperparameter search at all times.
-    Its initutive to have run the hyperparameter search beforehand to know the hyperparameter value to set.
-
-    Args:
-        n_estimators: the number of trees in the random forest
-        max_depth: the maximum depth of the tree.
-        min_samples_split: The minimum number of samples required to split an internal node:
-        min_samples_leaf: The minimum number of samples required to be at a leaf node.
-        X_train: X trainset
-        y_train: y trainset
-        X_test: X testset
-        y_test: y testset
-        y_test_complete: dataframe containing the target variable with corresponding datapointid for the test set
-        scalery: y scaler used to transform the y values to the original scale
-        X_validate: X validation set
-        y_validate: y validation set
-        y_validate_complete: dataframe containing the target variable with corresponding datapointid for the validation set
-        output_path: Where the outputs will be placed
-        path_elec: Filepath of the electricity building file which has been used
-        path_gas: Filepath of the gas building file, if it has been used (pass nothing otherwise)
-        val_building_path: Filepath of the validation building file, if it has been used (pass nothing otherwise).
-        process_type: Either 'energy' or 'costing' to specify the operations to be performed.
-        output_nodes: The number of outputs which the model needs to predict.
-    Returns:
-        metric: evaluation results containing the loss value from the testset prediction,
-        annual_metric: predicted value for each datapooint_id is summed to calculate the annual energy consumed and the loss value from the testset prediction,
-        output_df: merge of y_pred, y_test, datapoint_id, the final dataframe showing the model output using the testset
-        val_metric:evaluation results containing the loss value from the validationset prediction,
-        val_annual_metric:predicted value for each datapooint_id is summed to calculate the annual energy consumed and the loss value from the validationset prediction,,
-        output_val_df: merge of y_pred, y_validate, datapoint_id, the final dataframe showing the model output using the validation set
-    """
-    parameter_search_path = str(Path(output_path).joinpath("parameter_search"))
-    btap_log_path = str(Path(parameter_search_path).joinpath("btap"))
-    # Create the output directories if they do not exist
-    config.create_directory(parameter_search_path)
-    config.create_directory(btap_log_path)
-
-    model = RandomForestRegressor(random_state=42)
-    
-    rf_search_space = {
-        'n_estimators': [100, 200, 300],
-        'max_depth': [None, 5, 10, 15],
-        'min_samples_split': [2, 4, 8],
-        'min_samples_leaf': [1, 2, 4],
-    }
-
-    random_search = RandomizedSearchCV(model,
-                                       param_distributions=rf_search_space,
-                                       scoring='neg_mean_squared_error',
-                                       n_iter=70,
-                                       cv=3,
-                                       n_jobs=-1,
-                                       verbose=3,
-                                       random_state=42)
-
-    # Train the model
-    random_search.fit(X_train, y_train)
-
-    print(random_search.best_params_)
-
-    result, _, _ = evaluate(random_search.best_estimator_, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
-    print(score(random_search.predict(X_train), y_train))
-
-    return result, random_search.best_estimator_
-
-def predicts_hp(X_train, y_train, X_test, y_test, col_length, output_nodes, selected_feature, output_path, random_seed, process_type):
+def tune_mlp(X_train, y_train, X_test, y_test, col_length, output_nodes, selected_feature, output_path, random_seed, process_type):
     """
     DECOMMISIONED: May need updates for multi-outputs
     Using the set of hyperparameter combined,the model built is used to make predictions.
@@ -245,13 +78,12 @@ def predicts_hp(X_train, y_train, X_test, y_test, col_length, output_nodes, sele
     Returns:
        Model built from the set of hyperparameters combined.
     """
+    # Create the output directories if they do not exist
     parameter_search_path = str(Path(output_path).joinpath("parameter_search"))
     log_path = str(Path(parameter_search_path).joinpath("btap"))
-    # Create the output directories if they do not exist
+
     config.create_directory(parameter_search_path)
     config.create_directory(log_path)
-
-    #lambda hp: energy_model_builder(hp, col_length, output_nodes)
 
     if process_type == 'energy':      
         BATCH_SIZE = 1024
@@ -260,6 +92,8 @@ def predicts_hp(X_train, y_train, X_test, y_test, col_length, output_nodes, sele
 
     print(col_length)
     print(output_nodes)
+
+    stop_early = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=10)
 
     tuner = Hyperband(lambda hp: model_builder(hp, col_length, output_nodes),
                         objective='val_loss',
@@ -270,7 +104,6 @@ def predicts_hp(X_train, y_train, X_test, y_test, col_length, output_nodes, sele
                         project_name='btap',
                         seed=random_seed)
 
-    stop_early = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=10)
     tuner.search(X_train,
                  y_train,
                  epochs=100,
@@ -279,6 +112,7 @@ def predicts_hp(X_train, y_train, X_test, y_test, col_length, output_nodes, sele
                  validation_split=0.10)
 
     tuner.search_space_summary()
+    
     # Get the optimal hyperparameters
     best_hps = tuner.get_best_hyperparameters(num_trials=1)[0]
 
@@ -328,7 +162,6 @@ def predicts_hp(X_train, y_train, X_test, y_test, col_length, output_nodes, sele
     hypermodel = tuner.hypermodel.build(best_hps)
     hypermodel.fit(X_train, y_train, epochs=best_epoch, validation_split=0.2)
     '''
-
     return model
 
 def convert_dataframe_to_annual(df):
@@ -342,11 +175,13 @@ def convert_dataframe_to_annual(df):
     """
     # Sum the daily values
     updated_df = df.groupby(['datapoint_id']).sum()
+
     # Scale the values to GigaJoules per meter squared
     updated_df['energy_elec'] = updated_df['energy_elec'].apply(lambda r : float((r*1.0)/1000))
     updated_df['energy_gas'] = updated_df['energy_gas'].apply(lambda r : float((r*1.0)/1000))
     updated_df['y_pred_elec_transformed'] = updated_df['y_pred_elec_transformed'].apply(lambda r : float((r*1.0)/1000))
     updated_df['y_pred_gas_transformed'] = updated_df['y_pred_gas_transformed'].apply(lambda r : float((r*1.0)/1000))
+
     return updated_df
 
 def compute_building_weather_errors(df, actual_label, prediction_label):
@@ -567,8 +402,10 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
     return results, energy_rmse, costing_rmse
 
 
-def create_model_mlp(dense_layers, activation, optimizer, dropout_rate, length, learning_rate, epochs, batch_size, scaling_performance, X_train, y_train, X_test, y_test, y_test_complete, scalery,
-                 X_validate, y_validate, y_validate_complete, output_path, path_elec, path_gas, val_building_path, process_type, output_nodes):
+def create_model_mlp(dense_layers, activation, optimizer, dropout_rate, length, learning_rate, epochs,
+                     batch_size, scaling_performance, X_train, y_train, X_test, y_test, y_test_complete,
+                     scalery, X_validate, y_validate, y_validate_complete, output_path, path_elec, path_gas,
+                     val_building_path, process_type, output_nodes):
     """
     Creates a MLP model with defaulted values without need to perform an hyperparameter search at all times.
     Its initutive to have run the hyperparameter search beforehand to know the hyperparameter value to set.
@@ -665,13 +502,15 @@ def create_model_mlp(dense_layers, activation, optimizer, dropout_rate, length, 
     print(model.summary())
     plt.ylabel('loss')
     
-    result, _, _ = evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
+    result, _, _ = evaluate(model, X_test, y_test, scalery, X_validate, y_validate,
+                            y_test_complete, y_validate_complete,
+                            path_elec, path_gas, val_building_path, process_type)
 
     return result, model
 
 def create_model_rf(idx, n_estimators, max_depth, min_samples_split, min_samples_leaf, scaling_performance,
                     X_train, y_train, X_test, y_test, y_test_complete, scalery, X_validate, y_validate,
-                    y_validate_complete, output_path, path_elec, path_gas, val_building_path, process_type, output_nodes):
+                    y_validate_complete, output_path, path_elec, path_gas, val_building_path, process_type):
     """
     Creates a model with defaulted values without need to perform an hyperparameter search at all times.
     Its initutive to have run the hyperparameter search beforehand to know the hyperparameter value to set.
@@ -966,55 +805,27 @@ def fit_evaluate(idx, preprocessed_data_file, selected_features_file, selected_m
     config.create_directory(str(model_path))
 
     # If set to "yes", search for best hyperparameters before training
-    # "YES" HAS BEEN DECOMMISSIONED AS OF THE RELEASE OF TASKS 5/6 OF PHASE 3
     if param_search.lower() == "yes":
         if selected_model_type.lower() == 'mlp':
-            hypermodel = predicts_hp(X_train, y_train, X_test, y_test, col_length, output_nodes, features, output_path, random_seed, process_type)
-            results_pred, _, _ = evaluate(hypermodel, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
+            hypermodel = tune_mlp(X_train, y_train, X_test, y_test, col_length, output_nodes, features, output_path, random_seed, process_type)
 
             model_output_path = str(model_path.joinpath(config.Settings().APP_CONFIG.TRAINED_MODEL_FILENAME_MLP))
             hypermodel.save(model_output_path) 
 
         elif selected_model_type.lower() == 'rf':
-            results_pred, hypermodel = tune_rf(
-                            X_train=X_train,
-                            y_train=y_train,
-                            X_test=X_test,
-                            y_test=y_test,
-                            y_test_complete=y_test_complete,
-                            scalery=scalery,
-                            X_validate = X_validate,
-                            y_validate=y_validate,
-                            y_validate_complete= y_validate_complete,
-                            output_path=output_path,
-                            path_elec=path_elec,
-                            path_gas=path_gas,
-                            val_building_path=val_building_path,
-                            process_type=process_type,
-                            output_nodes=output_nodes
-                            )
+            best_modal = tune_rf(X_train, y_train, output_path)
             
+            results_pred, _, _ = evaluate(best_modal, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete,
+                                          path_elec, path_gas, val_building_path, process_type)
+
             model_output_path = str(model_path.joinpath(config.Settings().APP_CONFIG.TRAINED_MODEL_FILENAME_RF))
             joblib.dump(hypermodel, model_output_path)
 
         else:
-            results_pred, hypermodel = tune_gradient_boosting(
-                X_train=X_train,
-                y_train=y_train,
-                X_test=X_test,
-                y_test=y_test,
-                y_test_complete=y_test_complete,
-                scalery=scalery,
-                X_validate = X_validate,
-                y_validate=y_validate,
-                y_validate_complete= y_validate_complete,
-                output_path=output_path,
-                path_elec=path_elec,
-                path_gas=path_gas,
-                val_building_path=val_building_path,
-                process_type=process_type,
-                output_nodes=output_nodes
-            )
+            best_model = tune_gradient_boosting(X_train, y_train, output_path)
+
+            results_pred, _, _ = evaluate(best_model, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete,
+                                          path_elec, path_gas, val_building_path, process_type)
             
             model_output_path = str(model_path.joinpath(config.Settings().APP_CONFIG.TRAINED_MODEL_FILENAME_GB))
             joblib.dump(hypermodel, model_output_path)
@@ -1049,31 +860,30 @@ def fit_evaluate(idx, preprocessed_data_file, selected_features_file, selected_m
             if not use_dropout:
                 DROPOUT_RATE = -1
 
-            results_pred, hypermodel = create_model_mlp(
-                                    dense_layers=NUMBER_OF_NODES,
-                                    activation=ACTIVATION,
-                                    optimizer=OPTIMIZER,
-                                    dropout_rate=DROPOUT_RATE,
-                                    length=col_length,
-                                    learning_rate=LEARNING_RATE,
-                                    epochs=EPOCHS,
-                                    batch_size=BATCH_SIZE,
-                                    scaling_performance=SCALING_PERFORMANCE,
-                                    X_train=X_train,
-                                    y_train=y_train,
-                                    X_test=X_test,
-                                    y_test=y_test,
-                                    y_test_complete=y_test_complete,
-                                    scalery=scalery,
-                                    X_validate = X_validate,
-                                    y_validate=y_validate,
-                                    y_validate_complete= y_validate_complete,
-                                    output_path=output_path,
-                                    path_elec=path_elec,
-                                    path_gas=path_gas,
-                                    val_building_path=val_building_path,
-                                    process_type=process_type,
-                                    output_nodes=output_nodes)
+            results_pred, hypermodel = create_model_mlp(dense_layers=NUMBER_OF_NODES,
+                                                        activation=ACTIVATION,
+                                                        optimizer=OPTIMIZER,
+                                                        dropout_rate=DROPOUT_RATE,
+                                                        length=col_length,
+                                                        learning_rate=LEARNING_RATE,
+                                                        epochs=EPOCHS,
+                                                        batch_size=BATCH_SIZE,
+                                                        scaling_performance=SCALING_PERFORMANCE,
+                                                        X_train=X_train,
+                                                        y_train=y_train,
+                                                        X_test=X_test,
+                                                        y_test=y_test,
+                                                        y_test_complete=y_test_complete,
+                                                        scalery=scalery,
+                                                        X_validate = X_validate,
+                                                        y_validate=y_validate,
+                                                        y_validate_complete= y_validate_complete,
+                                                        output_path=output_path,
+                                                        path_elec=path_elec,
+                                                        path_gas=path_gas,
+                                                        val_building_path=val_building_path,
+                                                        process_type=process_type,
+                                                        output_nodes=output_nodes)
             # Output the trained model architecture
             model_output_path = str(model_path.joinpath(config.Settings().APP_CONFIG.TRAINED_MODEL_FILENAME_MLP))
             hypermodel.save(model_output_path)
@@ -1112,7 +922,6 @@ def fit_evaluate(idx, preprocessed_data_file, selected_features_file, selected_m
                                         path_gas=path_gas,
                                         val_building_path=val_building_path,
                                         process_type=process_type,
-                                        output_nodes=output_nodes
                                        )
             model_output_path = str(model_path.joinpath(config.Settings().APP_CONFIG.TRAINED_MODEL_FILENAME_RF))
             joblib.dump(hypermodel, model_output_path)
@@ -1167,7 +976,7 @@ def fit_evaluate(idx, preprocessed_data_file, selected_features_file, selected_m
     time_taken = ((time.time() - start_time) / 60)
     print("********* Total time spent is " + str(time_taken) + " minutes ***********" )
 
-    # write processing time
+    # Write processing time in processing_time.txt file
     processing_time_file_path = str(model_path) + "/" + 'processing_time.txt'
     processing_time_file = open(processing_time_file_path, 'w')
     processing_time_file.write(str(time_taken))
@@ -1175,6 +984,7 @@ def fit_evaluate(idx, preprocessed_data_file, selected_features_file, selected_m
     # Define the output files
     output_filename_json = str(model_path) + "/" + config.Settings().APP_CONFIG.TRAINING_RESULTS_FILENAME + ".json"
     output_filename_csv = str(model_path) + "/" + config.Settings().APP_CONFIG.TRAINING_RESULTS_FILENAME + ".csv"
+
     # Specify the indices where the target outputs are
     # The order is [acutal_0, predicted_0, actual_1, predicted_1, ..., actual_n, predicted_n]
     output_indices = [1, 3, 2, 4]
@@ -1266,14 +1076,15 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
         idx: Keeps track of the training process type.
     """
     DOCKER_INPUT_PATH = config.Settings().APP_CONFIG.DOCKER_INPUT_PATH
+
     # Load all content stored from the config file, if provided
     if len(config_file) > 0:
         # Load the specified config file
         cfg = config.get_config(DOCKER_INPUT_PATH + config_file)
         if random_seed < 0: random_seed = cfg.get(config.Settings().APP_CONFIG.RANDOM_SEED)
         if perform_param_search == "": perform_param_search = cfg.get(config.Settings().APP_CONFIG.PARAM_SEARCH)
+
     # Validate all input files
-    # Validate all inputs
     input_model = PredictModel(input_prefix=DOCKER_INPUT_PATH,
                                preprocessed_data_file=preprocessed_data_file,
                                selected_features_file=selected_features_file,
@@ -1286,6 +1097,7 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
     # If the output path is blank, map to the docker output path
     if len(output_path) < 1:
         output_path = config.Settings().APP_CONFIG.DOCKER_OUTPUT_PATH
+        
     return fit_evaluate(idx, input_model.preprocessed_data_file, input_model.selected_features_file, input_model.selected_model_type, input_model.perform_param_search, output_path, input_model.random_seed, input_model.building_param_files[0], input_model.building_param_files[1], input_model.val_building_params_file, process_type, use_updated_model,
                         use_dropout)
 

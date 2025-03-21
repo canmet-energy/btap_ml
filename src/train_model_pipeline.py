@@ -18,6 +18,7 @@ from models.training_model import TrainingModel
 # Get a log handler
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 # Ensure reproduability when using a GPU
 os.environ["TF_CUDNN_DETERMINISTIC"] = "true"
 os.environ["TF_DETERMINISTIC_OPS"] = "true"
@@ -85,11 +86,14 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
     logger.info("Beginning the training process.")
     DOCKER_INPUT_PATH = config.Settings().APP_CONFIG.DOCKER_INPUT_PATH
     INPUT_CONFIG_FILENAME = "input_config.yml"
+
     # Load the settings
     settings = config.Settings()
-    # Set the perform_param_search parameter to 'no', this is hard-coded since we
-    # want to leave the infrastructure for it in, but remove the ability to use it for now
+
+    # Set the perform_param_search parameter to 'yes' to tune the models.
+    # Otherwise set it to 'no'.
     perform_param_search = 'no'
+
     # Begin by loading the config file, if passed, to overwrite
     # blank argument values
     if len(config_file) > 0:

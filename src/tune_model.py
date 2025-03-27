@@ -1,3 +1,6 @@
+import os
+import time
+import datetime
 from math import sqrt
 from pathlib import Path
 
@@ -51,6 +54,104 @@ def rmse_loss(y_true, y_pred):
 
     return K.sqrt(tf.reduce_mean(K.square(y_pred - y_true)))
 
+def tune_mlp(X_train, y_train, X_test, y_test, col_length, output_nodes, selected_feature, output_path, random_seed, process_type):
+    """
+    DECOMMISIONED: May need updates for multi-outputs
+    Using the set of hyperparameter combined,the model built is used to make predictions.
+
+    Args:
+        X_train: X train set
+        y_train: y train set
+        X_test: X test set
+        y_test: y test set
+        col_length: The number of input nodes
+        output_nodes: The number of output nodes
+        selected_feature: selected features that would be used to build the model
+        output_path: Where the output files should be placed.
+        random_seed: The random seed to be used
+    Returns:
+       Model built from the set of hyperparameters combined.
+    """
+    # Create the output directories if they do not exist
+    parameter_search_path = str(Path(output_path).joinpath("parameter_search"))
+    log_path = str(Path(parameter_search_path).joinpath("btap"))
+
+    config.create_directory(parameter_search_path)
+    config.create_directory(log_path)
+
+    if process_type == 'energy':      
+        BATCH_SIZE = 1024
+    else:
+        BATCH_SIZE = 32
+
+    print(col_length)
+    print(output_nodes)
+
+    stop_early = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=10)
+
+    # Define the d
+    tuner = Hyperband(lambda hp: model_builder(hp, col_length, output_nodes),
+                      objective='val_loss',
+                      max_epochs=100,
+                      overwrite=True,
+                      factor=3,
+                      directory=parameter_search_path,
+                      project_name='btap',
+                      seed=random_seed)
+
+    tuner.search(X_train,
+                 y_train,
+                 epochs=100,
+                 batch_size=BATCH_SIZE,
+                 use_multiprocessing=True,
+                 validation_split=0.10)
+
+    tuner.search_space_summary()
+    
+    # Get the optimal hyperparameters
+    best_hps = tuner.get_best_hyperparameters(num_trials=1)[0]
+
+    print(f"""
+            The optimal hyperparameters are:
+            - Activation function: {best_hps.get('activation')}
+            - Number of layers: {best_hps.get('num_layers')}
+            - Units in each layer: {[best_hps.get(f'units_{i}') for i in range(best_hps.get('num_layers'))]}
+            - Dropout rate: {best_hps.get('dropout_rate')}
+            - Learning rate: {best_hps.get('learning_rate')}
+            - Optimizer: {best_hps.get('optimizer')}
+            """)
+
+    logdir = os.path.join(log_path, datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
+    hist_callback = tf.keras.callbacks.TensorBoard(logdir,
+                                                   histogram_freq=1,
+                                                   embeddings_freq=1,
+                                                   update_freq='epoch',
+                                                   write_graph=True,
+                                                   write_steps_per_second=False
+                                                   )
+
+    # Build the model with the optimal hyperparameters
+    model = tuner.hypermodel.build(best_hps)
+    history = model.fit(X_train,
+                        y_train,
+                        epochs=100,
+                        batch_size=BATCH_SIZE,
+                        validation_split=0.10,
+                        callbacks=[hist_callback],
+                        )
+    pl.shared_learning_curve_plot(history)
+
+    '''
+    val_acc_per_epoch = history.history['mae']
+    best_epoch = val_acc_per_epoch.index(max(val_acc_per_epoch)) + 1
+    print('Best epoch: %d' % (best_epoch,))
+
+    # Re-instantiate the hypermodel and train it with the optimal number of epochs from above.
+    hypermodel = tuner.hypermodel.build(best_hps)
+    hypermodel.fit(X_train, y_train, epochs=best_epoch, validation_split=0.2)
+    '''
+    return model
+
 def model_builder(hp, col_length, output_nodes):
     """
     Builds the MLP model that would be used to search for hyperparameter.
@@ -58,8 +159,8 @@ def model_builder(hp, col_length, output_nodes):
 
     Args:
         hp: hyperband object with different hyperparameters to be checked.
-        col_length: The number of the input nodes
-        output_nodes: The number of the output nodes
+        col_length: The number of input nodes
+        output_nodes: The number of output nodes
     Returns:
         Model will be built based on the different hyperparameter combinations.
     """
@@ -153,8 +254,7 @@ def tune_gradient_boosting(X_train, y_train, output_path):
 
 def tune_rf(X_train, y_train, output_path):
     """
-    Creates a model with defaulted values without need to perform an hyperparameter search at all times.
-    Its initutive to have run the hyperparameter search beforehand to know the hyperparameter value to set.
+    Perform randomized search to tune the random forest models to find the optimal hyperparameter values.
 
     Args:
         X_train: X trainset

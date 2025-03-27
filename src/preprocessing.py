@@ -252,11 +252,12 @@ def process_building_files_batch(directory: str, start_date: str, end_date: str,
                 for weather_key in weather_keys:
                     epw_keys[weather_key] = True
                 # Add a column to track the floor_sq values as needed for the specific file
-                building_df["floor_sq"] = building_df.apply(lambda r: floor_sq[0], axis=1)
+                building_df["floor_sq"] = floor_sq[0]
             else:
                 building_df, _ = process_costing_building_files(directory + '/' + filename, False, False)
             # Update the received outputs include a custom identifier column of the form '<filename>/<row_index>'
-            building_df["Prediction Identifier"] = building_df.apply(lambda r: filename + '/' + str(r.name), axis=1)
+            building_df["Prediction Identifier"] = filename + '/' + building_df.index.astype(str)
+
             # Only create copied rows for the buildings if specified
             if for_energy:
                 # Duplicate each row for every day between the specified start and end dates (ignoring the year)
@@ -313,7 +314,8 @@ def process_hourly_energy(path_elec, path_gas, floor_sq):
     Used to read the hourly energy file(s)
 
     Args:
-        path_elec: file path where the electric hourly energy consumed file is to be read. This is a mandatory parameter and in the case where only one hourly energy output file is provided, the path to this file should be indicated here.
+        path_elec: File path where the electric hourly energy consumed file is to be read.
+                   This is a mandatory parameter and in the case where only one hourly energy output file is provided, the path to this file should be indicated here.
         path_gas: This would be path to the gas output file. This is optional, if there is no gas output file to the loaded, then a value of path_gas ='' should be used
         floor_sq: the square foot of the building
 
@@ -322,12 +324,13 @@ def process_hourly_energy(path_elec, path_gas, floor_sq):
     """
     # Read in the energy file(s)
     energy_df = pd.read_csv(path_elec, low_memory=False)
+
     if path_gas:
         energy_df = pd.concat([energy_df, pd.read_csv(path_gas, low_memory=False)], ignore_index=True)
+
     # Adds all except Electricity:Facility
-    #energy_df.loc[(energy_df['Name'] != "ElectricityNet:Facility") & (energy_df['Name'] != "NaturalGas:Facility"), ['Name']] = "Electricity:Facility"
-    energy_df = energy_df.loc[(energy_df['Name'] == "Electricity:Facility") | (energy_df['Name'] == "NaturalGas:Facility")]
-    #print(energy_df[energy_df['Name'] == "ElectricityNet:Facility" or energy_df['Name'] == 'NaturalGas:Facility'])
+    energy_df = energy_df[energy_df['Name'].isin(["Electricity:Facility", "NaturalGas:Facility"])]
+    
     #energy_df = energy_df[energy_df['Name'] != "Electricity:Facility"].groupby(['datapoint_id']).sum()
     # TODO: REMOVE
     #energy_df = energy_df.agg(lambda x: x / (floor_sq * 1000000))
@@ -338,14 +341,13 @@ def process_hourly_energy(path_elec, path_gas, floor_sq):
     energy_df = energy_df.reset_index(drop=True)
     # Change the dataframe from having all dates as columns to having
     # each current row contain an entry for each date
-    # Note that this takes a long time to process
     energy_df = energy_df.melt(id_vars=['datapoint_id', 'Name'], var_name='Timestamp', value_name='energy')
-    energy_df["date_int"] = energy_df['Timestamp'].apply(lambda r : datetime.strptime(r, '%Y-%m-%d %H:%M'))
+    
     # Since the year is ignored, change the date to an int of the form:
     # <month_number><day_number>
     # where <day_number always has two digits AND <month_number> may only have one
-    energy_df["date_int"] = energy_df["date_int"].apply(lambda r: r.strftime("%m%d"))
-    energy_df["date_int"] = energy_df["date_int"].apply(lambda r: int(r))
+    energy_df["date_int"] = pd.to_datetime(energy_df['Timestamp'], format='%Y-%m-%d %H:%M').dt.strftime("%m%d").astype("int64")
+    
     energy_df = energy_df.groupby(['datapoint_id', 'date_int', 'Name'])['energy'].agg(lambda x: x.sum()).reset_index()
 
     # Merge gas and electricity rows together

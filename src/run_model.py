@@ -214,8 +214,6 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
         # Load the keras model
         if selected_model_type.lower() == config.Settings().APP_CONFIG.MULTILAYER_PERCEPTRON:
             model = keras.models.load_model(input_model.model_file, compile=False)
-        elif selected_model_type.lower() == config.Settings().APP_CONFIG.RANDOM_FOREST:
-            model = joblib.load(input_model.model_file)
         else:
             model = joblib.load(input_model.model_file)
 
@@ -245,10 +243,12 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
         if running_process.lower() == config.Settings().APP_CONFIG.ENERGY:
             logger.info("Preparing output file format for daily Megajoules per square meter.")
             # Convert the int date values into a standard representation, without the year
-            X_ids["Date"] = X_ids["date_int"].apply(lambda r: '0' + str(r) if len(str(r)) == 3 else str(r))
+            X_ids["Date"] = X_ids["date_int"].astype(str).str.zfill(4)
+            
             X_ids["Date"] = pd.to_datetime(X_ids["Date"], format="%m%d")
             # Replace the year with a placeholder value to clearly identify that it is unused
-            X_ids["Date"] = X_ids["Date"].apply(lambda r: r.strftime('%m/%d') + '/YYYY')
+            X_ids["Date"] = X_ids["Date"].dt.strftime('%m/%d') + '/YYYY'
+                        
             X_ids = X_ids.drop('date_int', axis=1)
             logger.info("Preparing aggregated output in Gigajoules per square meter over the specified date range.")
             # From the daily total, generate a total for the entire start-end date in gigajoules
@@ -256,8 +256,9 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
             total_days = len(pd.date_range(TEMP_YEAR + start_date, TEMP_YEAR + end_date))
             # If the averaged energy use is needed, the line below can be used
             # ... = X_aggregated[COL_NAME_DAILY_MEGAJOULES].apply(lambda r: float(r / total_days))
-            X_aggregated[COL_NAME_AGGREGATED_GIGAJOULES_ELEC] = X_aggregated[COL_NAME_DAILY_MEGAJOULES_ELEC].apply(lambda r: float((r*1.0)/1000))
-            X_aggregated[COL_NAME_AGGREGATED_GIGAJOULES_GAS] = X_aggregated[COL_NAME_DAILY_MEGAJOULES_GAS].apply(lambda r: float((r*1.0)/1000))
+            X_aggregated[COL_NAME_AGGREGATED_GIGAJOULES_ELEC] = X_aggregated[COL_NAME_DAILY_MEGAJOULES_ELEC].astype('float64') / 1000.0
+            X_aggregated[COL_NAME_AGGREGATED_GIGAJOULES_GAS] = X_aggregated[COL_NAME_DAILY_MEGAJOULES_GAS].astype('float64') / 1000.0
+                        
             X_aggregated = X_aggregated.drop([COL_NAME_DAILY_MEGAJOULES_ELEC, COL_NAME_DAILY_MEGAJOULES_GAS], axis=1)
         # Merge the processed building data used for training with the preprocessed building data
         if buildings_df is None:

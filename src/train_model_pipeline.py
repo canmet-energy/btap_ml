@@ -7,6 +7,8 @@ import shutil
 from datetime import datetime
 from pathlib import Path
 
+import time
+
 import typer
 
 import config
@@ -169,6 +171,7 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
         output_path = str(output_path)
         # Preprocess the data (generates json with train, test, validate)
         if not skip_file_preprocessing:
+            start_time = time.time()
             input_model.preprocessed_data_file = preprocessing.main(config_file=input_model.config_file,
                                                                     process_type=training_process,
                                                                     hourly_energy_electric_file=input_model.energy_param_files[0],
@@ -185,6 +188,7 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
                                                                     end_date='',
                                                                     ohe_file='',
                                                                     cleaned_columns_file='')
+            print(time.time() - start_time)
         # Perform feature selection (retrieve the features to be used)
         if not skip_feature_selection:
             input_model.selected_features_file = feature_selection.main(input_model.config_file,

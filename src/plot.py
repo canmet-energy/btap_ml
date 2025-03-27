@@ -1,5 +1,5 @@
 '''
-Contains helper functions used to create chart. The plots created are stored in ../output directory.
+Contains helper functions used to create chart. The plots created are stored in ./output directory.
 '''
 
 import numpy as np
@@ -11,7 +11,7 @@ from matplotlib import pyplot as plt
 def show_var(btap_data_df: pd.DataFrame) -> None:
     num_vars = list(btap_data_df.select_dtypes(include=[np.number]).columns.values)
     df_ax = btap_data_df[num_vars].plot(title='numerical values', figsize=(15, 8))
-    plt.savefig('../output/numerical_val_plot.png')
+    plt.savefig('./output/numerical_val_plot.png')
 
 
 '''
@@ -41,7 +41,7 @@ def norm_res_plot(btap_data_df: pd.DataFrame) -> None:
     plt.scatter(norm_res(btap_data_df[":ext_roof_cond"]), total_heating_use, label="roof cond")
     plt.scatter(norm_res(btap_data_df[":fdwr_set"]), total_heating_use, label="w2w ratio")
     plt.legend()
-    plt.savefig('../output/Total_Energy_Scatter.png')
+    plt.savefig('./output/Total_Energy_Scatter.png')
 
 
 def corr_plot(btap_data_df: pd.DataFrame) -> None:
@@ -49,14 +49,14 @@ def corr_plot(btap_data_df: pd.DataFrame) -> None:
     plt.figure(figsize=(20, 20))
     cor = btap_data_df.corr()
     sns.heatmap(cor, annot=True, cmap=plt.cm.Reds)
-    plt.savefig('../output/corr_plot.png')
+    plt.savefig('./output/corr_plot.png')
 
 
 def target_plot(y_train, y_test) -> None:
     plt.figure()
     plt.hist(y_train, label='train')
     plt.hist(y_test, label='test')
-    plt.savefig('../output/daily_energy_train.png')
+    plt.savefig('./output/daily_energy_train.png')
 
 
 def plot_metric(df: pd.DataFrame) -> None:
@@ -73,23 +73,29 @@ def plot_metric(df: pd.DataFrame) -> None:
 
     return
 
-index = 0
-
 plt.style.use('seaborn-darkgrid')
 fig, ax = plt.subplots(2, 1, figsize=(8, 10))
 
-def shared_learning_curve_plot(H) -> None:
-    global index
+def mlp_learning_curve_plot(idx: int, process_type, H) -> None:
+    """
+    Visualize MLP learning curve.
 
-    if index == 0:
+    Args:
+        idx: 
+        H: 
+
+    Returns:
+        None.
+    """
+    if idx == 0:
         ax[0].set_title('MLP', fontsize=16)
         ax[0].plot(H.history["loss"], label="Training dataset", color="coral")
         ax[0].plot(H.history["val_loss"], label="Validation dataset", color="darkolivegreen")
 
         ax[0].tick_params(axis='both', which='major', labelsize=13)
     else:
-        ax[1].plot(H.history["loss"], label="Train", color="coral")
-        ax[1].plot(H.history["val_loss"], label="Validation", color="darkolivegreen")
+        ax[1].plot(H.history["loss"], label="Training dataset", color="coral")
+        ax[1].plot(H.history["val_loss"], label="Validation dataset", color="darkolivegreen")
         ax[1].set_xlabel("Epoch #", color='black', fontsize=14)
 
         ax[1].tick_params(axis='both', which='major', labelsize=13)
@@ -101,9 +107,53 @@ def shared_learning_curve_plot(H) -> None:
     legend = fig.legend(handles, labels, loc='upper center', fontsize='x-large')
     legend.get_frame().set_facecolor('none')
     legend.get_frame().set_edgecolor('none')
-        
-    index += 1
+
+    return
+
+def xgboost_learning_curve_plot(idx: int, train_rmse, val_rmse):
+    """
+    Visualize XGBoost learning curve.
+
+    Args:
+        idx: 
+        train_rmse: The training dataset RMSE values for each sequential tree added.
+        val_rmse: The validation dataset RMSE values for each sequential tree added.
+
+    Returns:
+        None.
+    """
+    if idx == 0:
+        plt.style.use('seaborn-darkgrid')
+        global fig
+        global ax
+
+        fig, ax = plt.subplots(2, 1, figsize=(8, 10))
+
+        ax[0].set_title("XGBoost", fontsize=16)
+        ax[0].plot(train_rmse, label='Training dataset', color="coral")
+        ax[0].plot(val_rmse, label='Validation dataset', color="darkolivegreen")
+        ax[0].set_ylabel("Energy Use Intensity RMSE", color='black', fontsize=14)
+
+        ax[0].tick_params(axis='both', which='major', labelsize=13)
+
+    else:
+        ax[1].plot(train_rmse, label='Training dataset', color="coral")
+        ax[1].plot(val_rmse, label='Validation dataset', color="darkolivegreen")
+        ax[1].set_xlabel("Number of trees", color='black', fontsize=14)
+        ax[1].set_ylabel("Costing RMSE", color='black', fontsize=14)
+
+        ax[1].tick_params(axis='both', which='major', labelsize=13)
+
+        plt.savefig('./output/XGBoost_Learning_Curve.png')
     
+    handles, labels = ax[0].get_legend_handles_labels()
+
+    legend = fig.legend(handles, labels, loc='upper center', fontsize='x-large')
+    legend.get_frame().set_facecolor('none')
+    legend.get_frame().set_edgecolor('none')
+
+    return
+            
 def save_plot(H) -> None:
     # plot the training loss and accuracy
     plt.clf()
@@ -155,7 +205,7 @@ def annual_plot(output_df: pd.DataFrame, desc: str) -> None:
     plt.plot(output_df['Total Energy'], label='actual')
     plt.plot(output_df['y_pred_transformed'], label='pred')
     plt.title("Annual Energy " + desc)
-    plt.savefig('../output/annual_energy_' + desc + '.png')
+    plt.savefig('./output/annual_energy_' + desc + '.png')
 
     return
 
@@ -166,6 +216,6 @@ def daily_plot(output_df, desc):
     plt.plot(output_df['energy'], label='actual')
     plt.plot(output_df['y_pred_transformed'], label='pred')
     plt.title("Daily Energy " + desc)
-    plt.savefig('../output/daily_energy_' + desc + '.png')
+    plt.savefig('./output/daily_energy_' + desc + '.png')
 
     return

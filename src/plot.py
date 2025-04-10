@@ -81,8 +81,8 @@ def mlp_learning_curve_plot(idx: int, process_type, H) -> None:
     Visualize MLP learning curve.
 
     Args:
-        idx: 
-        H: 
+        idx: Identify the iteration number.
+        H: Training and validation results stored in a dictionary.
 
     Returns:
         None.
@@ -115,7 +115,7 @@ def xgboost_learning_curve_plot(idx: int, train_rmse, val_rmse):
     Visualize XGBoost learning curve.
 
     Args:
-        idx: 
+        idx: Identify the iteration number.
         train_rmse: The training dataset RMSE values for each sequential tree added.
         val_rmse: The validation dataset RMSE values for each sequential tree added.
 

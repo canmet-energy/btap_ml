@@ -4,7 +4,7 @@
 # Adding project-specific folders/files to ignore
 output
 testing
-
+input
 
 ### direnv ###
 .direnv

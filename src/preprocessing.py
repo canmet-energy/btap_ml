@@ -330,7 +330,7 @@ def process_hourly_energy(path_elec, path_gas, floor_sq):
 
     # Adds all except Electricity:Facility
     energy_df = energy_df[energy_df['Name'].isin(["Electricity:Facility", "NaturalGas:Facility"])]
-    
+
     #energy_df = energy_df[energy_df['Name'] != "Electricity:Facility"].groupby(['datapoint_id']).sum()
     # TODO: REMOVE
     #energy_df = energy_df.agg(lambda x: x / (floor_sq * 1000000))
@@ -342,12 +342,12 @@ def process_hourly_energy(path_elec, path_gas, floor_sq):
     # Change the dataframe from having all dates as columns to having
     # each current row contain an entry for each date
     energy_df = energy_df.melt(id_vars=['datapoint_id', 'Name'], var_name='Timestamp', value_name='energy')
-    
+
     # Since the year is ignored, change the date to an int of the form:
     # <month_number><day_number>
     # where <day_number always has two digits AND <month_number> may only have one
     energy_df["date_int"] = pd.to_datetime(energy_df['Timestamp'], format='%Y-%m-%d %H:%M').dt.strftime("%m%d").astype("int64")
-    
+
     energy_df = energy_df.groupby(['datapoint_id', 'date_int', 'Name'])['energy'].agg(lambda x: x.sum()).reset_index()
 
     # Merge gas and electricity rows together

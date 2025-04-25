@@ -16,6 +16,8 @@ import pandas as pd
 import tensorflow as tf
 import tensorflow.keras as keras
 
+import shap
+
 import typer
 
 from keras import backend as K
@@ -174,6 +176,7 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
     # Choose the prediction set to work with
     prediction_set = ENERGY_PREDICTIONS
     actual_set = ENERGY_ACTUAL
+    
     if process_type.lower() == config.Settings().APP_CONFIG.COSTING:
         prediction_set = COSTING_PREDICTIONS
         actual_set = COSTING_ACTUAL
@@ -207,6 +210,7 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
     annual_daily_label = DAILY_PREFIX
     if process_type.lower() == config.Settings().APP_CONFIG.COSTING:
         annual_daily_label = ANNUAL_PREFIX
+        
     for actual_label, predicted_label in zip(actual_set, prediction_set):
         # Retrieve the score and store it with the appropriate title for both the test and validation sets
         performance_score = score(y_test[actual_label], y_test[predicted_label + TRANSFORMATION_SUFFIX])
@@ -467,7 +471,7 @@ def create_model_rf(idx, n_estimators, max_depth, min_samples_split, min_samples
         
 def create_model_gradient_boosting(idx, n_estimators, max_depth, learning_rate, subsample, scaling_performance,
                                    X_train, y_train, X_test, y_test, y_test_complete, scalery, X_validate, y_validate, y_validate_complete, modified_y_validate,
-                                   output_path, path_elec, path_gas, val_building_path, process_type):
+                                   selected_features, output_path, path_elec, path_gas, val_building_path, process_type):
     """
     Creates a XGBoost model and graphs the learning curve.
 
@@ -517,6 +521,29 @@ def create_model_gradient_boosting(idx, n_estimators, max_depth, learning_rate, 
               eval_set=[(X_train, y_train),
                         (X_validate, modified_y_validate)],
               verbose=True)
+    
+    # Show Shap Value    
+    X_train_df = pd.DataFrame(X_train, columns=selected_features)
+    
+    print(X_train_df)
+    
+    X_sample = shap.sample(X_train_df, 10, random_state=42)
+        
+    explainer = shap.TreeExplainer(model, data=X_sample)
+    explanation = explainer(X_sample)
+    
+    print(explanation)
+        
+    shap.summary_plot(
+        explanation,
+        X_sample,
+        feature_names=selected_features,
+        plot_type="bar",
+        max_display=12,
+        show=True
+    )
+    
+    plt.savefig("shap_plot.png")
 
     # Visualize performance of the machine learning models
     model_results = model.evals_result()
@@ -653,12 +680,15 @@ def fit_evaluate(idx, preprocessed_data_file, selected_features_file, selected_m
     y_train = pd.read_json(preprocessing_json["y_train"], orient='values').values#.ravel()
     # Remove the total from the loaded json
     y_train = y_train[:, 1:]
-
+    
     # Extract the selected features from feature engineering
     X_train = X_train[selected_features]
     X_test = X_test[selected_features]
     X_validate = X_validate[selected_features]
     col_length = X_train.shape[1]
+    
+    print(X_train)
+    print(selected_features)
 
     json_columns = ['energy', 'datapoint_id', 'Total Energy', 'energy_elec', 'energy_gas']
     if process_type.lower() == config.Settings().APP_CONFIG.COSTING:
@@ -691,7 +721,7 @@ def fit_evaluate(idx, preprocessed_data_file, selected_features_file, selected_m
     X_test = scalerx.transform(X_test)
     X_validate = scalerx.transform(X_validate)
     y_train = scalery.fit_transform(y_train)
-    
+        
     # Define the path where the output files should be placed
     model_path = Path(output_path).joinpath(config.Settings().APP_CONFIG.TRAINING_BUCKET_NAME)
     config.create_directory(str(model_path))
@@ -853,6 +883,7 @@ def fit_evaluate(idx, preprocessed_data_file, selected_features_file, selected_m
                                                    y_validate=y_validate,
                                                    y_validate_complete= y_validate_complete,
                                                    modified_y_validate=modified_y_validate,
+                                                   selected_features=selected_features,
                                                    output_path=output_path,
                                                    path_elec=path_elec,path_gas=path_gas,
                                                    val_building_path=val_building_path,

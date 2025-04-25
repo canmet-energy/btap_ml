@@ -132,8 +132,6 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
     logger.info("Creating output directory %s.", str(output_path_root))
     config.create_directory(str(output_path_root))
 
-
-
     # If the config file is used, copy it into the output folder
     logger.info("Copying config file into %s.", str(output_path_root))
     if len(config_file) > 0:
@@ -143,8 +141,8 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
     for idx, training_process_params in enumerate(TRAINING_PROCESSES):
         training_process = training_process_params[0]
         train_with_updated_model = training_process_params[1]
-        # Validate all input arguments before continuing
-        # Program will output an error if validation fails
+        
+        # Validate all input arguments before continuing. Program will output an error if validation fails
         input_model = TrainingModel(input_prefix=DOCKER_INPUT_PATH,
                                     config_file=config_file,
                                     random_seed=random_seed,
@@ -161,6 +159,7 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
                                     selected_features_file=selected_features_file,
                                     perform_param_search=perform_param_search,
                                     skip_model_training=skip_model_training)
+        
         # Define the output path for the current training process
         output_path = output_path_root.joinpath(training_process)
 
@@ -169,9 +168,9 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
         config.create_directory(str(output_path))
 
         output_path = str(output_path)
+        
         # Preprocess the data (generates json with train, test, validate)
         if not skip_file_preprocessing:
-            start_time = time.time()
             input_model.preprocessed_data_file = preprocessing.main(config_file=input_model.config_file,
                                                                     process_type=training_process,
                                                                     hourly_energy_electric_file=input_model.energy_param_files[0],
@@ -188,7 +187,6 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
                                                                     end_date='',
                                                                     ohe_file='',
                                                                     cleaned_columns_file='')
-            print(time.time() - start_time)
         # Perform feature selection (retrieve the features to be used)
         if not skip_feature_selection:
             input_model.selected_features_file = feature_selection.main(input_model.config_file,
@@ -218,8 +216,7 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
                 os.remove(input_model.preprocessed_data_file)
             except OSError:
                 pass
-    # Provide any additional outputs/plots as needed
-    #...
+
     logger.info("Training process has been completed.")
     return
 

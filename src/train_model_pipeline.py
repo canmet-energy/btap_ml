@@ -140,7 +140,7 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
     for idx, training_process_params in enumerate(TRAINING_PROCESSES):
         training_process = training_process_params[0]
         train_with_updated_model = training_process_params[1]
-        
+
         # Validate all input arguments before continuing. Program will output an error if validation fails
         input_model = TrainingModel(input_prefix=DOCKER_INPUT_PATH,
                                     config_file=config_file,
@@ -158,7 +158,7 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
                                     selected_features_file=selected_features_file,
                                     perform_param_search=perform_param_search,
                                     skip_model_training=skip_model_training)
-        
+
         # Define the output path for the current training process
         output_path = output_path_root.joinpath(training_process)
 
@@ -167,7 +167,7 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
         config.create_directory(str(output_path))
 
         output_path = str(output_path)
-        
+
         # Preprocess the data (generates json with train, test, validate)
         if not skip_file_preprocessing:
             input_model.preprocessed_data_file = preprocessing.main(config_file=input_model.config_file,

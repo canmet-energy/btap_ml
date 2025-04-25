@@ -13,10 +13,9 @@ from pathlib import Path
 import joblib
 import numpy as np
 import pandas as pd
+import shap
 import tensorflow as tf
 import tensorflow.keras as keras
-
-import shap
 import typer
 from keras import backend as K
 from keras.callbacks import EarlyStopping
@@ -172,7 +171,7 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
     # Choose the prediction set to work with
     prediction_set = ENERGY_PREDICTIONS
     actual_set = ENERGY_ACTUAL
-    
+
     if process_type.lower() == config.Settings().APP_CONFIG.COSTING:
         prediction_set = COSTING_PREDICTIONS
         actual_set = COSTING_ACTUAL
@@ -206,7 +205,7 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
     annual_daily_label = DAILY_PREFIX
     if process_type.lower() == config.Settings().APP_CONFIG.COSTING:
         annual_daily_label = ANNUAL_PREFIX
-        
+
     for actual_label, predicted_label in zip(actual_set, prediction_set):
         # Retrieve the score and store it with the appropriate title for both the test and validation sets
         performance_score = score(y_test[actual_label], y_test[predicted_label + TRANSFORMATION_SUFFIX])
@@ -517,19 +516,19 @@ def create_model_gradient_boosting(idx, n_estimators, max_depth, learning_rate, 
               eval_set=[(X_train, y_train),
                         (X_validate, modified_y_validate)],
               verbose=True)
-    
-    # Show Shap Value    
+
+    # Show Shap Value
     X_train_df = pd.DataFrame(X_train, columns=selected_features)
-    
+
     print(X_train_df)
-    
+
     X_sample = shap.sample(X_train_df, 10, random_state=42)
-        
+
     explainer = shap.TreeExplainer(model, data=X_sample)
     explanation = explainer(X_sample)
-    
+
     print(explanation)
-        
+
     shap.summary_plot(
         explanation,
         X_sample,
@@ -538,7 +537,7 @@ def create_model_gradient_boosting(idx, n_estimators, max_depth, learning_rate, 
         max_display=12,
         show=True
     )
-    
+
     plt.savefig("shap_plot.png")
 
     # Visualize performance of the machine learning models
@@ -676,13 +675,13 @@ def fit_evaluate(idx, preprocessed_data_file, selected_features_file, selected_m
     y_train = pd.read_json(preprocessing_json["y_train"], orient='values').values#.ravel()
     # Remove the total from the loaded json
     y_train = y_train[:, 1:]
-    
+
     # Extract the selected features from feature engineering
     X_train = X_train[selected_features]
     X_test = X_test[selected_features]
     X_validate = X_validate[selected_features]
     col_length = X_train.shape[1]
-    
+
     print(X_train)
     print(selected_features)
 

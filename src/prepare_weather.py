@@ -1,13 +1,15 @@
 import logging
 import os
-from pathlib import Path
-import pandas as pd
-import typer
-import yaml
-import config
 import zipfile
 from io import BytesIO
+from pathlib import Path
+
+import pandas as pd
 import requests
+import typer
+import yaml
+
+import config
 
 # Get a log handler
 logging.basicConfig(level=logging.INFO)

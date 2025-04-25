@@ -1,6 +1,6 @@
+import datetime
 import os
 import time
-import datetime
 from math import sqrt
 from pathlib import Path
 
@@ -15,16 +15,16 @@ from keras_tuner import Hyperband
 from matplotlib import pyplot as plt
 from sklearn import metrics
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 from tensorboard.plugins.hparams import api as hp
 from tensorflow.keras import layers
 from xgboost import XGBRegressor
-
-from sklearn.model_selection import RandomizedSearchCV, GridSearchCV
 
 import config
 import plot as pl
 import preprocessing
 from models.predict_model import PredictModel
+
 
 def det_coeff(y_true, y_pred):
     """
@@ -38,7 +38,7 @@ def det_coeff(y_true, y_pred):
     """
     u = K.sum(K.square(y_true - y_pred))
     v = K.sum(K.square(y_true - K.mean(y_true)))
-    
+
     return K.ones_like(v) - (u / v)
 
 def rmse_loss(y_true, y_pred):
@@ -79,7 +79,7 @@ def tune_mlp(X_train, y_train, X_test, y_test, col_length, output_nodes, selecte
     config.create_directory(parameter_search_path)
     config.create_directory(log_path)
 
-    if process_type == 'energy':      
+    if process_type == 'energy':
         BATCH_SIZE = 1024
     else:
         BATCH_SIZE = 32
@@ -107,7 +107,7 @@ def tune_mlp(X_train, y_train, X_test, y_test, col_length, output_nodes, selecte
                  validation_split=0.10)
 
     tuner.search_space_summary()
-    
+
     # Get the optimal hyperparameters
     best_hps = tuner.get_best_hyperparameters(num_trials=1)[0]
 
@@ -246,7 +246,7 @@ def tune_gradient_boosting(X_train, y_train, output_path):
 
     # Output the best hyperparameter values and the CV score
     best_model = grid_search.best_estimator_
-    
+
     print("Best parameters:", grid_search.best_params_)
     print("Best CV score (neg MSE):", grid_search.best_score_)
 

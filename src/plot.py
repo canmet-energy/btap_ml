@@ -145,7 +145,7 @@ def xgboost_learning_curve_plot(idx: int, train_rmse, val_rmse):
         ax[1].tick_params(axis='both', which='major', labelsize=13)
 
         plt.savefig('./output/XGBoost_Learning_Curve.png')
-    
+
     handles, labels = ax[0].get_legend_handles_labels()
 
     legend = fig.legend(handles, labels, loc='upper center', fontsize='x-large')
@@ -153,7 +153,7 @@ def xgboost_learning_curve_plot(idx: int, train_rmse, val_rmse):
     legend.get_frame().set_edgecolor('none')
 
     return
-            
+
 def save_plot(H) -> None:
     # plot the training loss and accuracy
     plt.clf()

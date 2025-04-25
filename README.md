@@ -15,14 +15,14 @@ The Docker image is named juliantemp/btap_ml:latest and is available at [Docker 
 
 Notes:
 - At present, the sphinx version must be changed within requirements.txt and requirements-dev.txt to be version 7.1.2 due to compatibility issues when building the image.
-- The image can be built in either docker or podman with the appropriate build commands:       
-  `docker build -t juliantemp/btap_ml:latest`    
-  OR `podman build -t juliantemp/btap_ml:latest`        
+- The image can be built in either docker or podman with the appropriate build commands:
+  `docker build -t juliantemp/btap_ml:latest`
+  OR `podman build -t juliantemp/btap_ml:latest`
 - Docker Desktop can be used on Windows to easily manage and deploy the updated image.
-- For Podman, the image can be pushed to the docker repository through the following series of commands:          
-  `podman login docker.io`, where the user logs into their docker account              
-  `podman tag localhost/juliantemp/btap_ml docker.io/juliantemp/btap_ml`                   
-  `podman push docker.io/juliantemp/btap_ml`         
+- For Podman, the image can be pushed to the docker repository through the following series of commands:
+  `podman login docker.io`, where the user logs into their docker account
+  `podman tag localhost/juliantemp/btap_ml docker.io/juliantemp/btap_ml`
+  `podman push docker.io/juliantemp/btap_ml`
 
 ## Structure
 - Block Storage Guide.ipynb: sample notebook of how to access minio using s3f3. Note that direct minio use has been decommissioned starting May 6, 2022 and now requires a drive to be mounted before running.

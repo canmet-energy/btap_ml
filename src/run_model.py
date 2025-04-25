@@ -5,6 +5,7 @@ for the specified batch of building files.
 import json
 import logging
 import shutil
+import time
 from datetime import datetime
 from pathlib import Path
 
@@ -16,8 +17,6 @@ from tensorflow import keras
 import config
 import preprocessing
 from models.running_model import RunningModel
-
-import time
 
 # Get a log handler
 logging.basicConfig(level=logging.INFO)
@@ -244,11 +243,11 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
             logger.info("Preparing output file format for daily Megajoules per square meter.")
             # Convert the int date values into a standard representation, without the year
             X_ids["Date"] = X_ids["date_int"].astype(str).str.zfill(4)
-            
+
             X_ids["Date"] = pd.to_datetime(X_ids["Date"], format="%m%d")
             # Replace the year with a placeholder value to clearly identify that it is unused
             X_ids["Date"] = X_ids["Date"].dt.strftime('%m/%d') + '/YYYY'
-                        
+
             X_ids = X_ids.drop('date_int', axis=1)
             logger.info("Preparing aggregated output in Gigajoules per square meter over the specified date range.")
             # From the daily total, generate a total for the entire start-end date in gigajoules
@@ -258,7 +257,7 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
             # ... = X_aggregated[COL_NAME_DAILY_MEGAJOULES].apply(lambda r: float(r / total_days))
             X_aggregated[COL_NAME_AGGREGATED_GIGAJOULES_ELEC] = X_aggregated[COL_NAME_DAILY_MEGAJOULES_ELEC].astype('float64') / 1000.0
             X_aggregated[COL_NAME_AGGREGATED_GIGAJOULES_GAS] = X_aggregated[COL_NAME_DAILY_MEGAJOULES_GAS].astype('float64') / 1000.0
-                        
+
             X_aggregated = X_aggregated.drop([COL_NAME_DAILY_MEGAJOULES_ELEC, COL_NAME_DAILY_MEGAJOULES_GAS], axis=1)
         # Merge the processed building data used for training with the preprocessed building data
         if buildings_df is None:

@@ -4,29 +4,27 @@ for the specified batch of building files.
 """
 import json
 import logging
+import os
 import shutil
 import time
 from datetime import datetime
 from pathlib import Path
 
 import joblib
+import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
+import shap
 import typer
+from lightgbm import LGBMRegressor
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.neural_network import MLPRegressor
 from tensorflow import keras
+from xgboost import XGBRegressor
 
 import config
 import preprocessing
 from models.running_model import RunningModel
-
-import shap
-import numpy as np
-import matplotlib.pyplot as plt
-import os
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.neural_network import MLPRegressor
-from xgboost import XGBRegressor
-from lightgbm import LGBMRegressor
-
 
 # Get a log handler
 logging.basicConfig(level=logging.INFO)
@@ -262,45 +260,45 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
             ':airloop_economizer_type_DifferentialDryBulb': 'Economizer: Differential Dry Bulb',
             ':airloop_economizer_type_DifferentialEnthalpy': 'Economizer: Differential Enthalpy',
             ':airloop_economizer_type_NECB_Default': 'Economizer: NECB Default',
-            
+
             ':boiler_eff_NECB 88%% Efficient Condensing Boiler': 'Boiler: 88%% Efficient Condensing',
             ':boiler_eff_NECB_Default': 'Boiler: NECB Default',
             ':boiler_eff_Viessmann Vitocrossal 300 CT3-17 96.2%% Efficient Condensing Gas Boiler': 'Boiler: Viessmann 96.2%% Efficient',
-            
+
             ':dcv_type_CO2_based_DCV': 'DCV: CO₂-Based',
             ':dcv_type_No_DCV': 'DCV: None',
             ':dcv_type_Occupancy_based_DCV': 'DCV: Occupancy-Based',
-            
+
             ':ecm_system_name_HS08_CCASHP_VRF': 'System: CCASHP + VRF',
             ':ecm_system_name_HS09_CCASHP_Baseboard': 'System: CCASHP + Baseboard',
             ':ecm_system_name_HS11_ASHP_PTHP': 'System: ASHP + PTHP',
             ':ecm_system_name_HS12_ASHP_Baseboard': 'System: ASHP + Baseboard',
             ':ecm_system_name_HS13_ASHP_VRF': 'System: ASHP + VRF',
             ':ecm_system_name_NECB_Default': 'System: NECB Default',
-            
+
             ':erv_package_NECB_Default_All': 'ERV: NECB Default All',
             ':erv_package_Plate-All': 'ERV: Plate All',
             ':erv_package_Plate-Existing': 'ERV: Plate Existing',
             ':erv_package_Rotary-All': 'ERV: Rotary All',
             ':erv_package_Rotary-Existing': 'ERV: Rotary Existing',
-            
+
             ':furnace_eff_NECB 85%% Efficient Condensing Gas Furnace': 'Furnace: 85%% Efficient Condensing',
             ':furnace_eff_NECB_Default': 'Furnace: NECB Default',
-            
+
             ':nv_type_NECB_Default': 'Natural Ventilation: NECB Default',
             ':nv_type_add_nv': 'Natural Ventilation: Additional',
-            
+
             ':shw_eff_NECB_Default': 'SHW: NECB Default',
             ':shw_eff_Natural Gas Direct Vent with Electric Ignition': 'SHW: NG Direct Vent + Elec Ignition',
             ':shw_eff_Natural Gas Power Vent with Electric Ignition': 'SHW: NG Power Vent + Elec Ignition',
-            
+
             ':building_type_MidriseApartment': 'Building Type: Midrise Apartment',
-            
+
             ':primary_heating_fuel_Electricity': 'Primary Heating Fuel: Electricity',
             ':primary_heating_fuel_ElectricityHPElecBackup': 'Primary Heating Fuel: Elec + HP Elec Backup',
             ':primary_heating_fuel_NaturalGas': 'Primary Heating Fuel: Natural Gas',
             ':primary_heating_fuel_NaturalGasHPGasBackup': 'Primary Heating Fuel: NG + HP Gas Backup',
-            
+
             ':ext_roof_cond': 'Exterior Roof Conductance (W/m2.K)',
             ':ext_wall_cond': 'Exterior Wall Conductance (W/m2.K)',
             ':fdwr_set': 'Fenestration and Door-to-Wall Ratio',
@@ -308,12 +306,12 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
             ':fixed_window_cond': 'Fixed Window Conductance (W/m2.K)',
             ':rotation_degrees': 'Rotation (Degrees)',
             ':srr_set': 'Skylight-to-Roof Ratio (SRR)',
-            
+
             'year': 'Year',
             'month': 'Month',
             'day': 'Day',
             'hour': 'Hour',
-            
+
             'drybulb': 'Outdoor Dry Bulb Temp (°C)',
             'dewpoint': 'Dew Point Temp (°C)',
             'relhum': 'Relative Humidity (%)',

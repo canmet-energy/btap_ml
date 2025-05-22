@@ -4,15 +4,23 @@ for the specified batch of building files.
 """
 import json
 import logging
+import os
 import shutil
 import time
 from datetime import datetime
 from pathlib import Path
 
 import joblib
+import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
+import shap
 import typer
+from lightgbm import LGBMRegressor
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.neural_network import MLPRegressor
 from tensorflow import keras
+from xgboost import XGBRegressor
 
 import config
 import preprocessing
@@ -202,7 +210,9 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
             features_json = json.load(feature_selection_file)
         # Load the data into a dataframe, only keeping the required features
         X_df = pd.DataFrame(X, columns=all_features)
+        # X_shap = X_df
         X_df = X_df[features_json["features"]]
+        X_shap = X_df.copy()
         # Load the scalers to be used for scaling the input data and predictions
         scaler_X = joblib.load(input_model.scaler_X_file)
         scaler_y = joblib.load(input_model.scaler_y_file)
@@ -219,6 +229,162 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
         logger.info("Getting the predictions for the input data.")
 
         predictions = scaler_y.inverse_transform(model.predict(X))
+
+        """
+        SHAP Analysis - Start
+        """
+
+        def get_explainer(model, background, model_type=None):
+            if model_type is None:
+                model_type = auto_detect_model_type(model)
+
+            if model_type == "tree":
+                return shap.Explainer(model, background)
+            elif model_type == "mlp":
+                return shap.KernelExplainer(lambda x: model.predict(x), background.to_numpy())
+            else:
+                return shap.KernelExplainer(lambda x: model.predict(x), background.to_numpy())
+
+        def auto_detect_model_type(model):
+            if hasattr(model, "predict_proba"):
+                return "classifier"
+            elif isinstance(model, (RandomForestRegressor, XGBRegressor, LGBMRegressor)):
+                return "tree"
+            elif isinstance(model, MLPRegressor):
+                return "mlp"
+            else:
+                return "kernel"
+
+        def load_feature_rename_dict():
+            return {
+            ':airloop_economizer_type_DifferentialDryBulb': 'Economizer: Differential Dry Bulb',
+            ':airloop_economizer_type_DifferentialEnthalpy': 'Economizer: Differential Enthalpy',
+            ':airloop_economizer_type_NECB_Default': 'Economizer: NECB Default',
+
+            ':boiler_eff_NECB 88%% Efficient Condensing Boiler': 'Boiler: 88%% Efficient Condensing',
+            ':boiler_eff_NECB_Default': 'Boiler: NECB Default',
+            ':boiler_eff_Viessmann Vitocrossal 300 CT3-17 96.2%% Efficient Condensing Gas Boiler': 'Boiler: Viessmann 96.2%% Efficient',
+
+            ':dcv_type_CO2_based_DCV': 'DCV: CO₂-Based',
+            ':dcv_type_No_DCV': 'DCV: None',
+            ':dcv_type_Occupancy_based_DCV': 'DCV: Occupancy-Based',
+
+            ':ecm_system_name_HS08_CCASHP_VRF': 'System: CCASHP + VRF',
+            ':ecm_system_name_HS09_CCASHP_Baseboard': 'System: CCASHP + Baseboard',
+            ':ecm_system_name_HS11_ASHP_PTHP': 'System: ASHP + PTHP',
+            ':ecm_system_name_HS12_ASHP_Baseboard': 'System: ASHP + Baseboard',
+            ':ecm_system_name_HS13_ASHP_VRF': 'System: ASHP + VRF',
+            ':ecm_system_name_NECB_Default': 'System: NECB Default',
+
+            ':erv_package_NECB_Default_All': 'ERV: NECB Default All',
+            ':erv_package_Plate-All': 'ERV: Plate All',
+            ':erv_package_Plate-Existing': 'ERV: Plate Existing',
+            ':erv_package_Rotary-All': 'ERV: Rotary All',
+            ':erv_package_Rotary-Existing': 'ERV: Rotary Existing',
+
+            ':furnace_eff_NECB 85%% Efficient Condensing Gas Furnace': 'Furnace: 85%% Efficient Condensing',
+            ':furnace_eff_NECB_Default': 'Furnace: NECB Default',
+
+            ':nv_type_NECB_Default': 'Natural Ventilation: NECB Default',
+            ':nv_type_add_nv': 'Natural Ventilation: Additional',
+
+            ':shw_eff_NECB_Default': 'SHW: NECB Default',
+            ':shw_eff_Natural Gas Direct Vent with Electric Ignition': 'SHW: NG Direct Vent + Elec Ignition',
+            ':shw_eff_Natural Gas Power Vent with Electric Ignition': 'SHW: NG Power Vent + Elec Ignition',
+
+            ':building_type_MidriseApartment': 'Building Type: Midrise Apartment',
+
+            ':primary_heating_fuel_Electricity': 'Primary Heating Fuel: Electricity',
+            ':primary_heating_fuel_ElectricityHPElecBackup': 'Primary Heating Fuel: Elec + HP Elec Backup',
+            ':primary_heating_fuel_NaturalGas': 'Primary Heating Fuel: Natural Gas',
+            ':primary_heating_fuel_NaturalGasHPGasBackup': 'Primary Heating Fuel: NG + HP Gas Backup',
+
+            ':ext_roof_cond': 'Exterior Roof Conductance (W/m2.K)',
+            ':ext_wall_cond': 'Exterior Wall Conductance (W/m2.K)',
+            ':fdwr_set': 'Fenestration and Door-to-Wall Ratio',
+            ':fixed_wind_solar_trans': 'Fixed Window Solar Transmittance',
+            ':fixed_window_cond': 'Fixed Window Conductance (W/m2.K)',
+            ':rotation_degrees': 'Rotation (Degrees)',
+            ':srr_set': 'Skylight-to-Roof Ratio (SRR)',
+
+            'year': 'Year',
+            'month': 'Month',
+            'day': 'Day',
+            'hour': 'Hour',
+
+            'drybulb': 'Outdoor Dry Bulb Temp (°C)',
+            'dewpoint': 'Dew Point Temp (°C)',
+            'relhum': 'Relative Humidity (%)',
+            'atmos_pressure': 'Atmospheric Pressure (Pa)',
+            'horirsky': 'Horizontal Infrared Radiation from Sky (W/m²)',
+            'dirnorillum': 'Direct Normal Illuminance (lux)',
+            'difhorillum': 'Diffuse Horizontal Illuminance (lux)',
+            'winddir': 'Wind Direction (°)',
+            'windspd': 'Wind Speed (m/s)',
+            'presweathobs': 'Present Weather Observation',
+            'snowdepth': 'Snow Depth (cm)',
+            'liq_precip_depth': 'Liquid Precipitation Depth (mm)'
+        }
+
+        def run_shap_analysis(model, X_df, running_process, output_dir="D:/btap_ml/SHAP"):
+            feature_rename_dict = load_feature_rename_dict()
+            is_energy = running_process.lower() == config.Settings().APP_CONFIG.ENERGY
+            output_type = "energy" if is_energy else "costing"
+            plot_title = "Mean Absolute SHAP Values by Feature (Average Energy)" if is_energy else "Mean Absolute SHAP Values by Feature (Average Costing)"
+
+            os.makedirs(output_dir, exist_ok=True)
+            X_shap = X_df.copy()
+            feature_names = X_shap.columns.tolist()
+            background = shap.utils.sample(X_shap, 20, random_state=42)
+
+            explainer = get_explainer(model, background)
+            shap_values = explainer(X_shap.to_numpy())
+            joblib.dump(shap_values, f"shap_values_{output_type}_avg.pkl")
+
+            if len(shap_values.values.shape) != 3:
+                raise ValueError("Expected multi-output SHAP values (3D array).")
+
+            avg_shap_values = shap_values.values.mean(axis=2)
+            avg_base_values = shap_values.base_values.mean(axis=1)
+
+            avg_shap_explanation = shap.Explanation(
+                values=avg_shap_values,
+                base_values=avg_base_values,
+                data=shap_values.data,
+                feature_names=feature_names
+            )
+
+            renamed_feature_names = [feature_rename_dict.get(name, name) for name in feature_names]
+
+            # SHAP summary plot
+            shap.summary_plot(avg_shap_explanation, X_shap, feature_names=renamed_feature_names, show=False)
+            summary_path = os.path.join(output_dir, f"shap_summary_plot_{output_type}_avg.png")
+            plt.savefig(summary_path, dpi=300, bbox_inches='tight')
+            plt.close()
+
+            shap_values_df = pd.DataFrame(avg_shap_explanation.values, columns=renamed_feature_names)
+            mean_abs_shap = shap_values_df.abs().mean().sort_values(ascending=False).head(20)
+            plt.figure(figsize=(6, 0.3 * len(mean_abs_shap)))
+            ax = mean_abs_shap.plot(kind='barh', color='royalblue', edgecolor='black')
+            ax.set_yticklabels(ax.get_yticklabels(), fontsize=12)
+            ax.set_xlabel("Mean |SHAP value|", fontsize=14)
+            ax.set_ylabel("Feature", fontsize=14)
+            plt.title(plot_title, fontsize=14)
+            plt.grid(axis='x', linestyle='--', alpha=0.7)
+            bar_chart_path = os.path.join(output_dir, f"shap_feature_importance_bar_chart_{output_type}_avg.png")
+            plt.savefig(bar_chart_path, dpi=300, bbox_inches='tight')
+            plt.close()
+
+            print(f"SHAP summary saved: {summary_path}")
+            print(f"SHAP bar chart saved: {bar_chart_path}")
+
+        run_shap_analysis(model, X_df, running_process)
+
+
+        """
+        SHAP Analysis - End
+        """
+
 
         if running_process.lower() == config.Settings().APP_CONFIG.ENERGY:
             X_ids[COL_NAME_DAILY_MEGAJOULES_ELEC] = [elem[0] for elem in predictions]

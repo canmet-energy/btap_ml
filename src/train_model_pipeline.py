@@ -4,6 +4,7 @@ Given all data files, preprocess the data and train an energy model and a costin
 import logging
 import os
 import shutil
+import time
 from datetime import datetime
 from pathlib import Path
 
@@ -18,6 +19,7 @@ from models.training_model import TrainingModel
 # Get a log handler
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 # Ensure reproduability when using a GPU
 os.environ["TF_CUDNN_DETERMINISTIC"] = "true"
 os.environ["TF_DETERMINISTIC_OPS"] = "true"
@@ -85,11 +87,14 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
     logger.info("Beginning the training process.")
     DOCKER_INPUT_PATH = config.Settings().APP_CONFIG.DOCKER_INPUT_PATH
     INPUT_CONFIG_FILENAME = "input_config.yml"
+
     # Load the settings
     settings = config.Settings()
-    # Set the perform_param_search parameter to 'no', this is hard-coded since we
-    # want to leave the infrastructure for it in, but remove the ability to use it for now
+
+    # Set the perform_param_search parameter to 'yes' to tune the models.
+    # Otherwise set it to 'no'.
     perform_param_search = 'no'
+
     # Begin by loading the config file, if passed, to overwrite
     # blank argument values
     if len(config_file) > 0:
@@ -126,19 +131,17 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
     logger.info("Creating output directory %s.", str(output_path_root))
     config.create_directory(str(output_path_root))
 
-
-
     # If the config file is used, copy it into the output folder
     logger.info("Copying config file into %s.", str(output_path_root))
     if len(config_file) > 0:
         shutil.copy(DOCKER_INPUT_PATH + config_file, str(output_path_root.joinpath(INPUT_CONFIG_FILENAME)))
 
     # Perform all specified training processes
-    for training_process_params in TRAINING_PROCESSES:
+    for idx, training_process_params in enumerate(TRAINING_PROCESSES):
         training_process = training_process_params[0]
         train_with_updated_model = training_process_params[1]
-        # Validate all input arguments before continuing
-        # Program will output an error if validation fails
+
+        # Validate all input arguments before continuing. Program will output an error if validation fails
         input_model = TrainingModel(input_prefix=DOCKER_INPUT_PATH,
                                     config_file=config_file,
                                     random_seed=random_seed,
@@ -155,6 +158,7 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
                                     selected_features_file=selected_features_file,
                                     perform_param_search=perform_param_search,
                                     skip_model_training=skip_model_training)
+
         # Define the output path for the current training process
         output_path = output_path_root.joinpath(training_process)
 
@@ -163,6 +167,7 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
         config.create_directory(str(output_path))
 
         output_path = str(output_path)
+
         # Preprocess the data (generates json with train, test, validate)
         if not skip_file_preprocessing:
             input_model.preprocessed_data_file = preprocessing.main(config_file=input_model.config_file,
@@ -201,7 +206,8 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
                                                      input_model.building_param_files[1],
                                                      input_model.val_building_params_file,
                                                      train_with_updated_model,
-                                                     use_dropout)
+                                                     use_dropout,
+                                                     idx)
 
         # If requested, delete the preprocessing file after completion
         if delete_preprocessing_file:
@@ -209,8 +215,7 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
                 os.remove(input_model.preprocessed_data_file)
             except OSError:
                 pass
-    # Provide any additional outputs/plots as needed
-    #...
+
     logger.info("Training process has been completed.")
     return
 

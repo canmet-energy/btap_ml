@@ -13,11 +13,11 @@ from pathlib import Path
 import joblib
 import numpy as np
 import pandas as pd
+import shap
 import tensorflow as tf
 import tensorflow.keras as keras
 import typer
 from keras import backend as K
-from keras import regularizers  # for l2 regularization
 from keras.callbacks import EarlyStopping
 from keras.layers.core import Dense, Dropout, Flatten
 from keras.models import Sequential
@@ -25,16 +25,17 @@ from keras_tuner import Hyperband
 from matplotlib import pyplot as plt
 from sklearn import metrics
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.preprocessing import (MaxAbsScaler, MinMaxScaler, Normalizer,
-                                   PowerTransformer, QuantileTransformer,
-                                   RobustScaler, StandardScaler, minmax_scale)
+from sklearn.preprocessing import StandardScaler
 from tensorboard.plugins.hparams import api as hp
 from tensorflow.keras import layers
+from xgboost import XGBRegressor
 
 import config
 import plot as pl
 import preprocessing
 from models.predict_model import PredictModel
+from tune_model import (det_coeff, rmse_loss, tune_gradient_boosting, tune_mlp,
+                        tune_rf)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -59,150 +60,6 @@ def score(y_test, y_pred):
               "mape": mape}
     return scores
 
-
-def rmse_loss(y_true, y_pred):
-    """
-    A customized rmse score that takes a sum of y_pred and y_test before computing the rmse score
-
-    Args:
-        y_true: y testset
-        y_pred: y predicted value from the model
-    Returns:
-       rmse loss from comparing the y_test and y_pred values
-    """
-    sum_pred = K.sum(y_pred, axis=-1)
-    sum_true = K.sum(y_true, axis=-1)
-    loss = K.sqrt(K.mean(K.square(sum_pred - sum_true)))
-
-    return loss
-
-
-def model_builder(hp):
-    """
-    Builds the model that would be used to search for hyperparameter.
-    The hyperparameters search inclues activation, regularizers, dropout_rate, learning_rate, and optimizer
-
-    Args:
-        hp: hyperband object with different hyperparameters to be checked.
-    Returns:
-       model will be built based on the different hyperparameter combinations.
-    """
-    model = keras.Sequential()
-    model.add(keras.layers.Flatten())
-
-    hp_activation= hp.Choice('activation', values=['relu','tanh','sigmoid'])
-    for i in range(hp.Int("num_layers", 1, 1)):
-        model.add(layers.Dense(
-            units=hp.Int("units_" + str(i), min_value=8, max_value=96, step=8),
-            activation=hp_activation,
-            input_shape=(36, ),
-            kernel_initializer='normal',
-            kernel_regularizer=regularizers.l1_l2(l1=1e-5, l2=1e-5),
-            bias_regularizer=regularizers.l2(1e-4),
-            activity_regularizer=regularizers.l2(1e-5)
-            ))
-        model.add(Dropout(hp.Choice('dropout_rate', values=[0.1, 0.2, 0.3])))
-    model.add(Dense(1, activation='linear'))
-
-    hp_learning_rate = hp.Choice('learning_rate', values=[1e-3, 1e-4, 1e-5])
-    hp_optimizer = hp.Choice('optimizer', values=['rmsprop', 'adam', 'sgd'])
-
-    if hp_optimizer == "adam":
-        optimizer = tf.optimizers.Adam(learning_rate=hp_learning_rate)
-    elif hp_optimizer == "sgd":
-        optimizer = tf.optimizers.SGD(learning_rate=hp_learning_rate)
-    else:
-        optimizer = tf.optimizers.RMSprop(learning_rate=hp_learning_rate)
-
-    # Comiple the mode with the optimizer and learninf rate specified in hparams
-    model.compile(optimizer=optimizer,
-                  loss=rmse_loss,
-                  metrics=['mae', 'mse','mape'])
-
-    return model
-
-
-def predicts_hp(X_train, y_train, X_test, y_test, selected_feature, output_path, random_seed):
-    """
-    DECOMMISIONED: May need updates for multi-outputs
-    Using the set of hyperparameter combined,the model built is used to make predictions.
-
-    Args:
-        X_train: X train set
-        y_train: y train set
-        X_test: X test set
-        y_test: y test set
-        selected_feature: selected features that would be used to build the model
-        output_path: Where the output files should be placed.
-        random_seed: The random seed to be used
-    Returns:
-       Model built from the set of hyperparameters combined.
-    """
-    parameter_search_path = str(Path(output_path).joinpath("parameter_search"))
-    log_path = str(Path(parameter_search_path).joinpath("btap"))
-    # Create the output directories if they do not exist
-    config.create_directory(parameter_search_path)
-    config.create_directory(log_path)
-
-    tuner = Hyperband(model_builder,
-                      objective='val_loss',
-                      max_epochs=50,
-                      overwrite=True,
-                      factor=3,
-                      directory=parameter_search_path,
-                      project_name='btap',
-                      seed=random_seed)
-
-    stop_early = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=5)
-    tuner.search(X_train,
-                 y_train,
-                 epochs=100,
-                 batch_size=365,
-                 callbacks=[stop_early],
-                 use_multiprocessing=True,
-                 validation_split=0.2)
-
-    tuner.search_space_summary()
-    # Get the optimal hyperparameters
-    best_hps = tuner.get_best_hyperparameters(num_trials=1)[0]
-
-    print(f"""
-    The hyperparameter search is complete. The optimal number of units in the first densely-connected
-    layer is {best_hps.get('units_0')} and the optimal learning rate for the optimizer
-    is {best_hps.get('learning_rate')}.
-    """)
-    result = best_hps
-
-    logdir = os.path.join(log_path, datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
-    hist_callback = tf.keras.callbacks.TensorBoard(logdir,
-                                                   histogram_freq=1,
-                                                   embeddings_freq=1,
-                                                   update_freq='epoch',
-                                                   write_graph=True,
-                                                   write_steps_per_second=False
-                                                   )
-
-    # Build the model with the optimal hyperparameters
-    model = tuner.hypermodel.build(best_hps)
-    history = model.fit(X_train,
-                        y_train,
-                        epochs=50,
-                        batch_size=365,
-                        validation_split=0.2,
-                        callbacks=[stop_early, hist_callback],
-                        )
-    pl.save_plot(history)
-
-    val_acc_per_epoch = history.history['mae']
-    best_epoch = val_acc_per_epoch.index(max(val_acc_per_epoch)) + 1
-    print('Best epoch: %d' % (best_epoch,))
-
-    # Re-instantiate the hypermodel and train it with the optimal number of epochs from above.
-    hypermodel = tuner.hypermodel.build(best_hps)
-    hypermodel.fit(X_train, y_train, epochs=best_epoch, validation_split=0.2)
-
-    return hypermodel
-
 def convert_dataframe_to_annual(df):
     """
     Converts a dataframe of daily predictions into one with annual predictions (energy only).
@@ -214,11 +71,13 @@ def convert_dataframe_to_annual(df):
     """
     # Sum the daily values
     updated_df = df.groupby(['datapoint_id']).sum()
+
     # Scale the values to GigaJoules per meter squared
     updated_df['energy_elec'] = updated_df['energy_elec'].apply(lambda r : float((r*1.0)/1000))
     updated_df['energy_gas'] = updated_df['energy_gas'].apply(lambda r : float((r*1.0)/1000))
     updated_df['y_pred_elec_transformed'] = updated_df['y_pred_elec_transformed'].apply(lambda r : float((r*1.0)/1000))
     updated_df['y_pred_gas_transformed'] = updated_df['y_pred_gas_transformed'].apply(lambda r : float((r*1.0)/1000))
+
     return updated_df
 
 def compute_building_weather_errors(df, actual_label, prediction_label):
@@ -230,6 +89,7 @@ def compute_building_weather_errors(df, actual_label, prediction_label):
         df: The dataframe being manipulated.
         actual_label: The string used to describe the class being predicted (i.e. electricity, gas, ...).
         prediction_label: The string used to describe the prediction which a model outputs (i.e. predicted_electricity, ...).
+
     Returns:
         df: The updated dataframe.
         building_errors: The errors for each building type.
@@ -275,6 +135,7 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
     """
     test_predictions = model.predict(X_test)
     validate_predictions = model.predict(X_validate)
+
     ENERGY_PREDICTIONS = [
         'y_pred_elec',
         'y_pred_gas'
@@ -310,6 +171,7 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
     # Choose the prediction set to work with
     prediction_set = ENERGY_PREDICTIONS
     actual_set = ENERGY_ACTUAL
+
     if process_type.lower() == config.Settings().APP_CONFIG.COSTING:
         prediction_set = COSTING_PREDICTIONS
         actual_set = COSTING_ACTUAL
@@ -330,10 +192,20 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
 
     # Track each score within a dictionary
     test_val_scores = {}
+
+    costing_test_actual = 0
+    costing_test_predicted = 0
+    energy_test_actual = 0
+    energy_test_predicted = 0
+
+    energy_rmse = 0
+    costing_rmse = 0
+
     # Loop through all outputs and track how well the model does at predicting them for daily predictions or costing annual prediction
     annual_daily_label = DAILY_PREFIX
     if process_type.lower() == config.Settings().APP_CONFIG.COSTING:
         annual_daily_label = ANNUAL_PREFIX
+
     for actual_label, predicted_label in zip(actual_set, prediction_set):
         # Retrieve the score and store it with the appropriate title for both the test and validation sets
         performance_score = score(y_test[actual_label], y_test[predicted_label + TRANSFORMATION_SUFFIX])
@@ -343,6 +215,11 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
         performance_score = score(y_validate[actual_label], y_validate[predicted_label + TRANSFORMATION_SUFFIX])
         print("[" + actual_label, VAL_PREFIX + "score loss, test mae, test mse]:", performance_score)
         test_val_scores[VAL_PREFIX + annual_daily_label + actual_label] = performance_score
+
+        costing_test_actual += y_test[actual_label]
+        costing_test_predicted += y_test[predicted_label + TRANSFORMATION_SUFFIX]
+
+    costing_rmse = metrics.mean_squared_error(costing_test_actual, costing_test_predicted, squared=False)
 
     # Get the energy annual predictions
     # TODO: Up until final triple quote, fit within new metric trackiign and refactor
@@ -365,6 +242,11 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
             performance_score = score(y_validate[actual_label], y_validate[predicted_label + TRANSFORMATION_SUFFIX])
             print("[" + actual_label, VAL_PREFIX + "score loss, test mae, test mse]:", performance_score)
             test_val_scores[VAL_PREFIX + ANNUAL_PREFIX + actual_label] = performance_score
+
+            energy_test_actual += y_test[actual_label]
+            energy_test_predicted += y_test[predicted_label + TRANSFORMATION_SUFFIX]
+
+        energy_rmse = metrics.mean_squared_error(energy_test_actual, energy_test_predicted, squared=False)
 
     # Maintain original implemented notation by using two new variable names
     output_df = y_test
@@ -416,11 +298,13 @@ def evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_comp
             **building_weather_errors
             }
 
-    return results
+    return results, energy_rmse, costing_rmse
 
 
-def create_model_mlp(dense_layers, activation, optimizer, dropout_rate, length, learning_rate, epochs, batch_size, X_train, y_train, X_test, y_test, y_test_complete, scalery,
-                 X_validate, y_validate, y_validate_complete, output_path, path_elec, path_gas, val_building_path, process_type, output_nodes):
+def create_model_mlp(idx, dense_layers, activation, optimizer, dropout_rate, length, learning_rate, epochs,
+                     batch_size, scaling_performance, X_train, y_train, X_test, y_test, y_test_complete,
+                     scalery, X_validate, y_validate, y_validate_complete, output_path, path_elec, path_gas,
+                     val_building_path, process_type, output_nodes):
     """
     Creates a MLP model with defaulted values without need to perform an hyperparameter search at all times.
     Its initutive to have run the hyperparameter search beforehand to know the hyperparameter value to set.
@@ -470,9 +354,6 @@ def create_model_mlp(dense_layers, activation, optimizer, dropout_rate, length, 
         model.add(Dense(lsize, input_shape=(length,),
                         activation=activation, kernel_initializer='normal',
                         # kernel_regularizer=regularizers.l1(1e-5),
-                        kernel_regularizer=regularizers.l1_l2(l1=1e-2, l2=1e-2),
-                        bias_regularizer=regularizers.l2(1e-2),
-                        activity_regularizer=regularizers.l2(1e-2)
                         ))
         if dropout_rate > 0 and dropout_rate <= 1:
             model.add(Dropout(dropout_rate))
@@ -488,35 +369,43 @@ def create_model_mlp(dense_layers, activation, optimizer, dropout_rate, length, 
     # Comiple the mode with the optimizer and learninf rate specified in hparams
     model.compile(optimizer=optimizer,
                   loss=rmse_loss,
-                  metrics=['mae', 'mse', 'mape'])
+                  metrics=['mae', 'mse', 'mape', det_coeff])
     # Define callback
-    early_stopping = EarlyStopping(monitor='loss', patience=5)
+    early_stopping = EarlyStopping(monitor='val_loss', patience=10)
     logdir = os.path.join(btap_log_path, datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
     hist_callback = tf.keras.callbacks.TensorBoard(logdir, histogram_freq=1)
     logger = keras.callbacks.CSVLogger(output_path + '/metric.csv', append=True)
     output_df = ''
+
+    # See how the model performs based on the training dataset size.
+    isMLP = True
+    if scaling_performance == True:
+        test_scaling(model, isMLP, epochs, batch_size, X_train, y_train, X_test, y_test, scalery,
+                     X_validate, y_validate, y_test_complete, y_validate_complete,
+                     path_elec, path_gas, val_building_path, process_type)
+
     # prepare the model with target scaling
     scores_metric = ''
     history = model.fit(X_train,
                         y_train,
-                        callbacks=[logger,
-                                   early_stopping,
+                        callbacks=[
+                                   logger,
                                    hist_callback,
                                    ],
                         epochs=epochs,
-                        #batch_size=batch_size,
+                        batch_size=batch_size,
                         verbose=1,
                         #shuffle=False,
-                        validation_split=0.2)
+                        validation_split=0.10)
 
+    pl.mlp_learning_curve_plot(idx, process_type, history)
     print(model.summary())
-    plt.ylabel('loss')
 
-    result = evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
+    return model
 
-    return result, model
-
-def create_model_rf(n_estimators, max_depth, min_samples_split, min_samples_leaf, X_train, y_train, X_test, y_test, y_test_complete, scalery, X_validate, y_validate, y_validate_complete, output_path, path_elec, path_gas, val_building_path, process_type, output_nodes):
+def create_model_rf(idx, n_estimators, max_depth, min_samples_split, min_samples_leaf, scaling_performance,
+                    X_train, y_train, X_test, y_test, y_test_complete, scalery, X_validate, y_validate,
+                    y_validate_complete, output_path, path_elec, path_gas, val_building_path, process_type):
     """
     Creates a model with defaulted values without need to perform an hyperparameter search at all times.
     Its initutive to have run the hyperparameter search beforehand to know the hyperparameter value to set.
@@ -551,6 +440,7 @@ def create_model_rf(n_estimators, max_depth, min_samples_split, min_samples_leaf
     """
     parameter_search_path = str(Path(output_path).joinpath("parameter_search"))
     btap_log_path = str(Path(parameter_search_path).joinpath("btap"))
+
     # Create the output directories if they do not exist
     config.create_directory(parameter_search_path)
     config.create_directory(btap_log_path)
@@ -560,22 +450,196 @@ def create_model_rf(n_estimators, max_depth, min_samples_split, min_samples_leaf
                                   min_samples_split=min_samples_split,
                                   min_samples_leaf=min_samples_leaf,
                                   random_state=42,
+                                  n_jobs = -1,
                                   verbose = 1)
+
+    # See how the model performs based on the training dataset size.
+    if scaling_performance == True:
+        test_scaling(model, X_train, y_train, X_test, y_test, scalery,
+                     X_validate, y_validate, y_test_complete, y_validate_complete,
+                     path_elec, path_gas, val_building_path, process_type)
+
     # Train the model
     model.fit(X_train, y_train)
 
-    result = evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
+    return model
 
-    return result, model
+def create_model_gradient_boosting(idx, n_estimators, max_depth, learning_rate, subsample, scaling_performance,
+                                   X_train, y_train, X_test, y_test, y_test_complete, scalery, X_validate, y_validate, y_validate_complete, modified_y_validate,
+                                   selected_features, output_path, path_elec, path_gas, val_building_path, process_type):
+    """
+    Creates a XGBoost model and graphs the learning curve.
 
-def fit_evaluate(preprocessed_data_file, selected_features_file, selected_model_type, param_search, output_path, random_seed, path_elec, path_gas, val_building_path, process_type, use_updated_model, use_dropout):
+    Args:
+        n_estimators: the number of trees in the random forest
+        max_depth: the maximum depth of the tree.
+        min_samples_split: The minimum number of samples required to split an internal node:
+        min_samples_leaf: The minimum number of samples required to be at a leaf node.
+        X_train: X trainset
+        y_train: y trainset
+        X_test: X testset
+        y_test: y testset
+        y_test_complete: dataframe containing the target variable with corresponding datapointid for the test set
+        scalery: y scaler used to transform the y values to the original scale
+        X_validate: X validation set
+        y_validate: y validation set
+        y_validate_complete: dataframe containing the target variable with corresponding datapointid for the validation set
+        output_path: Where the outputs will be placed
+        path_elec: Filepath of the electricity building file which has been used
+        path_gas: Filepath of the gas building file, if it has been used (pass nothing otherwise)
+        val_building_path: Filepath of the validation building file, if it has been used (pass nothing otherwise).
+        process_type: Either 'energy' or 'costing' to specify the operations to be performed.
+        output_nodes: The number of outputs which the model needs to predict.
+    Returns:
+        XGBoost model.
+
+    Note:
+        There's an option to test how the model performs based on the training dataset size.
+        To see how this performs you need to set "scaling_performance" to True.
+    """
+    # Create the output directories if they do not exist
+    parameter_search_path = str(Path(output_path).joinpath("parameter_search"))
+    btap_log_path = str(Path(parameter_search_path).joinpath("btap"))
+
+    config.create_directory(parameter_search_path)
+    config.create_directory(btap_log_path)
+
+    model = XGBRegressor(n_estimators=n_estimators,
+                         max_depth=max_depth,
+                         learning_rate=learning_rate,
+                         subsample=subsample,
+                         random_state=42,
+                         n_jobs=-1)
+
+    model.fit(X_train,
+              y_train,
+              eval_set=[(X_train, y_train),
+                        (X_validate, modified_y_validate)],
+              verbose=True)
+
+    # Show Shap Value
+    X_train_df = pd.DataFrame(X_train, columns=selected_features)
+
+    print(X_train_df)
+
+    X_sample = shap.sample(X_train_df, 10, random_state=42)
+
+    explainer = shap.TreeExplainer(model, data=X_sample)
+    explanation = explainer(X_sample)
+
+    print(explanation)
+
+    shap.summary_plot(
+        explanation,
+        X_sample,
+        feature_names=selected_features,
+        plot_type="bar",
+        max_display=12,
+        show=True
+    )
+
+    plt.savefig("shap_plot.png")
+
+    # Visualize performance of the machine learning models
+    model_results = model.evals_result()
+
+    train_rmse = model_results["validation_0"]["rmse"]
+    val_rmse = model_results["validation_1"]["rmse"]
+
+    pl.xgboost_learning_curve_plot(idx, train_rmse, val_rmse)
+
+    # See how the model performs based on the training dataset size.
+    if scaling_performance == True:
+        test_scaling(model, X_train, y_train, X_test, y_test, scalery,
+                     X_validate, y_validate, y_test_complete, y_validate_complete,
+                     path_elec, path_gas, val_building_path, process_type)
+
+    return model
+
+def test_scaling(model, isMLP, epochs, batch_size, X_train, y_train, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type):
+    time_array = []
+    energy_result_array = []
+    costing_result_array = []
+
+    X_train_full = X_train.copy()
+    y_train_full = y_train.copy()
+
+    print(X_train_full.shape)
+    print(y_train_full.shape)
+
+    training_size = np.array([500, 1000, 2000, 3000, 4000])
+
+    # Energy dataset is based on daily data and not yearly data. Costing dataset is based on yearly data.
+    if process_type == 'energy':
+        training_size = training_size * 365
+
+    print(training_size)
+
+    for index, amount in enumerate(training_size):
+        idx = np.random.choice(X_train.shape[0], size=amount, replace=False)
+
+        X_train_subset = X_train_full[idx, :]
+        y_train_subset = y_train_full[idx, :]
+
+        current_time = time.time()
+
+        if isMLP == True:
+            print(batch_size)
+            model.fit(X_train_subset,
+                      y_train_subset,
+                      epochs=epochs,
+                      batch_size=batch_size,
+                      verbose=1,
+                      #shuffle=False,
+                      validation_split=0.10)
+        else:
+            model.fit(X_train_subset, y_train_subset)
+
+        time_taken = ((time.time() - current_time) / 60)
+        time_array.append(time_taken)
+
+        result, energy_rmse, costing_rmse = evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
+
+        energy_result_array.append(energy_rmse)
+        costing_result_array.append(costing_rmse)
+
+    print(energy_result_array)
+    print(costing_result_array)
+    print(time_array)
+
+    if process_type.lower() == config.Settings().APP_CONFIG.ENERGY:
+        global fig
+        global ax
+
+        fig, ax = plt.subplots(2, 2, figsize=(10,5))
+
+        ax[0, 0].set_title('Energy')
+
+        ax[0, 0].plot(training_size/365, energy_result_array, color='darkcyan')
+        ax[1, 0].plot(training_size/365, time_array, color='yellowgreen')
+
+        ax[0, 0].set_ylabel("RMSE", color='black')
+        ax[1, 0].set_ylabel("Time (minutes)", color='black')
+
+    else:
+        ax[0, 1].set_title('Costing')
+
+        ax[0, 1].plot(training_size, costing_result_array, color='darkcyan')
+        ax[1, 1].plot(training_size, time_array, color='yellowgreen')
+
+        ax[1, 0].set_xlabel("Training size", color='black')
+        ax[1, 1].set_xlabel("Training size", color='black')
+
+    plt.savefig('./output/training_size.png')
+
+def fit_evaluate(idx, preprocessed_data_file, selected_features_file, selected_model_type, param_search, output_path, random_seed, path_elec, path_gas, val_building_path, process_type, use_updated_model, use_dropout):
     """
     Loads the output from preprocessing and feature selection, builds the model, then evaluates the model.
 
     Args:
         preprocessed_data_file: Location and name of a .json preprocessing file to be used.
         selected_features_file: Location and name of a .json feature selection file to be used.
-        selected_model_type: the type of model to be used. Can either be 'mlp' or 'rf'
+        selected_model_type: the type of model to be used. Can either be 'mlp', 'rf', or 'gb'
         param_search: 'yes' if hyperparameter tuning should be performed (increases runtime), 'no' if the default hyperparameters should be used.
         output_path: Where output data should be placed. Note that this value should be empty unless this file is called from a pipeline.
         random_seed: Random seed to be used when training. Should not be -1 when used through the CLI.
@@ -618,6 +682,9 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, selected_model_
     X_validate = X_validate[selected_features]
     col_length = X_train.shape[1]
 
+    print(X_train)
+    print(selected_features)
+
     json_columns = ['energy', 'datapoint_id', 'Total Energy', 'energy_elec', 'energy_gas']
     if process_type.lower() == config.Settings().APP_CONFIG.COSTING:
         json_columns = ['cost_equipment_total_cost_per_m_sq',
@@ -633,6 +700,8 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, selected_model_
     y_validate_complete = pd.DataFrame(preprocessing_json["y_validate_complete"], columns=json_columns)
     # Remove "Total Energy" from json_columns if the energy predictions are being performed
     output_nodes = len(y_train[0])
+    print("Output nodes: " + str(output_nodes))
+    print("Input shape: " + str(col_length))
     if process_type.lower() == config.Settings().APP_CONFIG.ENERGY:
         #json_columns = json_columns[:-1]
         json_columns.remove('Total Energy')
@@ -653,21 +722,56 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, selected_model_
     config.create_directory(str(model_path))
 
     # If set to "yes", search for best hyperparameters before training
-    # "YES" HAS BEEN DECOMMISSIONED AS OF THE RELEASE OF TASKS 5/6 OF PHASE 3
     if param_search.lower() == "yes":
-        hypermodel = predicts_hp(X_train, y_train, X_test, y_test, features, output_path, random_seed)
-        results_pred = evaluate(hypermodel, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete, path_elec, path_gas, val_building_path, process_type)
-    # Otherwise use a default model design and train with that model
-    else:
         if selected_model_type.lower() == 'mlp':
-            # Default parameters for the MLP used
-            DROPOUT_RATE = 0.1
-            LEARNING_RATE = 0.0001
-            EPOCHS = 100
-            BATCH_SIZE = 90
-            NUMBER_OF_NODES = 5000
-            ACTIVATION = 'selu'
-            OPTIMIZER = 'adam'
+            model = tune_mlp(X_train,
+                             y_train,
+                             X_test,
+                             y_test,
+                             col_length,
+                             output_nodes,
+                             features,
+                             output_path,
+                             random_seed,
+                             process_type)
+
+            model_output_path = str(model_path.joinpath(config.Settings().APP_CONFIG.TRAINED_MODEL_FILENAME_MLP))
+            model.save(model_output_path)
+
+        elif selected_model_type.lower() == 'rf':
+            model = tune_rf(X_train, y_train, output_path)
+
+            model_output_path = str(model_path.joinpath(config.Settings().APP_CONFIG.TRAINED_MODEL_FILENAME_RF))
+            joblib.dump(model, model_output_path)
+
+        else:
+            model = tune_gradient_boosting(X_train, y_train, output_path)
+
+            model_output_path = str(model_path.joinpath(config.Settings().APP_CONFIG.TRAINED_MODEL_FILENAME_GB))
+            joblib.dump(model, model_output_path)
+
+        results_pred, _, _ = evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete,
+                                      path_elec, path_gas, val_building_path, process_type)
+    else:
+        SCALING_PERFORMANCE = False # Try out different training dataset size and see how they perform.
+
+        if selected_model_type.lower() == 'mlp':
+            if process_type == 'energy':
+                DROPOUT_RATE = 0.0
+                LEARNING_RATE = 0.001
+                EPOCHS = 100
+                BATCH_SIZE = 1024
+                NUMBER_OF_NODES = [856, 3744]
+                ACTIVATION = 'relu'
+                OPTIMIZER = 'adam'
+            else:
+                DROPOUT_RATE = 0.0
+                LEARNING_RATE = 0.001
+                EPOCHS = 100
+                BATCH_SIZE = 32
+                NUMBER_OF_NODES = [2744, 248]
+                ACTIVATION = 'relu'
+                OPTIMIZER = 'adam'
 
             if not use_updated_model:
                 LEARNING_RATE = 0.001
@@ -675,15 +779,52 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, selected_model_
             if not use_dropout:
                 DROPOUT_RATE = -1
 
-            results_pred, hypermodel = create_model_mlp(
-                                    dense_layers=[NUMBER_OF_NODES],
-                                    activation=ACTIVATION,
-                                    optimizer=OPTIMIZER,
-                                    dropout_rate=DROPOUT_RATE,
-                                    length=col_length,
-                                    learning_rate=LEARNING_RATE,
-                                    epochs=EPOCHS,
-                                    batch_size=BATCH_SIZE,
+            model = create_model_mlp(idx=idx,
+                                     dense_layers=NUMBER_OF_NODES,
+                                     activation=ACTIVATION,
+                                     optimizer=OPTIMIZER,
+                                     dropout_rate=DROPOUT_RATE,
+                                     length=col_length,
+                                     learning_rate=LEARNING_RATE,
+                                     epochs=EPOCHS,
+                                     batch_size=BATCH_SIZE,
+                                     scaling_performance=SCALING_PERFORMANCE,
+                                     X_train=X_train,
+                                     y_train=y_train,
+                                     X_test=X_test,
+                                     y_test=y_test,
+                                     y_test_complete=y_test_complete,scalery=scalery,
+                                     X_validate = X_validate,
+                                     y_validate=y_validate,
+                                     y_validate_complete= y_validate_complete,
+                                     output_path=output_path,
+                                     path_elec=path_elec,
+                                     path_gas=path_gas,
+                                     val_building_path=val_building_path,
+                                     process_type=process_type,
+                                     output_nodes=output_nodes)
+
+            model_output_path = str(model_path.joinpath(config.Settings().APP_CONFIG.TRAINED_MODEL_FILENAME_MLP))
+            model.save(model_output_path)
+
+        elif selected_model_type.lower() == 'rf':
+            if process_type == 'energy':
+                N_ESTIMATORS = 100
+                MAX_DEPTH = None
+                MIN_SAMPLES_SPLIT = 2
+                MIN_SAMPLES_LEAF = 1
+            else:
+                N_ESTIMATORS = 100
+                MAX_DEPTH = 15
+                MIN_SAMPLES_SPLIT = 2
+                MIN_SAMPLES_LEAF = 1
+
+            model = create_model_rf(idx=idx,
+                                    n_estimators = N_ESTIMATORS,
+                                    max_depth=MAX_DEPTH,
+                                    min_samples_split=MIN_SAMPLES_SPLIT,
+                                    min_samples_leaf=MIN_SAMPLES_LEAF,
+                                    scaling_performance=SCALING_PERFORMANCE,
                                     X_train=X_train,
                                     y_train=y_train,
                                     X_test=X_test,
@@ -697,55 +838,63 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, selected_model_
                                     path_elec=path_elec,
                                     path_gas=path_gas,
                                     val_building_path=val_building_path,
-                                    process_type=process_type,
-                                    output_nodes=output_nodes)
-            # Output the trained model architecture
-            model_output_path = str(model_path.joinpath(config.Settings().APP_CONFIG.TRAINED_MODEL_FILENAME_MLP))
-            hypermodel.save(model_output_path)
+                                    process_type=process_type)
 
-        elif selected_model_type.lower() == 'rf':
-            # Default parameters for the Random forest regressor
-            N_ESTIMATORS = 150
-            MAX_DEPTH = None
-            MIN_SAMPLES_SPLIT = 2
-            MIN_SAMPLES_LEAF = 1
-
-            if not use_updated_model:
-                LEARNING_RATE = 0.001
-                NUMBER_OF_NODES = 56
-            if not use_dropout:
-                DROPOUT_RATE = -1
-
-            results_pred, hypermodel = create_model_rf(
-                                        n_estimators = N_ESTIMATORS,
-                                        max_depth=MAX_DEPTH,
-                                        min_samples_split=MIN_SAMPLES_SPLIT,
-                                        min_samples_leaf=MIN_SAMPLES_LEAF,
-                                        X_train=X_train,
-                                        y_train=y_train,
-                                        X_test=X_test,
-                                        y_test=y_test,
-                                        y_test_complete=y_test_complete,
-                                        scalery=scalery,
-                                        X_validate = X_validate,
-                                        y_validate=y_validate,
-                                        y_validate_complete= y_validate_complete,
-                                        output_path=output_path,
-                                        path_elec=path_elec,
-                                        path_gas=path_gas,
-                                        val_building_path=val_building_path,
-                                        process_type=process_type,
-                                        output_nodes=output_nodes
-                                       )
             model_output_path = str(model_path.joinpath(config.Settings().APP_CONFIG.TRAINED_MODEL_FILENAME_RF))
-            joblib.dump(hypermodel, model_output_path)
+            joblib.dump(model, model_output_path)
 
+        else:
+            if process_type == 'energy':
+                N_ESTIMATORS = 500
+                MAX_DEPTH = 10
+                LEARNING_RATE = 0.05
+                SUBSAMPLE = 0.5
+            else:
+                N_ESTIMATORS = 500
+                MAX_DEPTH = 5
+                LEARNING_RATE = 0.05
+                SUBSAMPLE = 0.5
+
+            if process_type.lower() == config.Settings().APP_CONFIG.COSTING:
+                modified_y_validate = y_validate.iloc[:, 1:-1]
+                modified_y_validate = scalery.transform(modified_y_validate)
+            else:
+                modified_y_validate = y_validate.iloc[:, 2:]
+                modified_y_validate = scalery.transform(modified_y_validate)
+
+            model = create_model_gradient_boosting(idx=idx,
+                                                   n_estimators = N_ESTIMATORS,
+                                                   max_depth=MAX_DEPTH,
+                                                   learning_rate=LEARNING_RATE,
+                                                   subsample=SUBSAMPLE,
+                                                   scaling_performance=SCALING_PERFORMANCE,
+                                                   X_train=X_train,
+                                                   y_train=y_train,
+                                                   X_test=X_test,
+                                                   y_test=y_test,
+                                                   y_test_complete=y_test_complete,
+                                                   scalery=scalery,
+                                                   X_validate = X_validate,
+                                                   y_validate=y_validate,
+                                                   y_validate_complete= y_validate_complete,
+                                                   modified_y_validate=modified_y_validate,
+                                                   selected_features=selected_features,
+                                                   output_path=output_path,
+                                                   path_elec=path_elec,path_gas=path_gas,
+                                                   val_building_path=val_building_path,
+                                                   process_type=process_type)
+
+            model_output_path = str(model_path.joinpath(config.Settings().APP_CONFIG.TRAINED_MODEL_FILENAME_GB))
+            joblib.dump(model, model_output_path)
+
+        results_pred, _, _ = evaluate(model, X_test, y_test, scalery, X_validate, y_validate, y_test_complete, y_validate_complete,
+                                path_elec, path_gas, val_building_path, process_type)
 
     # Calculate the time spent training in minutes
     time_taken = ((time.time() - start_time) / 60)
     print("********* Total time spent is " + str(time_taken) + " minutes ***********" )
 
-    # write processing time
+    # Write processing time in processing_time.txt file
     processing_time_file_path = str(model_path) + "/" + 'processing_time.txt'
     processing_time_file = open(processing_time_file_path, 'w')
     processing_time_file.write(str(time_taken))
@@ -753,6 +902,7 @@ def fit_evaluate(preprocessed_data_file, selected_features_file, selected_model_
     # Define the output files
     output_filename_json = str(model_path) + "/" + config.Settings().APP_CONFIG.TRAINING_RESULTS_FILENAME + ".json"
     output_filename_csv = str(model_path) + "/" + config.Settings().APP_CONFIG.TRAINING_RESULTS_FILENAME + ".csv"
+
     # Specify the indices where the target outputs are
     # The order is [acutal_0, predicted_0, actual_1, predicted_1, ..., actual_n, predicted_n]
     output_indices = [1, 3, 2, 4]
@@ -819,7 +969,8 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
          path_gas: str = typer.Option("", help="Filepath of the gas building file, if it has been used (pass nothing otherwise)."),
          val_building_path: str = typer.Option("", help="Filepath of the validation building file, if it has been used (pass nothing otherwise)."),
          use_updated_model: bool = typer.Option(True, help="True if the larger model architecture should be used for training. Should be False if a costing model is being trained."),
-         use_dropout: bool = typer.Option(True, help="True if the regularization technique should be used (on by default). False if tests are desired without dropout. Note that not using dropout may cause bias to learned when training.")
+         use_dropout: bool = typer.Option(True, help="True if the regularization technique should be used (on by default). False if tests are desired without dropout. Note that not using dropout may cause bias to learned when training."),
+         idx: int = typer.Option(0, help="Keeps track of the training process type")
          ):
     """
     Using all preprocessed data, build and train a Machine Learning model to predict the total energy or costing values.
@@ -840,16 +991,18 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
         val_building_path: Filepath of the validation building file, if it has been used (pass nothing otherwise).
         use_updated_model: True if the larger model architecture should be used for training. Should be False if a costing model is being trained.
         use_dropout: True if the regularization technique should be used (on by default). False if tests are desired without dropout. Note that not using dropout may cause bias to learned when training.
+        idx: Keeps track of the training process type.
     """
     DOCKER_INPUT_PATH = config.Settings().APP_CONFIG.DOCKER_INPUT_PATH
+
     # Load all content stored from the config file, if provided
     if len(config_file) > 0:
         # Load the specified config file
         cfg = config.get_config(DOCKER_INPUT_PATH + config_file)
         if random_seed < 0: random_seed = cfg.get(config.Settings().APP_CONFIG.RANDOM_SEED)
         if perform_param_search == "": perform_param_search = cfg.get(config.Settings().APP_CONFIG.PARAM_SEARCH)
+
     # Validate all input files
-    # Validate all inputs
     input_model = PredictModel(input_prefix=DOCKER_INPUT_PATH,
                                preprocessed_data_file=preprocessed_data_file,
                                selected_features_file=selected_features_file,
@@ -862,7 +1015,8 @@ def main(config_file: str = typer.Argument(..., help="Location of the .yml confi
     # If the output path is blank, map to the docker output path
     if len(output_path) < 1:
         output_path = config.Settings().APP_CONFIG.DOCKER_OUTPUT_PATH
-    return fit_evaluate(input_model.preprocessed_data_file, input_model.selected_features_file, input_model.selected_model_type, input_model.perform_param_search, output_path, input_model.random_seed, input_model.building_param_files[0], input_model.building_param_files[1], input_model.val_building_params_file, process_type, use_updated_model,
+
+    return fit_evaluate(idx, input_model.preprocessed_data_file, input_model.selected_features_file, input_model.selected_model_type, input_model.perform_param_search, output_path, input_model.random_seed, input_model.building_param_files[0], input_model.building_param_files[1], input_model.val_building_params_file, process_type, use_updated_model,
                         use_dropout)
 
 if __name__ == '__main__':

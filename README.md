@@ -35,6 +35,28 @@ Notes:
     - feature_selection.py: use the output from preprocoessing to extract the features that would be used in building the surrogate model
     - predict.py: builds the surrogate model using the preprocessed data and the selected features described above
 
+## Citation
+
+If you use this repository in your research, please cite our published paper:
+
+```bibtex
+@article{
+  title={Surrogate Modeling for Building Design: Energy and Cost Prediction Compared to Simulation-Based Methods},
+  author={Shirzadi, Navid},
+  journal={Buildings},
+  volume={15},
+  number={13},
+  pages={2361},
+  year={2025},
+  publisher={MDPI},
+  doi={10.3390/buildings15132361},
+  url={https://www.mdpi.com/2075-5309/15/13/2361}
+}
+```
+
+**Alternative Citation Format:**
+> Shirzadi, N. (2025). Surrogate Modeling for Building Design: Energy and Cost Prediction Compared to Simulation-Based Methods. *Buildings*, 15(13), 2361. https://doi.org/10.3390/buildings15132361
+
 # License
 
 Unless otherwise noted, the source code of this project is covered under Crown Copyright, Government of Canada, and is distributed under the [GNU GPL v3 License](LICENSE).
